@@ -8,6 +8,7 @@
     <RootNamespace>PlayniteDisplayManager.RestoreHost</RootNamespace>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>..\bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,6 +27,7 @@
     <Compile Include="..\Displays\DisplayEdidReader.cs" Link="Displays\DisplayEdidReader.cs" />
     <Compile Include="..\Displays\DisplayEnumerator.cs" Link="Displays\DisplayEnumerator.cs" />
     <Compile Include="..\Displays\DisplaySnapshot.cs" Link="Displays\DisplaySnapshot.cs" />
+    <Compile Include="..\Displays\DisplayTopologyRequest.cs" Link="Displays\DisplayTopologyRequest.cs" />
     <Compile Include="..\Displays\DisplayTopologyService.cs" Link="Displays\DisplayTopologyService.cs" />
   </ItemGroup>
 </Project>

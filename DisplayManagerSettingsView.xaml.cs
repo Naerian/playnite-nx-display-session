@@ -7,6 +7,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Navigation;
+using System.Windows.Threading;
 using PlayniteDisplayManager.Displays;
 
 namespace PlayniteDisplayManager
@@ -14,6 +15,9 @@ namespace PlayniteDisplayManager
     public partial class DisplayManagerSettingsView : UserControl
     {
         private PlayniteDisplayManagerPlugin subscribedPlugin;
+        private DisplaySnapshot topologyTrialSnapshot;
+        private DispatcherTimer topologyTrialTimer;
+        private int topologyTrialSecondsLeft;
 
         public DisplayManagerSettingsView()
         {
@@ -28,6 +32,7 @@ namespace PlayniteDisplayManager
                 ApplyAppearancePreset();
                 BuildAppearancePresetChips();
                 RebuildDisplayCards();
+                RefreshTopologyTargetBox();
                 UpdateOverview();
             };
             Loaded += OnLoaded;
@@ -39,11 +44,13 @@ namespace PlayniteDisplayManager
             ApplyAppearancePreset();
             BuildAppearancePresetChips();
             RebuildDisplayCards();
+            RefreshTopologyTargetBox();
             UpdateOverview();
         }
 
         private void OnUnloaded(object sender, RoutedEventArgs args)
         {
+            StopTopologyTrialTimer(restore: true);
             UnsubscribeDisplaysChanged();
         }
 
@@ -73,12 +80,14 @@ namespace PlayniteDisplayManager
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
                     RebuildDisplayCards();
+                    RefreshTopologyTargetBox();
                     UpdateOverview();
                 }));
                 return;
             }
 
             RebuildDisplayCards();
+            RefreshTopologyTargetBox();
             UpdateOverview();
         }
 
@@ -251,7 +260,183 @@ namespace PlayniteDisplayManager
             settings?.RefreshDisplays();
             settings?.Plugin?.NotifyDisplaysChanged();
             RebuildDisplayCards();
+            RefreshTopologyTargetBox();
             UpdateOverview();
+        }
+
+        private void RefreshTopologyTargetBox()
+        {
+            if (TopologyTargetBox == null)
+            {
+                return;
+            }
+
+            var settings = DataContext as DisplayManagerSettings;
+            var previous = TopologyTargetBox.SelectedValue as string;
+            var connected = settings?.AvailableDisplays?
+                .Where(d => d.IsConnected)
+                .ToList() ?? new System.Collections.Generic.List<DisplayInfo>();
+            TopologyTargetBox.ItemsSource = connected;
+            if (connected.Count == 0)
+            {
+                TopologyTargetBox.SelectedIndex = -1;
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(previous) &&
+                connected.Any(d => string.Equals(d.Id, previous, StringComparison.OrdinalIgnoreCase)))
+            {
+                TopologyTargetBox.SelectedValue = previous;
+            }
+            else
+            {
+                var primary = connected.FirstOrDefault(d => d.IsPrimary) ?? connected[0];
+                TopologyTargetBox.SelectedValue = primary.Id;
+            }
+        }
+
+        private void TopologyTrialApply_OnClick(object sender, RoutedEventArgs e)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            var plugin = settings?.Plugin;
+            if (plugin == null)
+            {
+                return;
+            }
+
+            var targetId = TopologyTargetBox?.SelectedValue as string;
+            if (string.IsNullOrWhiteSpace(targetId))
+            {
+                TopologyTrialStatusText.Text = TryFindResource("LOCDisplayManager_TopologyTrialNoTarget") as string
+                    ?? "Select a connected display first.";
+                return;
+            }
+
+            var makePrimary = TopologyMakePrimaryCheck?.IsChecked == true;
+            var turnOffOthers = TopologyTurnOffOthersCheck?.IsChecked == true;
+            if (!makePrimary && !turnOffOthers)
+            {
+                TopologyTrialStatusText.Text = TryFindResource("LOCDisplayManager_TopologyTrialNothing") as string
+                    ?? "Enable make primary and/or turn off others.";
+                return;
+            }
+
+            if (turnOffOthers)
+            {
+                var confirm = MessageBox.Show(
+                    TryFindResource("LOCDisplayManager_TopologyTurnOffConfirm") as string
+                    ?? "Other displays will turn off for a few seconds, then restore. Continue?",
+                    "Display Manager",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+                if (confirm != MessageBoxResult.Yes)
+                {
+                    return;
+                }
+            }
+
+            var apply = plugin.ApplyTopologyWithLease(new DisplayTopologyRequest
+            {
+                TargetDisplayId = targetId,
+                MakePrimary = makePrimary,
+                TurnOffOtherDisplays = turnOffOthers
+            });
+
+            if (!apply.Success)
+            {
+                TopologyTrialStatusText.Text = apply.Error ?? "Apply failed.";
+                return;
+            }
+
+            topologyTrialSnapshot = apply.BeforeSnapshot;
+            RefreshDisplaysInternal();
+            StartTopologyTrialCountdown(8);
+            TopologyTrialStatusText.Text = string.Format(
+                TryFindResource("LOCDisplayManager_TopologyTrialAppliedFormat") as string
+                ?? "Applied ({0}). Restoring in {1}s…",
+                apply.Message,
+                topologyTrialSecondsLeft);
+        }
+
+        private void TopologyTrialRestore_OnClick(object sender, RoutedEventArgs e)
+        {
+            RestoreTopologyTrial(manual: true);
+        }
+
+        private void StartTopologyTrialCountdown(int seconds)
+        {
+            StopTopologyTrialTimer(restore: false);
+            topologyTrialSecondsLeft = seconds;
+            topologyTrialTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            topologyTrialTimer.Tick += TopologyTrialTimer_OnTick;
+            topologyTrialTimer.Start();
+        }
+
+        private void TopologyTrialTimer_OnTick(object sender, EventArgs e)
+        {
+            topologyTrialSecondsLeft--;
+            if (topologyTrialSecondsLeft > 0)
+            {
+                TopologyTrialStatusText.Text = string.Format(
+                    TryFindResource("LOCDisplayManager_TopologyTrialCountdownFormat") as string
+                    ?? "Restoring in {0}s…",
+                    topologyTrialSecondsLeft);
+                return;
+            }
+
+            RestoreTopologyTrial(manual: false);
+        }
+
+        private void StopTopologyTrialTimer(bool restore)
+        {
+            if (topologyTrialTimer != null)
+            {
+                topologyTrialTimer.Stop();
+                topologyTrialTimer.Tick -= TopologyTrialTimer_OnTick;
+                topologyTrialTimer = null;
+            }
+
+            if (restore)
+            {
+                RestoreTopologyTrial(manual: false);
+            }
+        }
+
+        private void RestoreTopologyTrial(bool manual)
+        {
+            if (topologyTrialTimer != null)
+            {
+                topologyTrialTimer.Stop();
+                topologyTrialTimer.Tick -= TopologyTrialTimer_OnTick;
+                topologyTrialTimer = null;
+            }
+
+            var settings = DataContext as DisplayManagerSettings;
+            var plugin = settings?.Plugin;
+            var snapshot = topologyTrialSnapshot;
+            topologyTrialSnapshot = null;
+            if (plugin == null || snapshot == null)
+            {
+                plugin?.DisarmRestoreLease();
+                if (manual)
+                {
+                    TopologyTrialStatusText.Text = TryFindResource("LOCDisplayManager_TopologyTrialNothingToRestore") as string
+                        ?? "No trial snapshot to restore.";
+                }
+
+                return;
+            }
+
+            if (plugin.TryRestoreLastLeaseSnapshot(snapshot, out var error))
+            {
+                RefreshDisplaysInternal();
+                TopologyTrialStatusText.Text = TryFindResource("LOCDisplayManager_TopologyTrialRestored") as string
+                    ?? "Desktop topology restored.";
+            }
+            else
+            {
+                TopologyTrialStatusText.Text = error ?? "Restore failed.";
+            }
         }
 
         private void UpdateOverview()

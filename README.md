@@ -6,7 +6,7 @@ Designed for HTPC / couch setups (TV plus another screen): choose which display 
 
 ## Status
 
-Early (`0.1.0`). Settings chrome, live display enumeration, and RestoreHost lease (external snapshot reapply) are in place. Primary/topology apply and HDR ownership land next.
+Early (`0.1.0`). Settings chrome, display enumeration, RestoreHost lease, and topology trial (primary / opt-in others-off with auto-restore) are in place. HDR ownership lands next.
 
 ## Requirements
 

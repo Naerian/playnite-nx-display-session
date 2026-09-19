@@ -48,22 +48,12 @@ if ($LASTEXITCODE -ne 0) {
     throw "dotnet restore (RestoreHost) failed with exit code $LASTEXITCODE"
 }
 
-dotnet clean $project -c $Configuration
-if ($LASTEXITCODE -ne 0) {
-    throw "dotnet clean failed with exit code $LASTEXITCODE"
-}
-
-dotnet clean $hostProject -c $Configuration
-if ($LASTEXITCODE -ne 0) {
-    throw "dotnet clean (RestoreHost) failed with exit code $LASTEXITCODE"
-}
-
-dotnet build $project -c $Configuration --no-restore
+dotnet build $project -c $Configuration --no-restore -t:Rebuild
 if ($LASTEXITCODE -ne 0) {
     throw "dotnet build failed with exit code $LASTEXITCODE"
 }
 
-dotnet build $hostProject -c $Configuration --no-restore
+dotnet build $hostProject -c $Configuration --no-restore -t:Rebuild
 if ($LASTEXITCODE -ne 0) {
     throw "dotnet build (RestoreHost) failed with exit code $LASTEXITCODE"
 }

@@ -321,6 +321,43 @@
                             </Border>
                             <TextBlock Text="{DynamicResource LOCDisplayManager_DisplaysHelp}" Style="{StaticResource SectionSubtitleText}" />
                         </StackPanel>
+
+                        <Border Style="{StaticResource SettingsCard}">
+                            <StackPanel>
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTrialTitle}" Style="{StaticResource FieldLabel}" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTrialHelp}" Style="{StaticResource HintText}" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTrialTarget}" Style="{StaticResource FieldLabel}" Margin="0,8,0,4" />
+                                <ComboBox x:Name="TopologyTargetBox"
+                                          MinHeight="36"
+                                          DisplayMemberPath="EffectiveName"
+                                          SelectedValuePath="Id" />
+                                <CheckBox x:Name="TopologyMakePrimaryCheck"
+                                          Content="{DynamicResource LOCDisplayManager_TopologyMakePrimary}"
+                                          IsChecked="True"
+                                          Margin="0,12,0,0" />
+                                <CheckBox x:Name="TopologyTurnOffOthersCheck"
+                                          Content="{DynamicResource LOCDisplayManager_TopologyTurnOffOthers}"
+                                          Margin="0,8,0,0" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTurnOffOthersWarning}"
+                                           Style="{StaticResource HintText}"
+                                           Margin="24,4,0,0" />
+                                <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                                    <Button Content="{DynamicResource LOCDisplayManager_TopologyTrialApply}"
+                                            Style="{StaticResource NarianPrimaryButton}"
+                                            MinWidth="180"
+                                            Margin="0,0,8,0"
+                                            Click="TopologyTrialApply_OnClick" />
+                                    <Button Content="{DynamicResource LOCDisplayManager_TopologyTrialRestoreNow}"
+                                            MinWidth="140"
+                                            MinHeight="36"
+                                            Click="TopologyTrialRestore_OnClick" />
+                                </StackPanel>
+                                <TextBlock x:Name="TopologyTrialStatusText"
+                                           Style="{StaticResource HintText}"
+                                           Margin="0,12,0,0" />
+                            </StackPanel>
+                        </Border>
+
                         <StackPanel x:Name="DisplayCardsPanel" />
                     </StackPanel>
                 </ScrollViewer>

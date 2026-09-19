@@ -53,6 +53,15 @@ namespace PlayniteDisplayManager.Displays
 
         public double RefreshRateHz { get; set; }
 
+        /// <summary>Transient CCD matching keys — not for profile persistence.</summary>
+        public uint AdapterIdLow { get; set; }
+
+        public int AdapterIdHigh { get; set; }
+
+        public uint TargetId { get; set; }
+
+        public uint SourceId { get; set; }
+
         public DisplayInfo Clone()
         {
             return new DisplayInfo
@@ -74,7 +83,11 @@ namespace PlayniteDisplayManager.Displays
                 EdidSerial = EdidSerial,
                 Width = Width,
                 Height = Height,
-                RefreshRateHz = RefreshRateHz
+                RefreshRateHz = RefreshRateHz,
+                AdapterIdLow = AdapterIdLow,
+                AdapterIdHigh = AdapterIdHigh,
+                TargetId = TargetId,
+                SourceId = SourceId
             };
         }
     }

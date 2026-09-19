@@ -117,6 +117,52 @@ namespace PlayniteDisplayManager
             restoreClient?.Disarm();
         }
 
+        /// <summary>
+        /// Apply topology with snapshot + RestoreHost lease. On failure, restores immediately.
+        /// </summary>
+        public DisplayTopologyApplyResult ApplyTopologyWithLease(DisplayTopologyRequest request)
+        {
+            EnsureRestoreClient();
+            DisplaySnapshot before = null;
+            try
+            {
+                before = Topology.CaptureSnapshot();
+                restoreClient.Arm(before);
+                StartRestoreHeartbeat();
+            }
+            catch (Exception ex)
+            {
+                return new DisplayTopologyApplyResult
+                {
+                    Success = false,
+                    Error = "Could not arm restore lease: " + ex.Message
+                };
+            }
+
+            var apply = Topology.TryApplyRequest(request);
+            if (!apply.Success)
+            {
+                if (before != null)
+                {
+                    Topology.TryRestoreSnapshot(before, out _);
+                }
+
+                DisarmRestoreLease();
+                return apply;
+            }
+
+            apply.BeforeSnapshot = before ?? apply.BeforeSnapshot;
+            return apply;
+        }
+
+        public bool TryRestoreLastLeaseSnapshot(DisplaySnapshot snapshot, out string error)
+        {
+            var ok = Topology.TryRestoreSnapshot(snapshot, out error);
+            DisarmRestoreLease();
+            NotifyDisplaysChanged();
+            return ok;
+        }
+
         public bool TryRestoreSnapshotNow(out string error)
         {
             var snapshot = Topology.CaptureSnapshot();

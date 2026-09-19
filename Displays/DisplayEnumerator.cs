@@ -103,7 +103,11 @@ namespace PlayniteDisplayManager.Displays
                         EdidSerial = serial,
                         Width = width,
                         Height = height,
-                        RefreshRateHz = refresh
+                        RefreshRateHz = refresh,
+                        AdapterIdLow = path.targetInfo.adapterId.LowPart,
+                        AdapterIdHigh = path.targetInfo.adapterId.HighPart,
+                        TargetId = path.targetInfo.id,
+                        SourceId = path.sourceInfo.id
                     });
                 }
 
