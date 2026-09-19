@@ -15,6 +15,7 @@ using PlayniteDisplayManager.Hdr;
 using PlayniteDisplayManager.Profiles;
 using PlayniteDisplayManager.Refresh;
 using PlayniteDisplayManager.Restore;
+using PlayniteDisplayManager.Theme;
 
 namespace PlayniteDisplayManager
 {
@@ -32,6 +33,7 @@ namespace PlayniteDisplayManager
         private DisplaySnapshot gameSessionSnapshot;
         private Guid? activeGameId;
         private string activeGameName;
+        private TopPanelItem desktopTopPanelItem;
 
         public override Guid Id { get; } = Guid.Parse("9c2e4a71-b8d3-4f6a-a1c5-0e7d92f3b846");
 
@@ -45,6 +47,8 @@ namespace PlayniteDisplayManager
 
         public GameDisplayProfileStore GameProfiles => gameProfiles;
 
+        public DisplayManagerThemeApi Theme { get; }
+
         public PlayniteDisplayManagerPlugin(IPlayniteAPI playniteApi) : base(playniteApi)
         {
             logger = LogManager.GetLogger();
@@ -52,13 +56,31 @@ namespace PlayniteDisplayManager
             Topology = new DisplayTopologyService();
             gameProfiles = new GameDisplayProfileStore(GetPluginUserDataPath());
             nativeHdrMigration = new NativeHdrFlagMigration(PlayniteApi, logger, GetPluginUserDataPath());
+            Theme = new DisplayManagerThemeApi(this);
             Properties = new GenericPluginProperties
             {
                 HasSettings = true
             };
 
+            AddCustomElementSupport(new AddCustomElementSupportArgs
+            {
+                SourceName = "DisplayManager",
+                ElementList = new List<string>
+                {
+                    "DisplayList",
+                    "HdrStatus"
+                }
+            });
+
+            AddSettingsSupport(new AddSettingsSupportArgs
+            {
+                SourceName = "DisplayManager",
+                SettingsRoot = nameof(Theme)
+            });
+
             EnsureEnglishFallbackResources();
             ReloadSettings();
+            Theme.Refresh();
         }
 
         public DisplayManagerSettings Settings => settings;
@@ -67,6 +89,8 @@ namespace PlayniteDisplayManager
 
         public void NotifyDisplaysChanged()
         {
+            Theme?.Refresh();
+            RefreshTopPanelItem();
             DisplaysChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -84,6 +108,8 @@ namespace PlayniteDisplayManager
         public void ReloadSettings()
         {
             settings = new DisplayManagerSettings(this);
+            Theme?.Refresh();
+            RefreshTopPanelItem();
         }
 
         public override ISettings GetSettings(bool firstRunSettings)
@@ -94,6 +120,55 @@ namespace PlayniteDisplayManager
         public override UserControl GetSettingsView(bool firstRunSettings)
         {
             return new DisplayManagerSettingsView();
+        }
+
+        public override Control GetGameViewControl(GetGameViewControlArgs args)
+        {
+            if (args == null)
+            {
+                return null;
+            }
+
+            if (string.Equals(args.Name, "DisplayList", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(args.Name, "DisplayManager_DisplayList", StringComparison.OrdinalIgnoreCase))
+            {
+                return new DisplayManagerDisplayListControl(this);
+            }
+
+            if (string.Equals(args.Name, "HdrStatus", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(args.Name, "DisplayManager_HdrStatus", StringComparison.OrdinalIgnoreCase))
+            {
+                return new DisplayManagerHdrStatusControl(this);
+            }
+
+            return null;
+        }
+
+        public override IEnumerable<TopPanelItem> GetTopPanelItems()
+        {
+            if (desktopTopPanelItem == null)
+            {
+                desktopTopPanelItem = new TopPanelItem
+                {
+                    Icon = new DisplayManagerTopPanelControl(this),
+                    Activated = () => OpenSettingsView()
+                };
+            }
+
+            RefreshTopPanelItem();
+            yield return desktopTopPanelItem;
+        }
+
+        private void RefreshTopPanelItem()
+        {
+            if (desktopTopPanelItem == null)
+            {
+                return;
+            }
+
+            desktopTopPanelItem.Visible = settings == null || settings.ShowDesktopTopPanel;
+            desktopTopPanelItem.Title = Theme?.TopPanelTooltip
+                ?? Loc("LOCDisplayManager_PluginName");
         }
 
         public override IEnumerable<MainMenuItem> GetMainMenuItems(GetMainMenuItemsArgs args)
@@ -109,6 +184,26 @@ namespace PlayniteDisplayManager
                 Description = Loc("LOCDisplayManager_OpenSetupWizard"),
                 MenuSection = "@Display Manager",
                 Action = _ => OpenSetupWizard()
+            };
+            yield return new MainMenuItem
+            {
+                Description = Loc("LOCDisplayManager_HdrWriteOffNow"),
+                MenuSection = "@Display Manager",
+                Action = _ =>
+                {
+                    if (TryWriteHdrOffNow(out var error))
+                    {
+                        PlayniteApi.Dialogs.ShowMessage(
+                            Loc("LOCDisplayManager_HdrWriteOffOk"),
+                            Loc("LOCDisplayManager_PluginName"));
+                    }
+                    else
+                    {
+                        PlayniteApi.Dialogs.ShowErrorMessage(
+                            error ?? "HDR write failed.",
+                            Loc("LOCDisplayManager_PluginName"));
+                    }
+                }
             };
         }
 
@@ -549,6 +644,18 @@ namespace PlayniteDisplayManager
                     return Loc("LOCDisplayManager_RefreshPolicyHighest");
                 default:
                     return Loc("LOCDisplayManager_RefreshPolicyNative");
+            }
+        }
+
+        public Game GetSelectedLibraryGame()
+        {
+            try
+            {
+                return PlayniteApi?.MainView?.SelectedGames?.FirstOrDefault();
+            }
+            catch
+            {
+                return null;
             }
         }
 

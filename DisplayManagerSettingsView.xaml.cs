@@ -38,6 +38,7 @@ namespace PlayniteDisplayManager
                 SyncHdrPolicyRadios();
                 SyncHdrMetadataControls();
                 SyncRefreshRateRadios();
+                SyncDesktopAccessControls();
                 UpdateOverview();
             };
             Loaded += OnLoaded;
@@ -53,6 +54,7 @@ namespace PlayniteDisplayManager
             SyncHdrPolicyRadios();
             SyncHdrMetadataControls();
             SyncRefreshRateRadios();
+            SyncDesktopAccessControls();
             UpdateOverview();
         }
 
@@ -641,6 +643,29 @@ namespace PlayniteDisplayManager
             {
                 OverviewHdrBadge.Text = TryFindResource("LOCDisplayManager_StatusUnknown") as string ?? "Unknown";
             }
+        }
+
+        private void SyncDesktopAccessControls()
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null || ShowDesktopTopPanelCheck == null)
+            {
+                return;
+            }
+
+            ShowDesktopTopPanelCheck.IsChecked = settings.ShowDesktopTopPanel;
+        }
+
+        private void ShowDesktopTopPanelCheck_OnChanged(object sender, RoutedEventArgs e)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null || ShowDesktopTopPanelCheck == null)
+            {
+                return;
+            }
+
+            settings.ShowDesktopTopPanel = ShowDesktopTopPanelCheck.IsChecked == true;
+            settings.Plugin?.NotifyDisplaysChanged();
         }
 
         private void SyncRefreshRateRadios()

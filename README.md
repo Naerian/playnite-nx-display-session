@@ -6,7 +6,7 @@ Designed for HTPC / couch setups (TV plus another screen): choose which display 
 
 ## Status
 
-Early (`0.1.0`). Chrome, displays, RestoreHost, topology trial, HDR, EnableSystemHdr migration, optional refresh rate (Hz), and Night Light cut are in place. Menus / Theme API polish is next.
+Early (`0.1.0`). Chrome, displays, RestoreHost, HDR, Hz, EnableSystemHdr migration, Theme API v1 (DisplayList / HdrStatus), and Desktop top panel are in place. Audio Switcher hook is next.
 
 ## Documentation
 
@@ -14,6 +14,8 @@ Early (`0.1.0`). Chrome, displays, RestoreHost, topology trial, HDR, EnableSyste
 - [HDR y ACM (ES)](docs/HDR-Y-ACM.es.md)
 - [Night Light cut (EN)](docs/NIGHT-LIGHT.md)
 - [Luz nocturna recortada (ES)](docs/NIGHT-LIGHT.es.md)
+- [Theme API v1 (EN)](docs/THEME-API.md)
+- [Theme API v1 (ES)](docs/THEME-API.es.md)
 
 ## Requirements
 

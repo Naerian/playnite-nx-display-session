@@ -489,6 +489,18 @@
 
                         <Border Style="{StaticResource SettingsCard}">
                             <StackPanel>
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_DesktopAccessTitle}" Style="{StaticResource FieldLabel}" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_DesktopAccessHelp}" Style="{StaticResource HintText}" />
+                                <CheckBox x:Name="ShowDesktopTopPanelCheck"
+                                          Content="{DynamicResource LOCDisplayManager_ShowDesktopTopPanel}"
+                                          Margin="0,8,0,0"
+                                          Checked="ShowDesktopTopPanelCheck_OnChanged"
+                                          Unchecked="ShowDesktopTopPanelCheck_OnChanged" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource SettingsCard}">
+                            <StackPanel>
                                 <TextBlock Text="{DynamicResource LOCDisplayManager_NightLightTitle}" Style="{StaticResource FieldLabel}" />
                                 <TextBlock Text="{DynamicResource LOCDisplayManager_NightLightExperimentalBadge}"
                                            Style="{StaticResource HintText}"

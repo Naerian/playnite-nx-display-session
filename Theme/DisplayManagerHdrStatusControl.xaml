@@ -1,0 +1,34 @@
+<playnite:PluginUserControl x:Class="PlayniteDisplayManager.Theme.DisplayManagerHdrStatusControl"
+                            xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:playnite="clr-namespace:Playnite.SDK.Controls;assembly=Playnite.SDK"
+                            Focusable="False">
+    <StackPanel>
+        <TextBlock Text="{Binding HdrPolicyLabel}" TextWrapping="Wrap" FontWeight="SemiBold" />
+        <TextBlock Text="{Binding HdrStatusLabel}" TextWrapping="Wrap" Margin="0,4,0,0" Opacity="0.85" />
+        <TextBlock Margin="0,8,0,0" TextWrapping="Wrap">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Setter Property="Text" Value="{Binding SelectedGameName, StringFormat={}{0}}" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedGameName}" Value="">
+                            <Setter Property="Text" Value="—" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+        <TextBlock Margin="0,2,0,0" Opacity="0.85">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Setter Property="Text" Value="HDR metadata: no" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasHdrMetadata}" Value="True">
+                            <Setter Property="Text" Value="HDR metadata: yes" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+    </StackPanel>
+</playnite:PluginUserControl>

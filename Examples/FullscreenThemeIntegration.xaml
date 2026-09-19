@@ -1,12 +1,37 @@
 <!--
-    Display Manager fullscreen theme integration example (placeholder).
-    Stable element names for Theme API v1:
-      - DisplayManager_DisplayList
-      - DisplayManager_HdrStatus
-    SourceName: DisplayManager
+  Display Manager — Fullscreen / Desktop theme integration (Theme API v1)
+
+  SourceName: DisplayManager
+  ApiVersion: 1.0.0 (PluginSettings Path Theme.ApiVersion)
+
+  Custom elements (x:Name = SourceName_ElementName):
+    DisplayManager_DisplayList  → connected displays (name, mode, primary)
+    DisplayManager_HdrStatus    → global HDR policy, honest ACM status, selected-game metadata
+
+  PluginSettings examples:
+    {PluginSettings Plugin=DisplayManager, Path=Theme.PrimaryDisplayName}
+    {PluginSettings Plugin=DisplayManager, Path=Theme.PrimaryDisplayAlias}
+    {PluginSettings Plugin=DisplayManager, Path=Theme.HdrPolicyLabel}
+    {PluginSettings Plugin=DisplayManager, Path=Theme.HasHdrMetadata}
+    {PluginSettings Plugin=DisplayManager, Path=Theme.SupportsDisplayList}
+
+  Supports* flags (v1): SupportsDisplayList, SupportsHdrStatus, SupportsHdrPolicy,
+  SupportsHdrMetadata, SupportsTopPanel, SupportsRefreshRatePolicy
+
+  Desktop also offers an optional top-panel button (Settings → General).
+  Replace ADDON_GUID with the extension Id if you gate on PluginStatus.
 -->
 <StackPanel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <!-- Theme controls will be registered in a later step. -->
-    <TextBlock Text="Display Manager theme integration placeholder" />
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            Margin="16">
+
+    <!-- Custom UI elements injected by Display Manager -->
+    <ContentControl x:Name="DisplayManager_DisplayList" Margin="0,0,0,12" />
+    <ContentControl x:Name="DisplayManager_HdrStatus" />
+
+    <!-- Optional: bind text without a custom element -->
+    <!--
+    <TextBlock Text="{PluginSettings Plugin=DisplayManager, Path=Theme.PrimaryDisplayAlias}" />
+    <TextBlock Text="{PluginSettings Plugin=DisplayManager, Path=Theme.HdrPolicyLabel}" />
+    -->
 </StackPanel>

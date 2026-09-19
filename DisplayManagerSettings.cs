@@ -26,6 +26,7 @@ namespace PlayniteDisplayManager
         private bool nativeHdrConflictNotified;
         private NightLightPolicy nightLightPolicy = NightLightPolicy.DoNotTouch;
         private RefreshRatePolicy globalRefreshRatePolicy = RefreshRatePolicy.Native;
+        private bool showDesktopTopPanel = true;
 
         public const int CurrentSettingsSchemaVersion = 1;
 
@@ -50,6 +51,7 @@ namespace PlayniteDisplayManager
                 NativeHdrConflictNotified = savedSettings.NativeHdrConflictNotified;
                 NightLightPolicy = savedSettings.NightLightPolicy;
                 GlobalRefreshRatePolicy = savedSettings.GlobalRefreshRatePolicy;
+                ShowDesktopTopPanel = savedSettings.ShowDesktopTopPanel;
             }
 
             AppearancePreset = SettingsAppearance.Normalize(AppearancePreset);
@@ -126,6 +128,13 @@ namespace PlayniteDisplayManager
         {
             get => globalRefreshRatePolicy;
             set => SetValue(ref globalRefreshRatePolicy, value);
+        }
+
+        /// <summary>Desktop top-panel button (opens settings).</summary>
+        public bool ShowDesktopTopPanel
+        {
+            get => showDesktopTopPanel;
+            set => SetValue(ref showDesktopTopPanel, value);
         }
 
         public List<DisplayDeviceAlias> DisplayAliases
@@ -218,6 +227,7 @@ namespace PlayniteDisplayManager
             NativeHdrConflictNotified = editingClone.NativeHdrConflictNotified;
             NightLightPolicy = editingClone.NightLightPolicy;
             GlobalRefreshRatePolicy = editingClone.GlobalRefreshRatePolicy;
+            ShowDesktopTopPanel = editingClone.ShowDesktopTopPanel;
             editingClone = null;
             RefreshDisplays();
             OnPropertyChanged(nameof(HdrMetadataMatchNamesText));

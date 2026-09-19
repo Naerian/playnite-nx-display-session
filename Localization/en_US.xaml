@@ -118,6 +118,9 @@
     <sys:String x:Key="LOCDisplayManager_SetupWizardSaved">Display Manager setup was saved.</sys:String>
     <sys:String x:Key="LOCDisplayManager_GeneralTab">General</sys:String>
     <sys:String x:Key="LOCDisplayManager_GeneralHelp">Session extras that are not HDR or display topology.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DesktopAccessTitle">Desktop access</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DesktopAccessHelp">Optional top-panel button in Playnite Desktop. Opens Display Manager settings.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ShowDesktopTopPanel">Show in Desktop top panel</sys:String>
     <sys:String x:Key="LOCDisplayManager_NightLightTitle">Night Light</sys:String>
     <sys:String x:Key="LOCDisplayManager_NightLightExperimentalBadge">Experimental — cut in this version</sys:String>
     <sys:String x:Key="LOCDisplayManager_NightLightCutHelp">Windows does not expose a supported Night Light API that works reliably on both Windows 10 and Windows 11. Undocumented CloudStore registry writes can leave Night Light broken until you sign out. Display Manager therefore does not turn Night Light off (or on) during games. Use Windows Settings if you need to change it.</sys:String>
