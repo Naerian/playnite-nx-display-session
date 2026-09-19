@@ -180,6 +180,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 foreach ($required in @(
     "PlayniteDisplayManager.dll",
+    "PlayniteDisplayManager.RestoreHost.exe",
     "extension.yaml",
     "README.md",
     "media/icon.png"
