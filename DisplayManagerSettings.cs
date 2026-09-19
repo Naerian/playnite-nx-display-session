@@ -18,6 +18,8 @@ namespace PlayniteDisplayManager
         private List<DisplayDeviceAlias> displayAliases = new List<DisplayDeviceAlias>();
         private List<DisplayInfo> availableDisplays = new List<DisplayInfo>();
         private GlobalHdrPolicy globalHdrPolicy = GlobalHdrPolicy.DoNotManage;
+        private List<string> hdrMetadataMatchNames = HdrMetadataMatcher.DefaultMatchNames.ToList();
+        private bool includeTagsInHdrMetadataMatch;
 
         public const int CurrentSettingsSchemaVersion = 1;
 
@@ -36,9 +38,12 @@ namespace PlayniteDisplayManager
                 SettingsSchemaVersion = savedSettings.SettingsSchemaVersion;
                 DisplayAliases = savedSettings.DisplayAliases ?? new List<DisplayDeviceAlias>();
                 GlobalHdrPolicy = savedSettings.GlobalHdrPolicy;
+                HdrMetadataMatchNames = savedSettings.HdrMetadataMatchNames;
+                IncludeTagsInHdrMetadataMatch = savedSettings.IncludeTagsInHdrMetadataMatch;
             }
 
             AppearancePreset = SettingsAppearance.Normalize(AppearancePreset);
+            HdrMetadataMatchNames = HdrMetadataMatcher.NormalizeMatchNames(HdrMetadataMatchNames).ToList();
             SettingsSchemaVersion = CurrentSettingsSchemaVersion;
             RefreshDisplays();
         }
@@ -70,6 +75,21 @@ namespace PlayniteDisplayManager
             set => SetValue(ref globalHdrPolicy, value);
         }
 
+        /// <summary>Feature/Tag names that indicate HDR (case-insensitive). Defaults: HDR, HDR10, …</summary>
+        public List<string> HdrMetadataMatchNames
+        {
+            get => hdrMetadataMatchNames;
+            set => SetValue(ref hdrMetadataMatchNames,
+                HdrMetadataMatcher.NormalizeMatchNames(value).ToList());
+        }
+
+        /// <summary>When true, Tags are scanned in addition to Features for policy 3.</summary>
+        public bool IncludeTagsInHdrMetadataMatch
+        {
+            get => includeTagsInHdrMetadataMatch;
+            set => SetValue(ref includeTagsInHdrMetadataMatch, value);
+        }
+
         public List<DisplayDeviceAlias> DisplayAliases
         {
             get => displayAliases;
@@ -81,6 +101,19 @@ namespace PlayniteDisplayManager
         {
             get => availableDisplays;
             private set => SetValue(ref availableDisplays, value ?? new List<DisplayInfo>());
+        }
+
+        [DontSerialize]
+        public string HdrMetadataMatchNamesText
+        {
+            get => string.Join(", ", HdrMetadataMatchNames ?? new List<string>());
+            set
+            {
+                var parts = (value ?? string.Empty)
+                    .Split(new[] { ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+                HdrMetadataMatchNames = parts.ToList();
+                OnPropertyChanged(nameof(HdrMetadataMatchNamesText));
+            }
         }
 
         [DontSerialize]
@@ -141,13 +174,17 @@ namespace PlayniteDisplayManager
             SettingsSchemaVersion = editingClone.SettingsSchemaVersion;
             DisplayAliases = editingClone.DisplayAliases ?? new List<DisplayDeviceAlias>();
             GlobalHdrPolicy = editingClone.GlobalHdrPolicy;
+            HdrMetadataMatchNames = editingClone.HdrMetadataMatchNames;
+            IncludeTagsInHdrMetadataMatch = editingClone.IncludeTagsInHdrMetadataMatch;
             editingClone = null;
             RefreshDisplays();
+            OnPropertyChanged(nameof(HdrMetadataMatchNamesText));
         }
 
         public void EndEdit()
         {
             AppearancePreset = SettingsAppearance.Normalize(AppearancePreset);
+            HdrMetadataMatchNames = HdrMetadataMatcher.NormalizeMatchNames(HdrMetadataMatchNames).ToList();
             DisplayAliases = PersistAliases(AvailableDisplays, DisplayAliases);
             plugin.SavePluginSettings(this);
             plugin.ReloadSettings();

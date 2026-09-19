@@ -16,7 +16,7 @@ namespace PlayniteDisplayManager.Hdr
         /// <summary>Option 2 — HDR on for any game; write off on exit.</summary>
         OnForAllGames = 1,
 
-        /// <summary>Option 3 — HDR only when game metadata matches (step 7).</summary>
+        /// <summary>Option 3 — HDR only when game Features/Tags match configured names.</summary>
         OnWhenMetadataIndicates = 2
     }
 

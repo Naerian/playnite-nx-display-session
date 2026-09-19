@@ -35,6 +35,7 @@ namespace PlayniteDisplayManager
                 RebuildDisplayCards();
                 RefreshTopologyTargetBox();
                 SyncHdrPolicyRadios();
+                SyncHdrMetadataControls();
                 UpdateOverview();
             };
             Loaded += OnLoaded;
@@ -48,6 +49,7 @@ namespace PlayniteDisplayManager
             RebuildDisplayCards();
             RefreshTopologyTargetBox();
             SyncHdrPolicyRadios();
+            SyncHdrMetadataControls();
             UpdateOverview();
         }
 
@@ -488,6 +490,58 @@ namespace PlayniteDisplayManager
             }
         }
 
+        private void SyncHdrMetadataControls()
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null)
+            {
+                return;
+            }
+
+            if (HdrMetadataNamesBox != null)
+            {
+                HdrMetadataNamesBox.Text = settings.HdrMetadataMatchNamesText;
+            }
+
+            if (HdrIncludeTagsCheck != null)
+            {
+                HdrIncludeTagsCheck.IsChecked = settings.IncludeTagsInHdrMetadataMatch;
+            }
+
+            if (HdrOverrideCountText != null)
+            {
+                var count = settings.Plugin?.GetGameHdrOverrideCount() ?? 0;
+                var format = TryFindResource("LOCDisplayManager_HdrOverrideCountFormat") as string
+                    ?? "{0} game(s) with an HDR override (not inherit).";
+                HdrOverrideCountText.Text = string.Format(format, count);
+            }
+        }
+
+        private void HdrMetadataNamesBox_OnLostFocus(object sender, RoutedEventArgs e)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null || HdrMetadataNamesBox == null)
+            {
+                return;
+            }
+
+            settings.HdrMetadataMatchNamesText = HdrMetadataNamesBox.Text;
+            HdrMetadataNamesBox.Text = settings.HdrMetadataMatchNamesText;
+            UpdateOverview();
+        }
+
+        private void HdrIncludeTagsCheck_OnChanged(object sender, RoutedEventArgs e)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null || HdrIncludeTagsCheck == null)
+            {
+                return;
+            }
+
+            settings.IncludeTagsInHdrMetadataMatch = HdrIncludeTagsCheck.IsChecked == true;
+            UpdateOverview();
+        }
+
         private void HdrWriteOffNow_OnClick(object sender, RoutedEventArgs e)
         {
             var settings = DataContext as DisplayManagerSettings;
@@ -547,6 +601,15 @@ namespace PlayniteDisplayManager
                 OverviewHdrText.Text = TryFindResource("LOCDisplayManager_OverviewHdrUnknown") as string
                     ?? "Unknown — Display Manager does not trust readback under Automatic Color Management.";
             }
+
+            if (OverviewGameHdrText != null)
+            {
+                OverviewGameHdrText.Text = settings?.Plugin?.GetSelectedGameHdrOverviewText()
+                    ?? (TryFindResource("LOCDisplayManager_OverviewGameHdrNone") as string
+                        ?? "Select a game in the library to preview HDR metadata.");
+            }
+
+            SyncHdrMetadataControls();
 
             if (OverviewHdrBadge != null)
             {

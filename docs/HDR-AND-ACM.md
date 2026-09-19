@@ -8,14 +8,17 @@ On Windows 11 (especially 24H2) with **Automatically manage apps colors** (ACM),
 
 ## What Display Manager does
 
-1. **On game start** (global policy “any game”): capture topology snapshot, arm RestoreHost, **write** advanced color / HDR **on** for the primary when supported.
+1. **On game start**: resolve the effective plan (global policy + per-game override + optional Features/Tags match), capture topology snapshot, arm RestoreHost, then **write** HDR on or off as planned.
 2. **On game stop / cancel / Playnite exit**: **write HDR off** for those targets (and restore topology). The snapshot stores the write intent (`enable: false`) — it does not ask Windows what HDR “is”.
 3. Overview shows HDR as **Unknown** when ACM may apply. That is intentional honesty.
+4. **Policy 3 (metadata)**: matches local Playnite `Game.Features` (and optionally `Tags`) against configurable names — default `HDR`, `HDR10`, `Dolby Vision`, `Auto HDR`, `HDR10+`. No network on launch.
+5. **Per-game override** (context menu → Display Manager → HDR): Inherit / Force on / Force off (SDR) / Do not touch. Override always wins over the global policy.
 
 ## Diagnostics
 
 - Visual check: **Win+Alt+B** (Xbox Game Bar HDR toggle) to see what the display actually does.
 - Settings → HDR → **Write HDR off now** forces SDR by write on capable active displays.
+- Overview → **Selected game (HDR)** previews metadata match and the effective plan for the library selection.
 - RestoreHost log: `%TEMP%\PlayniteDisplayManager-RestoreHost.log`
 
 ## Spanish

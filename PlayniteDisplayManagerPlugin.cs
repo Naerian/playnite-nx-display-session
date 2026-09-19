@@ -8,9 +8,11 @@ using System.Windows.Markup;
 using System.Windows.Threading;
 using Playnite.SDK;
 using Playnite.SDK.Events;
+using Playnite.SDK.Models;
 using Playnite.SDK.Plugins;
 using PlayniteDisplayManager.Displays;
 using PlayniteDisplayManager.Hdr;
+using PlayniteDisplayManager.Profiles;
 using PlayniteDisplayManager.Restore;
 
 namespace PlayniteDisplayManager
@@ -20,6 +22,7 @@ namespace PlayniteDisplayManager
         private readonly ILogger logger;
         private readonly HdrService hdr = new HdrService();
         private DisplayManagerSettings settings;
+        private GameDisplayProfileStore gameProfiles;
         private ResourceDictionary englishFallbackResources;
         private DisplayRestoreClient restoreClient;
         private DispatcherTimer restoreHeartbeatTimer;
@@ -35,11 +38,14 @@ namespace PlayniteDisplayManager
 
         public HdrService Hdr => hdr;
 
+        public GameDisplayProfileStore GameProfiles => gameProfiles;
+
         public PlayniteDisplayManagerPlugin(IPlayniteAPI playniteApi) : base(playniteApi)
         {
             logger = LogManager.GetLogger();
             Displays = new DisplayEnumerator();
             Topology = new DisplayTopologyService();
+            gameProfiles = new GameDisplayProfileStore(GetPluginUserDataPath());
             Properties = new GenericPluginProperties
             {
                 HasSettings = true
@@ -94,6 +100,46 @@ namespace PlayniteDisplayManager
             };
         }
 
+        public override IEnumerable<GameMenuItem> GetGameMenuItems(GetGameMenuItemsArgs args)
+        {
+            var games = args?.Games?.ToList();
+            if (games == null || games.Count == 0)
+            {
+                yield break;
+            }
+
+            var section = "Display Manager|" + Loc("LOCDisplayManager_GameMenuHdrSection");
+            var current = games.Select(g => gameProfiles.GetHdrOverride(g)).ToList();
+
+            yield return CreateHdrOverrideMenuItem(
+                section,
+                CheckedMenuLabel(current.All(o => o == GameHdrOverride.Inherit),
+                    Loc("LOCDisplayManager_GameHdrInherit")),
+                args,
+                GameHdrOverride.Inherit);
+
+            yield return CreateHdrOverrideMenuItem(
+                section,
+                CheckedMenuLabel(current.All(o => o == GameHdrOverride.ForceOn),
+                    Loc("LOCDisplayManager_GameHdrForceOn")),
+                args,
+                GameHdrOverride.ForceOn);
+
+            yield return CreateHdrOverrideMenuItem(
+                section,
+                CheckedMenuLabel(current.All(o => o == GameHdrOverride.ForceOff),
+                    Loc("LOCDisplayManager_GameHdrForceOff")),
+                args,
+                GameHdrOverride.ForceOff);
+
+            yield return CreateHdrOverrideMenuItem(
+                section,
+                CheckedMenuLabel(current.All(o => o == GameHdrOverride.DoNotTouch),
+                    Loc("LOCDisplayManager_GameHdrDoNotTouch")),
+                args,
+                GameHdrOverride.DoNotTouch);
+        }
+
         public override void OnGameStarting(OnGameStartingEventArgs args)
         {
             BeginGameSession(args?.Game);
@@ -121,16 +167,17 @@ namespace PlayniteDisplayManager
             }
         }
 
-        private void BeginGameSession(Playnite.SDK.Models.Game game)
+        private void BeginGameSession(Game game)
         {
             if (game == null || settings == null)
             {
                 return;
             }
 
-            if (settings.GlobalHdrPolicy != GlobalHdrPolicy.OnForAllGames)
+            var plan = PlanHdrSession(game);
+            if (plan.Action == HdrSessionAction.None)
             {
-                // Policy 3 (metadata) arrives in step 7; DoNotManage skips.
+                logger.Info("HDR session skipped for " + game.Name + " (" + plan.Reason + ").");
                 return;
             }
 
@@ -139,16 +186,28 @@ namespace PlayniteDisplayManager
                 EndGameSession("replace-session");
 
                 var live = Displays.GetDisplays().ToList();
-                var enableWrites = hdr.BuildEnableWritesForPrimary(live);
-                var offWrites = enableWrites.Select(w => new HdrWriteTarget
+                List<HdrWriteTarget> applyWrites;
+                if (plan.Action == HdrSessionAction.Enable)
                 {
-                    AdapterIdLow = w.AdapterIdLow,
-                    AdapterIdHigh = w.AdapterIdHigh,
-                    TargetId = w.TargetId,
-                    Enable = false,
-                    DisplayId = w.DisplayId,
-                    Name = w.Name
-                }).ToList();
+                    applyWrites = hdr.BuildEnableWritesForPrimary(live);
+                }
+                else
+                {
+                    applyWrites = hdr.BuildForceOffWrites(live);
+                }
+
+                var offWrites = (applyWrites.Count > 0
+                        ? applyWrites
+                        : hdr.BuildForceOffWrites(live))
+                    .Select(w => new HdrWriteTarget
+                    {
+                        AdapterIdLow = w.AdapterIdLow,
+                        AdapterIdHigh = w.AdapterIdHigh,
+                        TargetId = w.TargetId,
+                        Enable = false,
+                        DisplayId = w.DisplayId,
+                        Name = w.Name
+                    }).ToList();
 
                 var snapshot = Topology.CaptureSnapshot();
                 snapshot.HdrRestoreWrites = offWrites;
@@ -160,20 +219,22 @@ namespace PlayniteDisplayManager
                 restoreClient.Arm(snapshot);
                 StartRestoreHeartbeat();
 
-                if (enableWrites.Count == 0)
+                if (applyWrites.Count == 0)
                 {
-                    logger.Info("HDR policy OnForAllGames: primary display does not report advanced color support; lease armed for topology only.");
+                    logger.Info("HDR plan " + plan.Action + " (" + plan.Reason +
+                                "): no advanced-color-capable target; lease armed for topology only.");
                     return;
                 }
 
-                var written = hdr.ApplyHdrWrites(enableWrites, out var error);
+                var written = hdr.ApplyHdrWrites(applyWrites, out var error);
                 if (written == 0)
                 {
-                    logger.Warn("HDR enable write failed: " + error);
+                    logger.Warn("HDR write failed (" + plan.Reason + "): " + error);
                 }
                 else
                 {
-                    logger.Info("HDR enabled by write for " + written + " target(s) (game: " + activeGameName + ").");
+                    logger.Info("HDR " + plan.Action + " wrote " + written +
+                                " target(s) for " + activeGameName + " (" + plan.Reason + ").");
                 }
             }
             catch (Exception ex)
@@ -222,6 +283,24 @@ namespace PlayniteDisplayManager
             {
                 logger.Error(ex, "Failed to end Display Manager game session (" + reason + ").");
             }
+        }
+
+        public HdrSessionPlan PlanHdrSession(Game game)
+        {
+            return HdrSessionPlanner.Plan(
+                game,
+                settings?.GlobalHdrPolicy ?? GlobalHdrPolicy.DoNotManage,
+                gameProfiles?.GetProfile(game),
+                settings?.HdrMetadataMatchNames,
+                settings?.IncludeTagsInHdrMetadataMatch ?? false);
+        }
+
+        public bool GameHasHdrMetadata(Game game)
+        {
+            return HdrMetadataMatcher.GameIndicatesHdr(
+                game,
+                settings?.HdrMetadataMatchNames,
+                settings?.IncludeTagsInHdrMetadataMatch ?? false);
         }
 
         public string ArmRestoreLeaseForTest()
@@ -309,6 +388,122 @@ namespace PlayniteDisplayManager
                 default:
                     return Loc("LOCDisplayManager_HdrPolicyNone");
             }
+        }
+
+        public string GetSelectedGameHdrOverviewText()
+        {
+            try
+            {
+                var selected = PlayniteApi?.MainView?.SelectedGames?.FirstOrDefault();
+                if (selected == null)
+                {
+                    return Loc("LOCDisplayManager_OverviewGameHdrNone");
+                }
+
+                var hasMeta = GameHasHdrMetadata(selected);
+                var plan = PlanHdrSession(selected);
+                var metaText = hasMeta
+                    ? Loc("LOCDisplayManager_OverviewGameHdrYes")
+                    : Loc("LOCDisplayManager_OverviewGameHdrNo");
+                var actionText = DescribePlanAction(plan);
+                return string.Format(
+                    Loc("LOCDisplayManager_OverviewGameHdrFormat"),
+                    selected.Name,
+                    metaText,
+                    actionText);
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to build selected-game HDR overview.");
+                return Loc("LOCDisplayManager_OverviewGameHdrNone");
+            }
+        }
+
+        public int GetGameHdrOverrideCount()
+        {
+            return gameProfiles?.CountNonInherit() ?? 0;
+        }
+
+        private string DescribePlanAction(HdrSessionPlan plan)
+        {
+            if (plan == null)
+            {
+                return Loc("LOCDisplayManager_GameHdrInherit");
+            }
+
+            switch (plan.EffectiveOverride)
+            {
+                case GameHdrOverride.ForceOn:
+                    return Loc("LOCDisplayManager_GameHdrForceOn");
+                case GameHdrOverride.ForceOff:
+                    return Loc("LOCDisplayManager_GameHdrForceOff");
+                case GameHdrOverride.DoNotTouch:
+                    return Loc("LOCDisplayManager_GameHdrDoNotTouch");
+            }
+
+            switch (plan.Action)
+            {
+                case HdrSessionAction.Enable:
+                    return Loc("LOCDisplayManager_SessionActionEnable");
+                case HdrSessionAction.Disable:
+                    return Loc("LOCDisplayManager_SessionActionDisable");
+                default:
+                    return Loc("LOCDisplayManager_SessionActionNone");
+            }
+        }
+
+        private GameMenuItem CreateHdrOverrideMenuItem(
+            string menuSection,
+            string description,
+            GetGameMenuItemsArgs request,
+            GameHdrOverride hdrOverride)
+        {
+            return new GameMenuItem
+            {
+                MenuSection = menuSection,
+                Description = description,
+                Action = actionArgs =>
+                {
+                    var games = actionArgs?.Games ?? request.Games;
+                    if (games == null)
+                    {
+                        return;
+                    }
+
+                    foreach (var game in games)
+                    {
+                        gameProfiles.SetHdrOverride(game, hdrOverride);
+                    }
+
+                    var first = games.FirstOrDefault();
+                    if (first != null)
+                    {
+                        PlayniteApi.Dialogs.ShowMessage(
+                            first.Name + ": " + DescribeHdrOverride(hdrOverride),
+                            Loc("LOCDisplayManager_PluginName"));
+                    }
+                }
+            };
+        }
+
+        private string DescribeHdrOverride(GameHdrOverride hdrOverride)
+        {
+            switch (hdrOverride)
+            {
+                case GameHdrOverride.ForceOn:
+                    return Loc("LOCDisplayManager_GameHdrForceOn");
+                case GameHdrOverride.ForceOff:
+                    return Loc("LOCDisplayManager_GameHdrForceOff");
+                case GameHdrOverride.DoNotTouch:
+                    return Loc("LOCDisplayManager_GameHdrDoNotTouch");
+                default:
+                    return Loc("LOCDisplayManager_GameHdrInherit");
+            }
+        }
+
+        private static string CheckedMenuLabel(bool isChecked, string description)
+        {
+            return isChecked ? "✓ " + description : description;
         }
 
         private void EnsureRestoreClient()

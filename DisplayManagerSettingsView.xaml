@@ -290,6 +290,17 @@
                                 </StackPanel>
                             </Border>
                         </UniformGrid>
+
+                        <Border Style="{StaticResource SettingsCard}" Margin="0,8,0,0">
+                            <StackPanel>
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewGameHdr}"
+                                           Style="{StaticResource FieldLabel}" />
+                                <TextBlock x:Name="OverviewGameHdrText"
+                                           Style="{StaticResource BodyText}"
+                                           Margin="0,4,0,0"
+                                           Text="{DynamicResource LOCDisplayManager_OverviewGameHdrNone}" />
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -396,9 +407,29 @@
                                              Content="{DynamicResource LOCDisplayManager_HdrPolicyMetadata}"
                                              Margin="0,8,0,0"
                                              Checked="HdrPolicyRadio_OnChecked" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_HdrPolicyMetadataHint}"
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource SettingsCard}">
+                            <StackPanel>
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_HdrMetadataTitle}" Style="{StaticResource FieldLabel}" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_HdrMetadataHelp}" Style="{StaticResource HintText}" />
+                                <TextBox x:Name="HdrMetadataNamesBox"
+                                         MinHeight="36"
+                                         Margin="0,4,0,0"
+                                         VerticalContentAlignment="Center"
+                                         LostFocus="HdrMetadataNamesBox_OnLostFocus" />
+                                <CheckBox x:Name="HdrIncludeTagsCheck"
+                                          Content="{DynamicResource LOCDisplayManager_HdrIncludeTags}"
+                                          Margin="0,12,0,0"
+                                          Checked="HdrIncludeTagsCheck_OnChanged"
+                                          Unchecked="HdrIncludeTagsCheck_OnChanged" />
+                                <TextBlock x:Name="HdrOverrideCountText"
                                            Style="{StaticResource HintText}"
-                                           Margin="24,4,0,0" />
+                                           Margin="0,12,0,0" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_HdrGameMenuHint}"
+                                           Style="{StaticResource HintText}"
+                                           Margin="0,4,0,0" />
                             </StackPanel>
                         </Border>
 
