@@ -13,10 +13,12 @@ En Windows 11 (sobre todo 24H2) con **Administrar el color de las aplicaciones a
 3. El Resumen muestra HDR como **Desconocido** si ACM puede interferir. Es honestidad deliberada.
 4. **Política 3 (metadatos)**: empareja `Game.Features` locales (y opcionalmente `Tags`) con nombres configurables — por defecto `HDR`, `HDR10`, `Dolby Vision`, `Auto HDR`, `HDR10+`. Sin red en el lanzamiento.
 5. **Override por juego** (menú contextual → Display Manager → HDR): Heredar / Forzar on / Forzar off (SDR) / No tocar. El override siempre gana.
+6. **EnableSystemHdr nativo**: el asistente (y Mantenimiento) puede limpiar el flag en toda la biblioteca (con backup reversible). En cada lanzamiento, si el flag vuelve a estar on, NX lo limpia y notifica una vez — para no apilar restores. El checkbox nativo puede seguir visible; no hay API pública del SDK para ocultarlo.
 
 ## Diagnóstico
 
 - Comprobación visual: **Win+Alt+B**.
 - Ajustes → HDR → **Escribir HDR off ahora**.
 - Resumen → **Juego seleccionado (HDR)** previsualiza metadatos y el plan efectivo.
+- Resumen / Mantenimiento → conteo de `EnableSystemHdr` y limpiar/restaurar.
 - Log RestoreHost: `%TEMP%\PlayniteDisplayManager-RestoreHost.log`

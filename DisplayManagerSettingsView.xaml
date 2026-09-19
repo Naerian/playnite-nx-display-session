@@ -299,6 +299,13 @@
                                            Style="{StaticResource BodyText}"
                                            Margin="0,4,0,0"
                                            Text="{DynamicResource LOCDisplayManager_OverviewGameHdrNone}" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewNativeHdr}"
+                                           Style="{StaticResource FieldLabel}"
+                                           Margin="0,16,0,0" />
+                                <TextBlock x:Name="OverviewNativeHdrText"
+                                           Style="{StaticResource BodyText}"
+                                           Margin="0,4,0,0"
+                                           Text="{DynamicResource LOCDisplayManager_OverviewNativeHdrClear}" />
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -499,6 +506,32 @@
                             <TextBlock Text="{DynamicResource LOCDisplayManager_MaintenanceTab}" Style="{StaticResource SectionHeaderText}" />
                         </Border>
                         <TextBlock Text="{DynamicResource LOCDisplayManager_MaintenanceHelp}" Style="{StaticResource SectionSubtitleText}" />
+
+                        <Border Style="{StaticResource SettingsCard}">
+                            <StackPanel>
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_NativeHdrMigrationTitle}" Style="{StaticResource FieldLabel}" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_NativeHdrMigrationHelp}" Style="{StaticResource HintText}" />
+                                <TextBlock x:Name="NativeHdrMigrationStatusText"
+                                           Style="{StaticResource BodyText}"
+                                           Margin="0,0,0,8" />
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                    <Button Content="{DynamicResource LOCDisplayManager_NativeHdrClearNow}"
+                                            Style="{StaticResource NarianPrimaryButton}"
+                                            MinWidth="180"
+                                            Margin="0,0,8,0"
+                                            Click="NativeHdrClearNow_OnClick" />
+                                    <Button Content="{DynamicResource LOCDisplayManager_NativeHdrRestoreBackup}"
+                                            MinWidth="180"
+                                            MinHeight="36"
+                                            Margin="0,0,8,0"
+                                            Click="NativeHdrRestore_OnClick" />
+                                    <Button Content="{DynamicResource LOCDisplayManager_OpenSetupWizard}"
+                                            MinWidth="160"
+                                            MinHeight="36"
+                                            Click="OpenSetupWizard_OnClick" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
 
                         <Border Style="{StaticResource SettingsCard}">
                             <StackPanel>

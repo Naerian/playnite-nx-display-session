@@ -609,12 +609,94 @@ namespace PlayniteDisplayManager
                         ?? "Select a game in the library to preview HDR metadata.");
             }
 
+            if (OverviewNativeHdrText != null)
+            {
+                OverviewNativeHdrText.Text = settings?.Plugin?.GetNativeHdrOverviewText()
+                    ?? (TryFindResource("LOCDisplayManager_OverviewNativeHdrClear") as string
+                        ?? "No games have Playnite’s native Enable HDR flag set.");
+            }
+
             SyncHdrMetadataControls();
+            SyncNativeHdrMigrationStatus();
 
             if (OverviewHdrBadge != null)
             {
                 OverviewHdrBadge.Text = TryFindResource("LOCDisplayManager_StatusUnknown") as string ?? "Unknown";
             }
+        }
+
+        private void SyncNativeHdrMigrationStatus()
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            var plugin = settings?.Plugin;
+            if (NativeHdrMigrationStatusText == null || plugin == null)
+            {
+                return;
+            }
+
+            var enabled = plugin.CountNativeHdrEnabledGames();
+            var backup = plugin.CountNativeHdrBackupIds();
+            var format = TryFindResource("LOCDisplayManager_NativeHdrStatusFormat") as string
+                ?? "{0} game(s) still have EnableSystemHdr on · backup: {1} id(s).";
+            NativeHdrMigrationStatusText.Text = string.Format(format, enabled, backup);
+        }
+
+        private void NativeHdrClearNow_OnClick(object sender, RoutedEventArgs e)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            var plugin = settings?.Plugin;
+            if (plugin == null)
+            {
+                return;
+            }
+
+            var result = plugin.RunNativeHdrMigration();
+            if (!result.Success)
+            {
+                NativeHdrMigrationStatusText.Text = result.Error ?? "Migration failed.";
+                return;
+            }
+
+            var format = TryFindResource("LOCDisplayManager_NativeHdrClearedFormat") as string
+                ?? "Cleared {0} game(s). Remaining with flag on: {1}.";
+            NativeHdrMigrationStatusText.Text = string.Format(format, result.ClearedCount, result.RemainingEnabledCount);
+            UpdateOverview();
+        }
+
+        private void NativeHdrRestore_OnClick(object sender, RoutedEventArgs e)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            var plugin = settings?.Plugin;
+            if (plugin == null)
+            {
+                return;
+            }
+
+            var confirm = TryFindResource("LOCDisplayManager_NativeHdrRestoreConfirm") as string
+                ?? "Restore EnableSystemHdr=true for games in the Display Manager backup? Native and NX HDR may stack again.";
+            if (MessageBox.Show(confirm, "Display Manager", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            var result = plugin.RestoreNativeHdrFromBackup();
+            if (!result.Success)
+            {
+                NativeHdrMigrationStatusText.Text = result.Error ?? "Restore failed.";
+                return;
+            }
+
+            var format = TryFindResource("LOCDisplayManager_NativeHdrRestoredFormat") as string
+                ?? "Restored {0} game(s). Games with flag on now: {1}.";
+            NativeHdrMigrationStatusText.Text = string.Format(format, result.ClearedCount, result.RemainingEnabledCount);
+            UpdateOverview();
+        }
+
+        private void OpenSetupWizard_OnClick(object sender, RoutedEventArgs e)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            settings?.Plugin?.OpenSetupWizard();
+            UpdateOverview();
         }
 
         private static string BuildDisplayPillLabel(DisplayInfo display)

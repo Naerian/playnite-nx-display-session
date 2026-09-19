@@ -13,12 +13,14 @@ On Windows 11 (especially 24H2) with **Automatically manage apps colors** (ACM),
 3. Overview shows HDR as **Unknown** when ACM may apply. That is intentional honesty.
 4. **Policy 3 (metadata)**: matches local Playnite `Game.Features` (and optionally `Tags`) against configurable names — default `HDR`, `HDR10`, `Dolby Vision`, `Auto HDR`, `HDR10+`. No network on launch.
 5. **Per-game override** (context menu → Display Manager → HDR): Inherit / Force on / Force off (SDR) / Do not touch. Override always wins over the global policy.
+6. **Native EnableSystemHdr**: setup wizard (and Maintenance) can clear Playnite’s flag library-wide (backup kept for reverse). On each launch, if the flag is on again, NX clears it and notifies once — so native and NX restores do not stack. The native checkbox may still appear; there is no public SDK API to hide it.
 
 ## Diagnostics
 
 - Visual check: **Win+Alt+B** (Xbox Game Bar HDR toggle) to see what the display actually does.
 - Settings → HDR → **Write HDR off now** forces SDR by write on capable active displays.
 - Overview → **Selected game (HDR)** previews metadata match and the effective plan for the library selection.
+- Overview / Maintenance → native `EnableSystemHdr` count and clear/restore.
 - RestoreHost log: `%TEMP%\PlayniteDisplayManager-RestoreHost.log`
 
 ## Spanish

@@ -20,6 +20,8 @@ namespace PlayniteDisplayManager
         private GlobalHdrPolicy globalHdrPolicy = GlobalHdrPolicy.DoNotManage;
         private List<string> hdrMetadataMatchNames = HdrMetadataMatcher.DefaultMatchNames.ToList();
         private bool includeTagsInHdrMetadataMatch;
+        private bool nativeHdrMigrationCompleted;
+        private bool nativeHdrConflictNotified;
 
         public const int CurrentSettingsSchemaVersion = 1;
 
@@ -40,6 +42,8 @@ namespace PlayniteDisplayManager
                 GlobalHdrPolicy = savedSettings.GlobalHdrPolicy;
                 HdrMetadataMatchNames = savedSettings.HdrMetadataMatchNames;
                 IncludeTagsInHdrMetadataMatch = savedSettings.IncludeTagsInHdrMetadataMatch;
+                NativeHdrMigrationCompleted = savedSettings.NativeHdrMigrationCompleted;
+                NativeHdrConflictNotified = savedSettings.NativeHdrConflictNotified;
             }
 
             AppearancePreset = SettingsAppearance.Normalize(AppearancePreset);
@@ -88,6 +92,20 @@ namespace PlayniteDisplayManager
         {
             get => includeTagsInHdrMetadataMatch;
             set => SetValue(ref includeTagsInHdrMetadataMatch, value);
+        }
+
+        /// <summary>True after the user finished (or skipped) the setup wizard migration step at least once.</summary>
+        public bool NativeHdrMigrationCompleted
+        {
+            get => nativeHdrMigrationCompleted;
+            set => SetValue(ref nativeHdrMigrationCompleted, value);
+        }
+
+        /// <summary>One-shot toast when NX clears a conflicting EnableSystemHdr at launch.</summary>
+        public bool NativeHdrConflictNotified
+        {
+            get => nativeHdrConflictNotified;
+            set => SetValue(ref nativeHdrConflictNotified, value);
         }
 
         public List<DisplayDeviceAlias> DisplayAliases
@@ -176,6 +194,8 @@ namespace PlayniteDisplayManager
             GlobalHdrPolicy = editingClone.GlobalHdrPolicy;
             HdrMetadataMatchNames = editingClone.HdrMetadataMatchNames;
             IncludeTagsInHdrMetadataMatch = editingClone.IncludeTagsInHdrMetadataMatch;
+            NativeHdrMigrationCompleted = editingClone.NativeHdrMigrationCompleted;
+            NativeHdrConflictNotified = editingClone.NativeHdrConflictNotified;
             editingClone = null;
             RefreshDisplays();
             OnPropertyChanged(nameof(HdrMetadataMatchNamesText));

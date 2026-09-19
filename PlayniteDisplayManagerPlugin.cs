@@ -23,6 +23,7 @@ namespace PlayniteDisplayManager
         private readonly HdrService hdr = new HdrService();
         private DisplayManagerSettings settings;
         private GameDisplayProfileStore gameProfiles;
+        private NativeHdrFlagMigration nativeHdrMigration;
         private ResourceDictionary englishFallbackResources;
         private DisplayRestoreClient restoreClient;
         private DispatcherTimer restoreHeartbeatTimer;
@@ -46,6 +47,7 @@ namespace PlayniteDisplayManager
             Displays = new DisplayEnumerator();
             Topology = new DisplayTopologyService();
             gameProfiles = new GameDisplayProfileStore(GetPluginUserDataPath());
+            nativeHdrMigration = new NativeHdrFlagMigration(PlayniteApi, logger, GetPluginUserDataPath());
             Properties = new GenericPluginProperties
             {
                 HasSettings = true
@@ -98,6 +100,105 @@ namespace PlayniteDisplayManager
                 MenuSection = "@Display Manager",
                 Action = _ => OpenSettingsView()
             };
+            yield return new MainMenuItem
+            {
+                Description = Loc("LOCDisplayManager_OpenSetupWizard"),
+                MenuSection = "@Display Manager",
+                Action = _ => OpenSetupWizard()
+            };
+        }
+
+        public override void OnApplicationStarted(OnApplicationStartedEventArgs args)
+        {
+            TryOfferFirstRunSetupWizard();
+        }
+
+        public void OpenSetupWizard()
+        {
+            if (PlayniteApi.ApplicationInfo.Mode != ApplicationMode.Desktop)
+            {
+                PlayniteApi.Dialogs.ShowMessage(
+                    Loc("LOCDisplayManager_SetupWizardDesktopOnly"),
+                    Loc("LOCDisplayManager_SetupWizardTitle"));
+                return;
+            }
+
+            if (settings == null)
+            {
+                return;
+            }
+
+            var draft = new SetupWizardDraft
+            {
+                ClearNativeHdrFlags = true,
+                SetupWizardCompleted = settings.SetupWizardCompleted
+            };
+            var window = new SetupWizardWindow(this, draft, nativeHdrMigration.CountEnabled());
+            var owner = PlayniteApi.Dialogs.GetCurrentAppWindow();
+            if (owner != null)
+            {
+                window.Owner = owner;
+            }
+
+            SettingsAppearance.ApplyWindow(window, settings.AppearancePreset);
+            var result = window.ShowDialog();
+            if (result == true)
+            {
+                ApplyWizardDraft(draft);
+                PlayniteApi.Dialogs.ShowMessage(
+                    Loc("LOCDisplayManager_SetupWizardSaved"),
+                    Loc("LOCDisplayManager_SetupWizardTitle"));
+                return;
+            }
+
+            settings.SetupWizardCompleted = true;
+            SavePluginSettings(settings);
+        }
+
+        private void TryOfferFirstRunSetupWizard()
+        {
+            try
+            {
+                if (settings == null || settings.SetupWizardCompleted)
+                {
+                    return;
+                }
+
+                if (PlayniteApi.ApplicationInfo.Mode != ApplicationMode.Desktop)
+                {
+                    return;
+                }
+
+                Application.Current?.Dispatcher?.BeginInvoke(
+                    new Action(OpenSetupWizard),
+                    DispatcherPriority.ApplicationIdle);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Failed to offer the first-run setup wizard.");
+            }
+        }
+
+        private void ApplyWizardDraft(SetupWizardDraft draft)
+        {
+            if (draft == null || settings == null)
+            {
+                return;
+            }
+
+            settings.SetupWizardCompleted = true;
+            if (draft.ClearNativeHdrFlags)
+            {
+                var migration = nativeHdrMigration.ClearAllEnabled();
+                settings.NativeHdrMigrationCompleted = true;
+                if (!migration.Success)
+                {
+                    logger.Warn("Wizard native HDR migration failed: " + migration.Error);
+                }
+            }
+
+            SavePluginSettings(settings);
+            NotifyDisplaysChanged();
         }
 
         public override IEnumerable<GameMenuItem> GetGameMenuItems(GetGameMenuItemsArgs args)
@@ -173,6 +274,9 @@ namespace PlayniteDisplayManager
             {
                 return;
             }
+
+            // NX owns HDR: never stack with Playnite's native EnableSystemHdr restore.
+            ClearNativeHdrConflictIfNeeded(game);
 
             var plan = PlanHdrSession(game);
             if (plan.Action == HdrSessionAction.None)
@@ -301,6 +405,79 @@ namespace PlayniteDisplayManager
                 game,
                 settings?.HdrMetadataMatchNames,
                 settings?.IncludeTagsInHdrMetadataMatch ?? false);
+        }
+
+        public int CountNativeHdrEnabledGames()
+        {
+            return nativeHdrMigration?.CountEnabled() ?? 0;
+        }
+
+        public int CountNativeHdrBackupIds()
+        {
+            return nativeHdrMigration?.CountBackupIds() ?? 0;
+        }
+
+        public NativeHdrMigrationResult RunNativeHdrMigration()
+        {
+            var result = nativeHdrMigration.ClearAllEnabled();
+            if (result.Success && settings != null)
+            {
+                settings.NativeHdrMigrationCompleted = true;
+                SavePluginSettings(settings);
+            }
+
+            NotifyDisplaysChanged();
+            return result;
+        }
+
+        public NativeHdrMigrationResult RestoreNativeHdrFromBackup()
+        {
+            var result = nativeHdrMigration.RestoreFromBackup();
+            NotifyDisplaysChanged();
+            return result;
+        }
+
+        public string GetNativeHdrOverviewText()
+        {
+            var enabled = CountNativeHdrEnabledGames();
+            if (enabled <= 0)
+            {
+                return Loc("LOCDisplayManager_OverviewNativeHdrClear");
+            }
+
+            return string.Format(Loc("LOCDisplayManager_OverviewNativeHdrConflictFormat"), enabled);
+        }
+
+        private void ClearNativeHdrConflictIfNeeded(Game game)
+        {
+            if (game == null || nativeHdrMigration == null)
+            {
+                return;
+            }
+
+            if (!nativeHdrMigration.TryClearGame(game))
+            {
+                return;
+            }
+
+            if (settings == null || settings.NativeHdrConflictNotified)
+            {
+                return;
+            }
+
+            settings.NativeHdrConflictNotified = true;
+            SavePluginSettings(settings);
+            try
+            {
+                PlayniteApi.Notifications.Add(new NotificationMessage(
+                    "display-manager-native-hdr-cleared",
+                    Loc("LOCDisplayManager_NativeHdrConflictNotice"),
+                    NotificationType.Info));
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to show native HDR conflict notification.");
+            }
         }
 
         public string ArmRestoreLeaseForTest()

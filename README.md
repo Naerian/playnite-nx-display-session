@@ -6,7 +6,7 @@ Designed for HTPC / couch setups (TV plus another screen): choose which display 
 
 ## Status
 
-Early (`0.1.0`). Chrome, displays, RestoreHost, topology trial, global HDR policies (incl. metadata Features/Tags), and per-game HDR overrides (context menu) are in place. EnableSystemHdr migration is next.
+Early (`0.1.0`). Chrome, displays, RestoreHost, topology trial, HDR policies (metadata + per-game overrides), and EnableSystemHdr migration (wizard + Maintenance) are in place. Night Light is next.
 
 ## Documentation
 
