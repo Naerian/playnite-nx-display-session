@@ -6,7 +6,7 @@ Designed for HTPC / couch setups (TV plus another screen): choose which display 
 
 ## Status
 
-Early (`0.1.0`). Core features and user wiki (EN/ES) are in place. Installer / add-on catalog polish is next.
+`0.1.0`. Core features, EN/ES wiki, `installer.yaml`, and `playnite-addon.yaml` are in place. Build a local `.pext` with `.\package.ps1`.
 
 ## Requirements
 
