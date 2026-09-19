@@ -250,13 +250,8 @@
                                                FontWeight="SemiBold"
                                                Margin="0,0,0,8" />
                                     <TextBlock x:Name="OverviewDisplaysText"
-                                               Text="{DynamicResource LOCDisplayManager_OverviewDisplaysPlaceholder}"
                                                Style="{StaticResource BodyText}" />
-                                    <Border Style="{StaticResource SummaryPill}" Margin="0,12,0,0" HorizontalAlignment="Left">
-                                        <TextBlock x:Name="OverviewDisplaysBadge"
-                                                   Text="{DynamicResource LOCDisplayManager_StatusPending}"
-                                                   FontSize="12" />
-                                    </Border>
+                                    <WrapPanel x:Name="OverviewDisplayPills" Margin="0,12,0,0" />
                                 </StackPanel>
                             </Border>
                             <Border Style="{StaticResource SummaryCard}" Margin="8,0,0,16">
@@ -308,10 +303,25 @@
                 </TabItem.Header>
                 <ScrollViewer Style="{StaticResource FillScrollViewer}">
                     <StackPanel Margin="8,8,8,16">
-                        <Border Style="{StaticResource PageHeader}">
-                            <TextBlock Text="{DynamicResource LOCDisplayManager_DisplaysTab}" Style="{StaticResource SectionHeaderText}" />
-                        </Border>
-                        <TextBlock Text="{DynamicResource LOCDisplayManager_TabComingSoon}" Style="{StaticResource SectionSubtitleText}" />
+                        <StackPanel Style="{StaticResource PageSection}">
+                            <Border Style="{StaticResource PageHeader}">
+                                <DockPanel LastChildFill="True">
+                                    <Button DockPanel.Dock="Right"
+                                            Content="{DynamicResource LOCDisplayManager_OverviewRefresh}"
+                                            Style="{StaticResource NarianPrimaryButton}"
+                                            MinWidth="130"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center"
+                                            Margin="0,0,8,0"
+                                            Click="RefreshDisplays_OnClick" />
+                                    <TextBlock Text="{DynamicResource LOCDisplayManager_DisplaysTab}"
+                                               Style="{StaticResource SectionHeaderText}"
+                                               VerticalAlignment="Center" />
+                                </DockPanel>
+                            </Border>
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_DisplaysHelp}" Style="{StaticResource SectionSubtitleText}" />
+                        </StackPanel>
+                        <StackPanel x:Name="DisplayCardsPanel" />
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

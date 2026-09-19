@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Playnite.SDK;
 using Playnite.SDK.Data;
+using PlayniteDisplayManager.Displays;
 
 namespace PlayniteDisplayManager
 {
@@ -11,6 +14,8 @@ namespace PlayniteDisplayManager
         private string appearancePreset = SettingsAppearance.Midnight;
         private bool setupWizardCompleted;
         private int settingsSchemaVersion;
+        private List<DisplayDeviceAlias> displayAliases = new List<DisplayDeviceAlias>();
+        private List<DisplayInfo> availableDisplays = new List<DisplayInfo>();
 
         public const int CurrentSettingsSchemaVersion = 1;
 
@@ -27,10 +32,12 @@ namespace PlayniteDisplayManager
                 AppearancePreset = savedSettings.AppearancePreset;
                 SetupWizardCompleted = savedSettings.SetupWizardCompleted;
                 SettingsSchemaVersion = savedSettings.SettingsSchemaVersion;
+                DisplayAliases = savedSettings.DisplayAliases ?? new List<DisplayDeviceAlias>();
             }
 
             AppearancePreset = SettingsAppearance.Normalize(AppearancePreset);
             SettingsSchemaVersion = CurrentSettingsSchemaVersion;
+            RefreshDisplays();
         }
 
         [DontSerialize]
@@ -54,6 +61,19 @@ namespace PlayniteDisplayManager
             set => SetValue(ref settingsSchemaVersion, value);
         }
 
+        public List<DisplayDeviceAlias> DisplayAliases
+        {
+            get => displayAliases;
+            set => SetValue(ref displayAliases, value ?? new List<DisplayDeviceAlias>());
+        }
+
+        [DontSerialize]
+        public List<DisplayInfo> AvailableDisplays
+        {
+            get => availableDisplays;
+            private set => SetValue(ref availableDisplays, value ?? new List<DisplayInfo>());
+        }
+
         [DontSerialize]
         public List<AppearancePresetOption> AppearancePresetOptions => new List<AppearancePresetOption>
         {
@@ -64,8 +84,39 @@ namespace PlayniteDisplayManager
             new AppearancePresetOption { Value = SettingsAppearance.Ember, DisplayName = plugin?.Loc("LOCDisplayManager_PresetEmber") ?? "Ember" }
         };
 
+        public void RefreshDisplays()
+        {
+            if (plugin?.Displays == null)
+            {
+                AvailableDisplays = new List<DisplayInfo>();
+                return;
+            }
+
+            AvailableDisplays = plugin.Displays.GetVisibleDisplays(DisplayAliases)
+                .Select(d => d.Clone())
+                .ToList();
+            OnPropertyChanged(nameof(AvailableDisplays));
+            OnPropertyChanged(nameof(ConnectedDisplayCount));
+            OnPropertyChanged(nameof(PrimaryDisplayName));
+        }
+
+        [DontSerialize]
+        public int ConnectedDisplayCount => AvailableDisplays?.Count(d => d.IsConnected) ?? 0;
+
+        [DontSerialize]
+        public string PrimaryDisplayName
+        {
+            get
+            {
+                var primary = AvailableDisplays?.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
+                    ?? AvailableDisplays?.FirstOrDefault(d => d.IsConnected);
+                return primary?.EffectiveName;
+            }
+        }
+
         public void BeginEdit()
         {
+            RefreshDisplays();
             editingClone = Serialization.GetClone(this);
         }
 
@@ -79,12 +130,15 @@ namespace PlayniteDisplayManager
             AppearancePreset = editingClone.AppearancePreset;
             SetupWizardCompleted = editingClone.SetupWizardCompleted;
             SettingsSchemaVersion = editingClone.SettingsSchemaVersion;
+            DisplayAliases = editingClone.DisplayAliases ?? new List<DisplayDeviceAlias>();
             editingClone = null;
+            RefreshDisplays();
         }
 
         public void EndEdit()
         {
             AppearancePreset = SettingsAppearance.Normalize(AppearancePreset);
+            DisplayAliases = PersistAliases(AvailableDisplays, DisplayAliases);
             plugin.SavePluginSettings(this);
             plugin.ReloadSettings();
             editingClone = null;
@@ -94,6 +148,54 @@ namespace PlayniteDisplayManager
         {
             errors = new List<string>();
             return true;
+        }
+
+        private List<DisplayDeviceAlias> PersistAliases(
+            IEnumerable<DisplayInfo> currentDisplays,
+            IEnumerable<DisplayDeviceAlias> existingAliases)
+        {
+            var devices = (currentDisplays ?? Enumerable.Empty<DisplayInfo>()).ToList();
+            var currentIds = new HashSet<string>(devices.Select(d => d.Id), StringComparer.OrdinalIgnoreCase);
+
+            return devices
+                .Where(HasMeaningfulCustomization)
+                .Select(ToAlias)
+                .Concat((existingAliases ?? Enumerable.Empty<DisplayDeviceAlias>())
+                    .Where(alias => !string.IsNullOrWhiteSpace(alias.DisplayId) &&
+                                    !currentIds.Contains(alias.DisplayId) &&
+                                    DisplayEnumerator.HasMeaningfulAlias(alias))
+                    .Select(SanitizeAlias))
+                .ToList();
+        }
+
+        private static bool HasMeaningfulCustomization(DisplayInfo display)
+        {
+            return display != null &&
+                   (!string.IsNullOrWhiteSpace(DisplayEnumerator.SanitizeCustomName(display.CustomName)) ||
+                    !display.IsVisible);
+        }
+
+        private static DisplayDeviceAlias ToAlias(DisplayInfo display)
+        {
+            return new DisplayDeviceAlias
+            {
+                DisplayId = display.Id,
+                CustomName = DisplayEnumerator.SanitizeCustomName(display.CustomName),
+                LastKnownName = display.Name,
+                IsVisible = display.IsVisible ? (bool?)null : false
+            };
+        }
+
+        private static DisplayDeviceAlias SanitizeAlias(DisplayDeviceAlias alias)
+        {
+            return new DisplayDeviceAlias
+            {
+                DisplayId = alias.DisplayId,
+                CustomName = DisplayEnumerator.SanitizeCustomName(alias.CustomName),
+                LastKnownName = string.IsNullOrWhiteSpace(alias.LastKnownName) ? null : alias.LastKnownName.Trim(),
+                Icon = string.IsNullOrWhiteSpace(alias.Icon) ? null : alias.Icon.Trim(),
+                IsVisible = alias.IsVisible
+            };
         }
     }
 }

@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Markup;
 using Playnite.SDK;
 using Playnite.SDK.Plugins;
+using PlayniteDisplayManager.Displays;
 
 namespace PlayniteDisplayManager
 {
@@ -18,9 +19,12 @@ namespace PlayniteDisplayManager
 
         public override Guid Id { get; } = Guid.Parse("9c2e4a71-b8d3-4f6a-a1c5-0e7d92f3b846");
 
+        public DisplayEnumerator Displays { get; }
+
         public PlayniteDisplayManagerPlugin(IPlayniteAPI playniteApi) : base(playniteApi)
         {
             logger = LogManager.GetLogger();
+            Displays = new DisplayEnumerator(logger);
             Properties = new GenericPluginProperties
             {
                 HasSettings = true
@@ -31,6 +35,13 @@ namespace PlayniteDisplayManager
         }
 
         public DisplayManagerSettings Settings => settings;
+
+        internal event EventHandler DisplaysChanged;
+
+        public void NotifyDisplaysChanged()
+        {
+            DisplaysChanged?.Invoke(this, EventArgs.Empty);
+        }
 
         public string Loc(string key)
         {

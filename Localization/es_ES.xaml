@@ -9,6 +9,8 @@
     <sys:String x:Key="LOCDisplayManager_OverviewRefresh">Actualizar</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewDisplays">Pantallas</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewDisplaysPlaceholder">La enumeración de pantallas aún no está conectada.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewDisplaysNone">No se detectaron pantallas.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewDisplaysFormat">{0} conectadas · primaria: {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewHdr">HDR de Windows</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewHdrUnknown">Desconocido — Display Manager no confía en la lectura con Administración automática del color.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewPolicy">Política HDR global</sys:String>
@@ -17,6 +19,15 @@
     <sys:String x:Key="LOCDisplayManager_OverviewSessionIdle">Sin sesión de juego.</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusPending">Pendiente</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusUnknown">Desconocido</sys:String>
+    <sys:String x:Key="LOCDisplayManager_StatusConnected">Conectada</sys:String>
+    <sys:String x:Key="LOCDisplayManager_StatusDisconnected">Desconectada</sys:String>
+    <sys:String x:Key="LOCDisplayManager_StatusPrimary">Primaria</sys:String>
+    <sys:String x:Key="LOCDisplayManager_IdentityEdid">Identidad EDID</sys:String>
+    <sys:String x:Key="LOCDisplayManager_IdentityConnector">Fallback de conector</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplaysHelp">Renombra pantallas para Playnite. La identidad usa EDID cuando está disponible — nunca \\.\DISPLAY#.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplayAlias">Nombre personalizado</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplayAliasHelp">Nombre opcional en Playnite. Las pantallas desconectadas con nombre personalizado siguen listadas.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplayShowInList">Mostrar en Display Manager</sys:String>
     <sys:String x:Key="LOCDisplayManager_AppearancePreset">Apariencia</sys:String>
     <sys:String x:Key="LOCDisplayManager_AppearancePresetHelp">Los presets solo cambian colores. La estructura, tipografía y espaciado se mantienen fijos.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetMidnight">Midnight</sys:String>

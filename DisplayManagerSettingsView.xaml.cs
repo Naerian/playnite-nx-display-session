@@ -1,16 +1,20 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Navigation;
+using PlayniteDisplayManager.Displays;
 
 namespace PlayniteDisplayManager
 {
     public partial class DisplayManagerSettingsView : UserControl
     {
+        private PlayniteDisplayManagerPlugin subscribedPlugin;
+
         public DisplayManagerSettingsView()
         {
             InitializeComponent();
@@ -20,17 +24,61 @@ namespace PlayniteDisplayManager
 
             DataContextChanged += (_, __) =>
             {
+                SubscribeDisplaysChanged();
                 ApplyAppearancePreset();
                 BuildAppearancePresetChips();
+                RebuildDisplayCards();
                 UpdateOverview();
             };
             Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         private void OnLoaded(object sender, RoutedEventArgs args)
         {
             ApplyAppearancePreset();
             BuildAppearancePresetChips();
+            RebuildDisplayCards();
+            UpdateOverview();
+        }
+
+        private void OnUnloaded(object sender, RoutedEventArgs args)
+        {
+            UnsubscribeDisplaysChanged();
+        }
+
+        private void SubscribeDisplaysChanged()
+        {
+            UnsubscribeDisplaysChanged();
+            if (DataContext is DisplayManagerSettings settings && settings.Plugin != null)
+            {
+                subscribedPlugin = settings.Plugin;
+                subscribedPlugin.DisplaysChanged += OnDisplaysChanged;
+            }
+        }
+
+        private void UnsubscribeDisplaysChanged()
+        {
+            if (subscribedPlugin != null)
+            {
+                subscribedPlugin.DisplaysChanged -= OnDisplaysChanged;
+                subscribedPlugin = null;
+            }
+        }
+
+        private void OnDisplaysChanged(object sender, EventArgs args)
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    RebuildDisplayCards();
+                    UpdateOverview();
+                }));
+                return;
+            }
+
+            RebuildDisplayCards();
             UpdateOverview();
         }
 
@@ -158,13 +206,210 @@ namespace PlayniteDisplayManager
 
         private void RefreshOverview_OnClick(object sender, RoutedEventArgs e)
         {
+            RefreshDisplaysInternal();
+        }
+
+        private void RefreshDisplays_OnClick(object sender, RoutedEventArgs e)
+        {
+            RefreshDisplaysInternal();
+        }
+
+        private void RefreshDisplaysInternal()
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            settings?.RefreshDisplays();
+            settings?.Plugin?.NotifyDisplaysChanged();
+            RebuildDisplayCards();
             UpdateOverview();
         }
 
         private void UpdateOverview()
         {
-            // Live display/HDR enumeration arrives in later steps.
-            // Keep Overview honest: unknown / pending until Windows APIs are wired.
+            var settings = DataContext as DisplayManagerSettings;
+            var displays = settings?.AvailableDisplays;
+            if (displays == null || displays.Count == 0)
+            {
+                OverviewDisplaysText.Text = TryFindResource("LOCDisplayManager_OverviewDisplaysNone") as string
+                    ?? "No displays detected.";
+                OverviewDisplayPills.Children.Clear();
+                return;
+            }
+
+            var connected = displays.Count(d => d.IsConnected);
+            var format = TryFindResource("LOCDisplayManager_OverviewDisplaysFormat") as string
+                ?? "{0} connected · primary: {1}";
+            var primary = settings.PrimaryDisplayName
+                ?? (TryFindResource("LOCDisplayManager_StatusUnknown") as string ?? "Unknown");
+            OverviewDisplaysText.Text = string.Format(format, connected, primary);
+
+            OverviewDisplayPills.Children.Clear();
+            foreach (var display in displays.Take(6))
+            {
+                OverviewDisplayPills.Children.Add(CreatePill(BuildDisplayPillLabel(display)));
+            }
+        }
+
+        private static string BuildDisplayPillLabel(DisplayInfo display)
+        {
+            var label = display.EffectiveName;
+            if (display.IsPrimary)
+            {
+                label += " · primary";
+            }
+
+            if (!display.IsConnected)
+            {
+                label += " · offline";
+            }
+            else if (display.Width > 0 && display.Height > 0)
+            {
+                label += $" · {display.Width}×{display.Height}";
+                if (display.RefreshRateHz > 0)
+                {
+                    label += $"@{display.RefreshRateHz:0.#}";
+                }
+            }
+
+            return label;
+        }
+
+        private Border CreatePill(string text)
+        {
+            var border = new Border
+            {
+                Style = TryFindResource("SummaryPill") as Style,
+                Margin = new Thickness(0, 0, 8, 8),
+                Child = new TextBlock
+                {
+                    Text = text,
+                    FontSize = 12,
+                    VerticalAlignment = VerticalAlignment.Center
+                }
+            };
+            return border;
+        }
+
+        private void RebuildDisplayCards()
+        {
+            if (DisplayCardsPanel == null)
+            {
+                return;
+            }
+
+            DisplayCardsPanel.Children.Clear();
+            var settings = DataContext as DisplayManagerSettings;
+            var displays = settings?.AvailableDisplays;
+            if (displays == null || displays.Count == 0)
+            {
+                DisplayCardsPanel.Children.Add(new TextBlock
+                {
+                    Text = TryFindResource("LOCDisplayManager_OverviewDisplaysNone") as string
+                        ?? "No displays detected.",
+                    Style = TryFindResource("HintText") as Style
+                });
+                return;
+            }
+
+            foreach (var display in displays)
+            {
+                DisplayCardsPanel.Children.Add(CreateDisplayCard(display));
+            }
+        }
+
+        private UIElement CreateDisplayCard(DisplayInfo display)
+        {
+            var card = new Border
+            {
+                Style = TryFindResource("SummaryCard") as Style,
+                Margin = new Thickness(0, 0, 0, 16)
+            };
+
+            var root = new StackPanel();
+            var title = new TextBlock
+            {
+                Text = display.Name,
+                FontWeight = FontWeights.SemiBold,
+                FontSize = 14,
+                Margin = new Thickness(0, 0, 0, 8)
+            };
+            root.Children.Add(title);
+
+            var pills = new WrapPanel { Margin = new Thickness(0, 0, 0, 12) };
+            pills.Children.Add(CreatePill(display.IsConnected
+                ? (TryFindResource("LOCDisplayManager_StatusConnected") as string ?? "Connected")
+                : (TryFindResource("LOCDisplayManager_StatusDisconnected") as string ?? "Disconnected")));
+            if (display.IsPrimary)
+            {
+                pills.Children.Add(CreatePill(TryFindResource("LOCDisplayManager_StatusPrimary") as string ?? "Primary"));
+            }
+
+            pills.Children.Add(CreatePill(display.IdentityKind == "edid"
+                ? (TryFindResource("LOCDisplayManager_IdentityEdid") as string ?? "EDID identity")
+                : (TryFindResource("LOCDisplayManager_IdentityConnector") as string ?? "Connector fallback")));
+
+            if (display.IsConnected && display.Width > 0 && display.Height > 0)
+            {
+                var mode = $"{display.Width}×{display.Height}";
+                if (display.RefreshRateHz > 0)
+                {
+                    mode += $" @ {display.RefreshRateHz:0.#} Hz";
+                }
+
+                pills.Children.Add(CreatePill(mode));
+            }
+
+            root.Children.Add(pills);
+
+            var idHint = new TextBlock
+            {
+                Text = display.Id,
+                Style = TryFindResource("HintText") as Style,
+                Margin = new Thickness(0, 0, 0, 12),
+                FontFamily = new FontFamily("Consolas")
+            };
+            root.Children.Add(idHint);
+
+            var aliasLabel = new TextBlock
+            {
+                Text = TryFindResource("LOCDisplayManager_DisplayAlias") as string ?? "Custom name",
+                Style = TryFindResource("FieldLabel") as Style
+            };
+            root.Children.Add(aliasLabel);
+
+            var aliasBox = new TextBox
+            {
+                Text = display.CustomName ?? string.Empty,
+                MinHeight = 36,
+                Margin = new Thickness(0, 0, 0, 4)
+            };
+            aliasBox.TextChanged += (_, __) =>
+            {
+                display.CustomName = aliasBox.Text;
+                UpdateOverview();
+            };
+            root.Children.Add(aliasBox);
+
+            var aliasHelp = new TextBlock
+            {
+                Text = TryFindResource("LOCDisplayManager_DisplayAliasHelp") as string
+                    ?? "Optional Playnite name. Disconnected displays with a custom name stay listed.",
+                Style = TryFindResource("HintText") as Style,
+                Margin = new Thickness(0, 0, 0, 0)
+            };
+            root.Children.Add(aliasHelp);
+
+            var showCheck = new CheckBox
+            {
+                Content = TryFindResource("LOCDisplayManager_DisplayShowInList") as string ?? "Show in Display Manager",
+                IsChecked = display.IsVisible,
+                Margin = new Thickness(0, 12, 0, 0)
+            };
+            showCheck.Checked += (_, __) => display.IsVisible = true;
+            showCheck.Unchecked += (_, __) => display.IsVisible = false;
+            root.Children.Add(showCheck);
+
+            card.Child = root;
+            return card;
         }
 
         private void Hyperlink_OnRequestNavigate(object sender, RequestNavigateEventArgs e)

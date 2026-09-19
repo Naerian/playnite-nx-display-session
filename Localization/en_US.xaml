@@ -9,6 +9,8 @@
     <sys:String x:Key="LOCDisplayManager_OverviewRefresh">Refresh</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewDisplays">Displays</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewDisplaysPlaceholder">Display enumeration is not wired yet.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewDisplaysNone">No displays detected.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewDisplaysFormat">{0} connected · primary: {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewHdr">Windows HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewHdrUnknown">Unknown — Display Manager does not trust readback under Automatic Color Management.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewPolicy">Global HDR policy</sys:String>
@@ -17,6 +19,15 @@
     <sys:String x:Key="LOCDisplayManager_OverviewSessionIdle">No game session.</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusPending">Pending</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusUnknown">Unknown</sys:String>
+    <sys:String x:Key="LOCDisplayManager_StatusConnected">Connected</sys:String>
+    <sys:String x:Key="LOCDisplayManager_StatusDisconnected">Disconnected</sys:String>
+    <sys:String x:Key="LOCDisplayManager_StatusPrimary">Primary</sys:String>
+    <sys:String x:Key="LOCDisplayManager_IdentityEdid">EDID identity</sys:String>
+    <sys:String x:Key="LOCDisplayManager_IdentityConnector">Connector fallback</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplaysHelp">Rename displays for Playnite. Identity uses EDID when available — never \\.\DISPLAY#.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplayAlias">Custom name</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplayAliasHelp">Optional Playnite name. Disconnected displays with a custom name stay listed.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplayShowInList">Show in Display Manager</sys:String>
     <sys:String x:Key="LOCDisplayManager_AppearancePreset">Appearance</sys:String>
     <sys:String x:Key="LOCDisplayManager_AppearancePresetHelp">Presets change colors only. Layout, type scale, and spacing stay fixed.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetMidnight">Midnight</sys:String>
