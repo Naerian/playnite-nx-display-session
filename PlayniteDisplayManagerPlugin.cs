@@ -10,6 +10,7 @@ using Playnite.SDK;
 using Playnite.SDK.Events;
 using Playnite.SDK.Plugins;
 using PlayniteDisplayManager.Displays;
+using PlayniteDisplayManager.Hdr;
 using PlayniteDisplayManager.Restore;
 
 namespace PlayniteDisplayManager
@@ -17,16 +18,22 @@ namespace PlayniteDisplayManager
     public sealed class PlayniteDisplayManagerPlugin : GenericPlugin
     {
         private readonly ILogger logger;
+        private readonly HdrService hdr = new HdrService();
         private DisplayManagerSettings settings;
         private ResourceDictionary englishFallbackResources;
         private DisplayRestoreClient restoreClient;
         private DispatcherTimer restoreHeartbeatTimer;
+        private DisplaySnapshot gameSessionSnapshot;
+        private Guid? activeGameId;
+        private string activeGameName;
 
         public override Guid Id { get; } = Guid.Parse("9c2e4a71-b8d3-4f6a-a1c5-0e7d92f3b846");
 
         public DisplayEnumerator Displays { get; }
 
         public DisplayTopologyService Topology { get; }
+
+        public HdrService Hdr => hdr;
 
         public PlayniteDisplayManagerPlugin(IPlayniteAPI playniteApi) : base(playniteApi)
         {
@@ -87,24 +94,140 @@ namespace PlayniteDisplayManager
             };
         }
 
+        public override void OnGameStarting(OnGameStartingEventArgs args)
+        {
+            BeginGameSession(args?.Game);
+        }
+
+        public override void OnGameStopped(OnGameStoppedEventArgs args)
+        {
+            EndGameSession("game-stopped");
+        }
+
+        public override void OnGameStartupCancelled(OnGameStartupCancelledEventArgs args)
+        {
+            EndGameSession("startup-cancelled");
+        }
+
         public override void OnApplicationStopped(OnApplicationStoppedEventArgs args)
         {
+            EndGameSession("app-stopped");
             StopRestoreHeartbeat();
             if (restoreClient != null)
             {
-                // Graceful unload: disarm without forcing host restore; dispose sends SHUTDOWN.
                 try { restoreClient.Disarm(); } catch { /* ignore */ }
                 restoreClient.Dispose();
                 restoreClient = null;
             }
         }
 
-        /// <summary>
-        /// Captures the current topology and arms RestoreHost (fake apply for lease testing).
-        /// </summary>
+        private void BeginGameSession(Playnite.SDK.Models.Game game)
+        {
+            if (game == null || settings == null)
+            {
+                return;
+            }
+
+            if (settings.GlobalHdrPolicy != GlobalHdrPolicy.OnForAllGames)
+            {
+                // Policy 3 (metadata) arrives in step 7; DoNotManage skips.
+                return;
+            }
+
+            try
+            {
+                EndGameSession("replace-session");
+
+                var live = Displays.GetDisplays().ToList();
+                var enableWrites = hdr.BuildEnableWritesForPrimary(live);
+                var offWrites = enableWrites.Select(w => new HdrWriteTarget
+                {
+                    AdapterIdLow = w.AdapterIdLow,
+                    AdapterIdHigh = w.AdapterIdHigh,
+                    TargetId = w.TargetId,
+                    Enable = false,
+                    DisplayId = w.DisplayId,
+                    Name = w.Name
+                }).ToList();
+
+                var snapshot = Topology.CaptureSnapshot();
+                snapshot.HdrRestoreWrites = offWrites;
+                gameSessionSnapshot = snapshot;
+                activeGameId = game.Id;
+                activeGameName = game.Name;
+
+                EnsureRestoreClient();
+                restoreClient.Arm(snapshot);
+                StartRestoreHeartbeat();
+
+                if (enableWrites.Count == 0)
+                {
+                    logger.Info("HDR policy OnForAllGames: primary display does not report advanced color support; lease armed for topology only.");
+                    return;
+                }
+
+                var written = hdr.ApplyHdrWrites(enableWrites, out var error);
+                if (written == 0)
+                {
+                    logger.Warn("HDR enable write failed: " + error);
+                }
+                else
+                {
+                    logger.Info("HDR enabled by write for " + written + " target(s) (game: " + activeGameName + ").");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Failed to begin Display Manager game session.");
+            }
+        }
+
+        private void EndGameSession(string reason)
+        {
+            if (gameSessionSnapshot == null && activeGameId == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var snapshot = gameSessionSnapshot;
+                gameSessionSnapshot = null;
+                activeGameId = null;
+                var name = activeGameName;
+                activeGameName = null;
+
+                if (snapshot != null)
+                {
+                    // Restore writes HDR off from snapshot.HdrRestoreWrites — no GET trust.
+                    if (!Topology.TryRestoreSnapshot(snapshot, out var error))
+                    {
+                        logger.Warn("Session restore failed (" + reason + "): " + error);
+                        if (snapshot.HdrRestoreWrites != null && snapshot.HdrRestoreWrites.Count > 0)
+                        {
+                            hdr.ApplyHdrWrites(snapshot.HdrRestoreWrites, out _);
+                        }
+                    }
+                    else
+                    {
+                        logger.Info("Session restored (" + reason + ")" +
+                                    (string.IsNullOrWhiteSpace(name) ? "." : " for " + name + "."));
+                    }
+                }
+
+                DisarmRestoreLease();
+                NotifyDisplaysChanged();
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Failed to end Display Manager game session (" + reason + ").");
+            }
+        }
+
         public string ArmRestoreLeaseForTest()
         {
             var snapshot = Topology.CaptureSnapshot();
+            snapshot.HdrRestoreWrites = hdr.BuildForceOffWrites(Displays.GetDisplays());
             EnsureRestoreClient();
             var path = restoreClient.Arm(snapshot);
             StartRestoreHeartbeat();
@@ -117,9 +240,6 @@ namespace PlayniteDisplayManager
             restoreClient?.Disarm();
         }
 
-        /// <summary>
-        /// Apply topology with snapshot + RestoreHost lease. On failure, restores immediately.
-        /// </summary>
         public DisplayTopologyApplyResult ApplyTopologyWithLease(DisplayTopologyRequest request)
         {
             EnsureRestoreClient();
@@ -127,6 +247,7 @@ namespace PlayniteDisplayManager
             try
             {
                 before = Topology.CaptureSnapshot();
+                before.HdrRestoreWrites = hdr.BuildForceOffWrites(Displays.GetDisplays());
                 restoreClient.Arm(before);
                 StartRestoreHeartbeat();
             }
@@ -163,10 +284,31 @@ namespace PlayniteDisplayManager
             return ok;
         }
 
-        public bool TryRestoreSnapshotNow(out string error)
+        public bool TryWriteHdrOffNow(out string error)
         {
-            var snapshot = Topology.CaptureSnapshot();
-            return Topology.TryRestoreSnapshot(snapshot, out error);
+            var writes = hdr.BuildForceOffWrites(Displays.GetDisplays());
+            if (writes.Count == 0)
+            {
+                error = "No advanced-color-capable active display was found.";
+                return false;
+            }
+
+            var count = hdr.ApplyHdrWrites(writes, out error);
+            NotifyDisplaysChanged();
+            return count > 0;
+        }
+
+        public string GetHdrPolicyOverviewText()
+        {
+            switch (settings?.GlobalHdrPolicy ?? GlobalHdrPolicy.DoNotManage)
+            {
+                case GlobalHdrPolicy.OnForAllGames:
+                    return Loc("LOCDisplayManager_HdrPolicyAllGames");
+                case GlobalHdrPolicy.OnWhenMetadataIndicates:
+                    return Loc("LOCDisplayManager_HdrPolicyMetadata");
+                default:
+                    return Loc("LOCDisplayManager_HdrPolicyNone");
+            }
         }
 
         private void EnsureRestoreClient()

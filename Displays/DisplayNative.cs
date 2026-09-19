@@ -36,7 +36,15 @@ namespace PlayniteDisplayManager.Displays
             DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME = 1,
             DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME = 2,
             DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_PREFERRED_MODE = 3,
-            DISPLAYCONFIG_DEVICE_INFO_GET_ADAPTER_NAME = 4
+            DISPLAYCONFIG_DEVICE_INFO_GET_ADAPTER_NAME = 4,
+            DISPLAYCONFIG_DEVICE_INFO_SET_TARGET_PERSISTENCE = 5,
+            DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_BASE_TYPE = 6,
+            DISPLAYCONFIG_DEVICE_INFO_GET_SUPPORT_VIRTUAL_RESOLUTION = 7,
+            DISPLAYCONFIG_DEVICE_INFO_SET_SUPPORT_VIRTUAL_RESOLUTION = 8,
+            DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO = 9,
+            DISPLAYCONFIG_DEVICE_INFO_SET_ADVANCED_COLOR_STATE = 10,
+            DISPLAYCONFIG_DEVICE_INFO_GET_SDR_WHITE_LEVEL = 11,
+            DISPLAYCONFIG_DEVICE_INFO_SET_HDR_STATE = 16
         }
 
         public enum DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY : uint
@@ -280,6 +288,34 @@ namespace PlayniteDisplayManager.Displays
             public string adapterDevicePath;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO
+        {
+            public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+            public uint value;
+            public uint colorEncoding;
+            public uint bitsPerColorChannel;
+
+            public bool AdvancedColorSupported => (value & 0x1) == 0x1;
+            public bool AdvancedColorEnabled => (value & 0x2) == 0x2;
+            public bool WideColorEnforced => (value & 0x4) == 0x4;
+            public bool AdvancedColorForceDisabled => (value & 0x8) == 0x8;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE
+        {
+            public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+            public uint enableAdvancedColor;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_SET_HDR_STATE
+        {
+            public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+            public uint enableHdr;
+        }
+
         [DllImport("user32.dll")]
         public static extern int GetDisplayConfigBufferSizes(
             uint flags,
@@ -307,6 +343,15 @@ namespace PlayniteDisplayManager.Displays
 
         [DllImport("user32.dll", EntryPoint = "DisplayConfigGetDeviceInfo")]
         public static extern int DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_ADAPTER_NAME deviceName);
+
+        [DllImport("user32.dll", EntryPoint = "DisplayConfigGetDeviceInfo")]
+        public static extern int DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO colorInfo);
+
+        [DllImport("user32.dll")]
+        public static extern int DisplayConfigSetDeviceInfo(ref DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE setPacket);
+
+        [DllImport("user32.dll")]
+        public static extern int DisplayConfigSetDeviceInfo(ref DISPLAYCONFIG_SET_HDR_STATE setPacket);
 
         [DllImport("user32.dll")]
         public static extern int SetDisplayConfig(

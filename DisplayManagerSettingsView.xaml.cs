@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Navigation;
 using System.Windows.Threading;
 using PlayniteDisplayManager.Displays;
+using PlayniteDisplayManager.Hdr;
 
 namespace PlayniteDisplayManager
 {
@@ -33,6 +34,7 @@ namespace PlayniteDisplayManager
                 BuildAppearancePresetChips();
                 RebuildDisplayCards();
                 RefreshTopologyTargetBox();
+                SyncHdrPolicyRadios();
                 UpdateOverview();
             };
             Loaded += OnLoaded;
@@ -45,6 +47,7 @@ namespace PlayniteDisplayManager
             BuildAppearancePresetChips();
             RebuildDisplayCards();
             RefreshTopologyTargetBox();
+            SyncHdrPolicyRadios();
             UpdateOverview();
         }
 
@@ -439,6 +442,74 @@ namespace PlayniteDisplayManager
             }
         }
 
+        private void HdrPolicyRadio_OnChecked(object sender, RoutedEventArgs e)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null)
+            {
+                return;
+            }
+
+            if (HdrPolicyAllRadio?.IsChecked == true)
+            {
+                settings.GlobalHdrPolicy = GlobalHdrPolicy.OnForAllGames;
+            }
+            else if (HdrPolicyMetadataRadio?.IsChecked == true)
+            {
+                settings.GlobalHdrPolicy = GlobalHdrPolicy.OnWhenMetadataIndicates;
+            }
+            else
+            {
+                settings.GlobalHdrPolicy = GlobalHdrPolicy.DoNotManage;
+            }
+
+            UpdateOverview();
+        }
+
+        private void SyncHdrPolicyRadios()
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null || HdrPolicyNoneRadio == null)
+            {
+                return;
+            }
+
+            switch (settings.GlobalHdrPolicy)
+            {
+                case GlobalHdrPolicy.OnForAllGames:
+                    HdrPolicyAllRadio.IsChecked = true;
+                    break;
+                case GlobalHdrPolicy.OnWhenMetadataIndicates:
+                    HdrPolicyMetadataRadio.IsChecked = true;
+                    break;
+                default:
+                    HdrPolicyNoneRadio.IsChecked = true;
+                    break;
+            }
+        }
+
+        private void HdrWriteOffNow_OnClick(object sender, RoutedEventArgs e)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            var plugin = settings?.Plugin;
+            if (plugin == null)
+            {
+                return;
+            }
+
+            if (plugin.TryWriteHdrOffNow(out var error))
+            {
+                HdrStatusText.Text = TryFindResource("LOCDisplayManager_HdrWriteOffOk") as string
+                    ?? "HDR off was written to capable displays (no readback trust).";
+            }
+            else
+            {
+                HdrStatusText.Text = error ?? "HDR write failed.";
+            }
+
+            UpdateOverview();
+        }
+
         private void UpdateOverview()
         {
             var settings = DataContext as DisplayManagerSettings;
@@ -448,20 +519,38 @@ namespace PlayniteDisplayManager
                 OverviewDisplaysText.Text = TryFindResource("LOCDisplayManager_OverviewDisplaysNone") as string
                     ?? "No displays detected.";
                 OverviewDisplayPills.Children.Clear();
-                return;
+            }
+            else
+            {
+                var connected = displays.Count(d => d.IsConnected);
+                var format = TryFindResource("LOCDisplayManager_OverviewDisplaysFormat") as string
+                    ?? "{0} connected · primary: {1}";
+                var primary = settings.PrimaryDisplayName
+                    ?? (TryFindResource("LOCDisplayManager_StatusUnknown") as string ?? "Unknown");
+                OverviewDisplaysText.Text = string.Format(format, connected, primary);
+
+                OverviewDisplayPills.Children.Clear();
+                foreach (var display in displays.Take(6))
+                {
+                    OverviewDisplayPills.Children.Add(CreatePill(BuildDisplayPillLabel(display)));
+                }
             }
 
-            var connected = displays.Count(d => d.IsConnected);
-            var format = TryFindResource("LOCDisplayManager_OverviewDisplaysFormat") as string
-                ?? "{0} connected · primary: {1}";
-            var primary = settings.PrimaryDisplayName
-                ?? (TryFindResource("LOCDisplayManager_StatusUnknown") as string ?? "Unknown");
-            OverviewDisplaysText.Text = string.Format(format, connected, primary);
-
-            OverviewDisplayPills.Children.Clear();
-            foreach (var display in displays.Take(6))
+            if (OverviewPolicyText != null)
             {
-                OverviewDisplayPills.Children.Add(CreatePill(BuildDisplayPillLabel(display)));
+                OverviewPolicyText.Text = settings?.Plugin?.GetHdrPolicyOverviewText()
+                    ?? (TryFindResource("LOCDisplayManager_OverviewPolicyUnset") as string ?? "Not configured yet.");
+            }
+
+            if (OverviewHdrText != null)
+            {
+                OverviewHdrText.Text = TryFindResource("LOCDisplayManager_OverviewHdrUnknown") as string
+                    ?? "Unknown — Display Manager does not trust readback under Automatic Color Management.";
+            }
+
+            if (OverviewHdrBadge != null)
+            {
+                OverviewHdrBadge.Text = TryFindResource("LOCDisplayManager_StatusUnknown") as string ?? "Unknown";
             }
         }
 

@@ -36,6 +36,12 @@ namespace PlayniteDisplayManager.Displays
         [DataMember(Name = "displays")]
         public List<DisplaySnapshotEntry> Displays { get; set; } = new List<DisplaySnapshotEntry>();
 
+        /// <summary>
+        /// HDR states to WRITE on restore. Under ACM, never restore by trusting GET.
+        /// </summary>
+        [DataMember(Name = "hdrRestoreWrites")]
+        public List<Hdr.HdrWriteTarget> HdrRestoreWrites { get; set; } = new List<Hdr.HdrWriteTarget>();
+
         public static string ToJson(DisplaySnapshot snapshot)
         {
             var serializer = new DataContractJsonSerializer(typeof(DisplaySnapshot));

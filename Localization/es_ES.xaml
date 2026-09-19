@@ -52,6 +52,17 @@
     <sys:String x:Key="LOCDisplayManager_PresetEmber">Ember</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplaysTab">Pantallas</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrTab">HDR</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrHelp">Display Manager es dueño del HDR cuando está instalado. Al salir SIEMPRE ESCRIBE el estado deseado — no confía en la lectura de Windows con Administración automática del color (ACM).</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrPolicyTitle">Política HDR global</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrPolicyHelp">Una política para todos los juegos. Los overrides por juego llegan en un paso posterior.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrPolicyNone">No gestionar HDR de forma global</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrPolicyAllGames">Activar HDR al jugar y escribir HDR off al salir (cualquier juego)</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrPolicyMetadata">Activar HDR solo si los metadatos del juego indican HDR, y escribir off al salir</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrPolicyMetadataHint">El emparejado de metadatos llega en el siguiente paso. Elegir esto ahora solo guarda la preferencia.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrAcmTitle">ACM y diagnóstico</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrAcmHelp">La Administración automática del color de Windows 11 puede mentir al leer el estado HDR. Usa Win+Alt+B como comprobación visual. «Escribir HDR off» fuerza SDR por escritura.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrWriteOffNow">Escribir HDR off ahora</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrWriteOffOk">Se escribió HDR off en las pantallas capaces (sin confiar en lectura).</sys:String>
     <sys:String x:Key="LOCDisplayManager_GeneralTab">General</sys:String>
     <sys:String x:Key="LOCDisplayManager_NotificationsTab">Notificaciones</sys:String>
     <sys:String x:Key="LOCDisplayManager_MaintenanceTab">Mantenimiento</sys:String>

@@ -6,7 +6,12 @@ Designed for HTPC / couch setups (TV plus another screen): choose which display 
 
 ## Status
 
-Early (`0.1.0`). Settings chrome, display enumeration, RestoreHost lease, and topology trial (primary / opt-in others-off with auto-restore) are in place. HDR ownership lands next.
+Early (`0.1.0`). Chrome, displays, RestoreHost, topology trial, and global HDR policy 2 (write on play / write off on exit; ACM documented) are in place. Metadata policy and per-game overrides are next.
+
+## Documentation
+
+- [HDR and ACM (EN)](docs/HDR-AND-ACM.md)
+- [HDR y ACM (ES)](docs/HDR-Y-ACM.es.md)
 
 ## Requirements
 

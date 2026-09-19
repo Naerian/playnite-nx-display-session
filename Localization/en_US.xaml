@@ -52,6 +52,17 @@
     <sys:String x:Key="LOCDisplayManager_PresetEmber">Ember</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplaysTab">Displays</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrTab">HDR</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrHelp">Display Manager owns HDR when installed. Exit always WRITES the desired state — it does not trust Windows readback under Automatic Color Management (ACM).</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrPolicyTitle">Global HDR policy</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrPolicyHelp">One policy for all games. Per-game overrides arrive in a later step.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrPolicyNone">Do not manage HDR globally</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrPolicyAllGames">Enable HDR while playing, write HDR off on exit (any game)</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrPolicyMetadata">Enable HDR only when game metadata indicates HDR, write off on exit</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrPolicyMetadataHint">Metadata matching lands in the next step. Selecting this now stores the preference only.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrAcmTitle">ACM and diagnostics</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrAcmHelp">Windows 11 Automatic Color Management can make HDR status readbacks lie. Prefer Win+Alt+B as a visual check. Use Write HDR off to force SDR by write.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrWriteOffNow">Write HDR off now</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrWriteOffOk">HDR off was written to capable displays (no readback trust).</sys:String>
     <sys:String x:Key="LOCDisplayManager_GeneralTab">General</sys:String>
     <sys:String x:Key="LOCDisplayManager_NotificationsTab">Notifications</sys:String>
     <sys:String x:Key="LOCDisplayManager_MaintenanceTab">Maintenance</sys:String>

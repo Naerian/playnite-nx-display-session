@@ -386,6 +386,7 @@ namespace PlayniteDisplayManager.Displays
                     return false;
                 }
 
+                ApplyHdrRestoreWrites(snapshot);
                 return true;
             }
             catch (Exception ex)
@@ -393,6 +394,21 @@ namespace PlayniteDisplayManager.Displays
                 error = ex.Message;
                 Debug.WriteLine(ex);
                 return false;
+            }
+        }
+
+        private static void ApplyHdrRestoreWrites(DisplaySnapshot snapshot)
+        {
+            if (snapshot?.HdrRestoreWrites == null || snapshot.HdrRestoreWrites.Count == 0)
+            {
+                return;
+            }
+
+            var hdr = new Hdr.HdrService();
+            hdr.ApplyHdrWrites(snapshot.HdrRestoreWrites, out var hdrError);
+            if (!string.IsNullOrWhiteSpace(hdrError))
+            {
+                Debug.WriteLine("Display Manager HDR restore writes: " + hdrError);
             }
         }
 

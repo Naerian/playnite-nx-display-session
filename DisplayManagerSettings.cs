@@ -4,6 +4,7 @@ using System.Linq;
 using Playnite.SDK;
 using Playnite.SDK.Data;
 using PlayniteDisplayManager.Displays;
+using PlayniteDisplayManager.Hdr;
 
 namespace PlayniteDisplayManager
 {
@@ -16,6 +17,7 @@ namespace PlayniteDisplayManager
         private int settingsSchemaVersion;
         private List<DisplayDeviceAlias> displayAliases = new List<DisplayDeviceAlias>();
         private List<DisplayInfo> availableDisplays = new List<DisplayInfo>();
+        private GlobalHdrPolicy globalHdrPolicy = GlobalHdrPolicy.DoNotManage;
 
         public const int CurrentSettingsSchemaVersion = 1;
 
@@ -33,6 +35,7 @@ namespace PlayniteDisplayManager
                 SetupWizardCompleted = savedSettings.SetupWizardCompleted;
                 SettingsSchemaVersion = savedSettings.SettingsSchemaVersion;
                 DisplayAliases = savedSettings.DisplayAliases ?? new List<DisplayDeviceAlias>();
+                GlobalHdrPolicy = savedSettings.GlobalHdrPolicy;
             }
 
             AppearancePreset = SettingsAppearance.Normalize(AppearancePreset);
@@ -59,6 +62,12 @@ namespace PlayniteDisplayManager
         {
             get => settingsSchemaVersion;
             set => SetValue(ref settingsSchemaVersion, value);
+        }
+
+        public GlobalHdrPolicy GlobalHdrPolicy
+        {
+            get => globalHdrPolicy;
+            set => SetValue(ref globalHdrPolicy, value);
         }
 
         public List<DisplayDeviceAlias> DisplayAliases
@@ -131,6 +140,7 @@ namespace PlayniteDisplayManager
             SetupWizardCompleted = editingClone.SetupWizardCompleted;
             SettingsSchemaVersion = editingClone.SettingsSchemaVersion;
             DisplayAliases = editingClone.DisplayAliases ?? new List<DisplayDeviceAlias>();
+            GlobalHdrPolicy = editingClone.GlobalHdrPolicy;
             editingClone = null;
             RefreshDisplays();
         }

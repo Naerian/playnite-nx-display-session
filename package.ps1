@@ -38,6 +38,17 @@ elseif (-not [string]::Equals($Version, $manifestVersion, [StringComparison]::Or
 }
 
 Write-Host "Building Display Manager $Version ($Configuration)..."
+
+# Wipe intermediates before restore/build to avoid duplicate AssemblyInfo embeds.
+foreach ($dir in @(
+    (Join-Path $root "obj"),
+    (Join-Path $root "RestoreHost\obj")
+)) {
+    if (Test-Path -LiteralPath $dir) {
+        Remove-Item -LiteralPath $dir -Recurse -Force
+    }
+}
+
 dotnet restore $project
 if ($LASTEXITCODE -ne 0) {
     throw "dotnet restore failed with exit code $LASTEXITCODE"
@@ -48,12 +59,12 @@ if ($LASTEXITCODE -ne 0) {
     throw "dotnet restore (RestoreHost) failed with exit code $LASTEXITCODE"
 }
 
-dotnet build $project -c $Configuration --no-restore -t:Rebuild
+dotnet build $project -c $Configuration
 if ($LASTEXITCODE -ne 0) {
     throw "dotnet build failed with exit code $LASTEXITCODE"
 }
 
-dotnet build $hostProject -c $Configuration --no-restore -t:Rebuild
+dotnet build $hostProject -c $Configuration
 if ($LASTEXITCODE -ne 0) {
     throw "dotnet build (RestoreHost) failed with exit code $LASTEXITCODE"
 }

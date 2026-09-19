@@ -29,5 +29,6 @@
     <Compile Include="..\Displays\DisplaySnapshot.cs" Link="Displays\DisplaySnapshot.cs" />
     <Compile Include="..\Displays\DisplayTopologyRequest.cs" Link="Displays\DisplayTopologyRequest.cs" />
     <Compile Include="..\Displays\DisplayTopologyService.cs" Link="Displays\DisplayTopologyService.cs" />
+    <Compile Include="..\Hdr\HdrService.cs" Link="Hdr\HdrService.cs" />
   </ItemGroup>
 </Project>
