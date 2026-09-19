@@ -1,0 +1,10 @@
+bin/
+obj/
+dist/
+*.user
+*.suo
+*.nupkg
+*.pext
+*.zip
+.release-notes.md
+.vs/

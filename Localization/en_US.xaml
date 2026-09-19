@@ -1,0 +1,14 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="LOCDisplayManager_PluginName">Display Manager</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OpenSettings">Open settings</sys:String>
+    <sys:String x:Key="LOCDisplayManager_SkeletonHint">Skeleton build. Per-game display and HDR profiles come next.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewTab">Overview</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplaysTab">Displays</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrTab">HDR</sys:String>
+    <sys:String x:Key="LOCDisplayManager_GeneralTab">General</sys:String>
+    <sys:String x:Key="LOCDisplayManager_NotificationsTab">Notifications</sys:String>
+    <sys:String x:Key="LOCDisplayManager_MaintenanceTab">Maintenance</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AboutTab">About</sys:String>
+</ResourceDictionary>

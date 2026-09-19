@@ -1,0 +1,8 @@
+AddonId: PlayniteDisplayManager_9c2e4a71-b8d3-4f6a-a1c5-0e7d92f3b846
+Packages:
+  - Version: 0.1.0
+    RequiredApiVersion: 6.16.0
+    ReleaseDate: 2026-09-19
+    PackageUrl: https://github.com/Naerian/playnite-nx-display-session/releases/download/v0.1.0/PlayniteDisplayManager_9c2e4a71-b8d3-4f6a-a1c5-0e7d92f3b846_0_1_0.pext
+    Changelog:
+      - 'Initial GenericPlugin skeleton with extension identity, localization stubs, and packaging scripts.'

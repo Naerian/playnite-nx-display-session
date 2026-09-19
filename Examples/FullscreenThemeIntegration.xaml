@@ -1,0 +1,12 @@
+<!--
+    Display Manager fullscreen theme integration example (placeholder).
+    Stable element names for Theme API v1:
+      - DisplayManager_DisplayList
+      - DisplayManager_HdrStatus
+    SourceName: DisplayManager
+-->
+<StackPanel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Theme controls will be registered in a later step. -->
+    <TextBlock Text="Display Manager theme integration placeholder" />
+</StackPanel>
