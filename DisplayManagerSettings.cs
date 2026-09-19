@@ -5,6 +5,7 @@ using Playnite.SDK;
 using Playnite.SDK.Data;
 using PlayniteDisplayManager.Displays;
 using PlayniteDisplayManager.Hdr;
+using PlayniteDisplayManager.NightLight;
 
 namespace PlayniteDisplayManager
 {
@@ -22,6 +23,7 @@ namespace PlayniteDisplayManager
         private bool includeTagsInHdrMetadataMatch;
         private bool nativeHdrMigrationCompleted;
         private bool nativeHdrConflictNotified;
+        private NightLight.NightLightPolicy nightLightPolicy = NightLight.NightLightPolicy.DoNotTouch;
 
         public const int CurrentSettingsSchemaVersion = 1;
 
@@ -44,6 +46,7 @@ namespace PlayniteDisplayManager
                 IncludeTagsInHdrMetadataMatch = savedSettings.IncludeTagsInHdrMetadataMatch;
                 NativeHdrMigrationCompleted = savedSettings.NativeHdrMigrationCompleted;
                 NativeHdrConflictNotified = savedSettings.NativeHdrConflictNotified;
+                NightLightPolicy = savedSettings.NightLightPolicy;
             }
 
             AppearancePreset = SettingsAppearance.Normalize(AppearancePreset);
@@ -106,6 +109,13 @@ namespace PlayniteDisplayManager
         {
             get => nativeHdrConflictNotified;
             set => SetValue(ref nativeHdrConflictNotified, value);
+        }
+
+        /// <summary>v1 only supports DoNotTouch — see NightLightStatus.</summary>
+        public NightLightPolicy NightLightPolicy
+        {
+            get => nightLightPolicy;
+            set => SetValue(ref nightLightPolicy, NightLightPolicy.DoNotTouch);
         }
 
         public List<DisplayDeviceAlias> DisplayAliases
@@ -196,6 +206,7 @@ namespace PlayniteDisplayManager
             IncludeTagsInHdrMetadataMatch = editingClone.IncludeTagsInHdrMetadataMatch;
             NativeHdrMigrationCompleted = editingClone.NativeHdrMigrationCompleted;
             NativeHdrConflictNotified = editingClone.NativeHdrConflictNotified;
+            NightLightPolicy = editingClone.NightLightPolicy;
             editingClone = null;
             RefreshDisplays();
             OnPropertyChanged(nameof(HdrMetadataMatchNamesText));

@@ -117,6 +117,13 @@
     <sys:String x:Key="LOCDisplayManager_SetupWizardDesktopOnly">The setup assistant is available in Desktop mode.</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardSaved">Display Manager setup was saved.</sys:String>
     <sys:String x:Key="LOCDisplayManager_GeneralTab">General</sys:String>
+    <sys:String x:Key="LOCDisplayManager_GeneralHelp">Session extras that are not HDR or display topology.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_NightLightTitle">Night Light</sys:String>
+    <sys:String x:Key="LOCDisplayManager_NightLightExperimentalBadge">Experimental — cut in this version</sys:String>
+    <sys:String x:Key="LOCDisplayManager_NightLightCutHelp">Windows does not expose a supported Night Light API that works reliably on both Windows 10 and Windows 11. Undocumented CloudStore registry writes can leave Night Light broken until you sign out. Display Manager therefore does not turn Night Light off (or on) during games. Use Windows Settings if you need to change it.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_NightLightDoNotTouch">Do not touch Night Light</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewNightLight">Night Light</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewNightLightCut">Not managed — no supported Win10+Win11 Night Light API (experimental cut).</sys:String>
     <sys:String x:Key="LOCDisplayManager_NotificationsTab">Notifications</sys:String>
     <sys:String x:Key="LOCDisplayManager_MaintenanceTab">Maintenance</sys:String>
     <sys:String x:Key="LOCDisplayManager_MaintenanceHelp">Diagnostics, RestoreHost lease, and EnableSystemHdr migration (reversible).</sys:String>

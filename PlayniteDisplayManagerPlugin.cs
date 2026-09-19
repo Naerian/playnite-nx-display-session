@@ -448,6 +448,11 @@ namespace PlayniteDisplayManager
             return string.Format(Loc("LOCDisplayManager_OverviewNativeHdrConflictFormat"), enabled);
         }
 
+        public string GetNightLightOverviewText()
+        {
+            return Loc("LOCDisplayManager_OverviewNightLightCut");
+        }
+
         private void ClearNativeHdrConflictIfNeeded(Game game)
         {
             if (game == null || nativeHdrMigration == null)

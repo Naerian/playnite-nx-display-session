@@ -306,6 +306,13 @@
                                            Style="{StaticResource BodyText}"
                                            Margin="0,4,0,0"
                                            Text="{DynamicResource LOCDisplayManager_OverviewNativeHdrClear}" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewNightLight}"
+                                           Style="{StaticResource FieldLabel}"
+                                           Margin="0,16,0,0" />
+                                <TextBlock x:Name="OverviewNightLightText"
+                                           Style="{StaticResource BodyText}"
+                                           Margin="0,4,0,0"
+                                           Text="{DynamicResource LOCDisplayManager_OverviewNightLightCut}" />
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -471,7 +478,21 @@
                         <Border Style="{StaticResource PageHeader}">
                             <TextBlock Text="{DynamicResource LOCDisplayManager_GeneralTab}" Style="{StaticResource SectionHeaderText}" />
                         </Border>
-                        <TextBlock Text="{DynamicResource LOCDisplayManager_TabComingSoon}" Style="{StaticResource SectionSubtitleText}" />
+                        <TextBlock Text="{DynamicResource LOCDisplayManager_GeneralHelp}" Style="{StaticResource SectionSubtitleText}" />
+
+                        <Border Style="{StaticResource SettingsCard}">
+                            <StackPanel>
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_NightLightTitle}" Style="{StaticResource FieldLabel}" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_NightLightExperimentalBadge}"
+                                           Style="{StaticResource HintText}"
+                                           Margin="0,0,0,8" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_NightLightCutHelp}" Style="{StaticResource BodyText}" />
+                                <RadioButton IsChecked="True"
+                                             IsEnabled="False"
+                                             Content="{DynamicResource LOCDisplayManager_NightLightDoNotTouch}"
+                                             Margin="0,16,0,0" />
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

@@ -616,6 +616,13 @@ namespace PlayniteDisplayManager
                         ?? "No games have Playnite’s native Enable HDR flag set.");
             }
 
+            if (OverviewNightLightText != null)
+            {
+                OverviewNightLightText.Text = settings?.Plugin?.GetNightLightOverviewText()
+                    ?? (TryFindResource("LOCDisplayManager_OverviewNightLightCut") as string
+                        ?? "Not managed — Windows has no supported Night Light API across Win10+Win11.");
+            }
+
             SyncHdrMetadataControls();
             SyncNativeHdrMigrationStatus();
 

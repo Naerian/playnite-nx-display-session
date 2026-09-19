@@ -117,6 +117,13 @@
     <sys:String x:Key="LOCDisplayManager_SetupWizardDesktopOnly">El asistente está disponible en modo Escritorio.</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardSaved">Se guardó la configuración de Display Manager.</sys:String>
     <sys:String x:Key="LOCDisplayManager_GeneralTab">General</sys:String>
+    <sys:String x:Key="LOCDisplayManager_GeneralHelp">Extras de sesión que no son HDR ni topología de pantallas.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_NightLightTitle">Luz nocturna</sys:String>
+    <sys:String x:Key="LOCDisplayManager_NightLightExperimentalBadge">Experimental — recortado en esta versión</sys:String>
+    <sys:String x:Key="LOCDisplayManager_NightLightCutHelp">Windows no ofrece una API pública de Luz nocturna fiable en Windows 10 y Windows 11. Escrituras no documentadas en CloudStore pueden dejar la Luz nocturna rota hasta cerrar sesión. Por eso Display Manager no la apaga (ni enciende) durante los juegos. Usa Ajustes de Windows si necesitas cambiarla.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_NightLightDoNotTouch">No tocar la Luz nocturna</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewNightLight">Luz nocturna</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewNightLightCut">No gestionada — no hay API soportada Win10+Win11 (recorte experimental).</sys:String>
     <sys:String x:Key="LOCDisplayManager_NotificationsTab">Notificaciones</sys:String>
     <sys:String x:Key="LOCDisplayManager_MaintenanceTab">Mantenimiento</sys:String>
     <sys:String x:Key="LOCDisplayManager_MaintenanceHelp">Diagnóstico, lease RestoreHost y migración EnableSystemHdr (reversible).</sys:String>
