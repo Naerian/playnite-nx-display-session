@@ -6,9 +6,24 @@ Designed for HTPC / couch setups (TV plus another screen): choose which display 
 
 ## Status
 
-Early (`0.1.0`). Chrome, displays, RestoreHost, HDR, Hz, Theme API, Desktop top panel, and soft Audio Switcher hook are in place. Wiki EN/ES polish is next.
+Early (`0.1.0`). Core features and user wiki (EN/ES) are in place. Installer / add-on catalog polish is next.
 
-## Documentation
+## Requirements
+
+- Windows.
+- Playnite 10.x.
+- Playnite SDK 6.16 compatible runtime.
+
+## Wiki
+
+- [Home](https://github.com/Naerian/playnite-nx-display-session/wiki)
+- [Overview (EN)](https://github.com/Naerian/playnite-nx-display-session/wiki/EN-Overview)
+- [Descripción general (ES)](https://github.com/Naerian/playnite-nx-display-session/wiki/ES-Descripcion-General)
+- [HDR (EN)](https://github.com/Naerian/playnite-nx-display-session/wiki/EN-HDR) · [HDR (ES)](https://github.com/Naerian/playnite-nx-display-session/wiki/ES-HDR)
+- [ACM troubleshooting](https://github.com/Naerian/playnite-nx-display-session/wiki/EN-Troubleshooting-ACM) · [Solución ACM](https://github.com/Naerian/playnite-nx-display-session/wiki/ES-Solucion-de-Problemas-ACM)
+- [Native HDR checkbox](https://github.com/Naerian/playnite-nx-display-session/wiki/EN-Native-HDR-Checkbox) · [Checkbox nativo](https://github.com/Naerian/playnite-nx-display-session/wiki/ES-Checkbox-HDR-nativo)
+
+## Technical docs (repo)
 
 - [HDR and ACM (EN)](docs/HDR-AND-ACM.md)
 - [HDR y ACM (ES)](docs/HDR-Y-ACM.es.md)
@@ -19,16 +34,7 @@ Early (`0.1.0`). Chrome, displays, RestoreHost, HDR, Hz, Theme API, Desktop top 
 - [Audio Switcher hook (EN)](docs/AUDIO-SWITCHER.md)
 - [Hook Audio Switcher (ES)](docs/AUDIO-SWITCHER.es.md)
 
-## Requirements
-
-- Windows.
-- Playnite 10.x.
-- Playnite SDK 6.16 compatible runtime.
-
-## Documentation
-
-- [Wiki (EN)](https://github.com/Naerian/playnite-nx-display-session/wiki)
-- [Wiki (ES)](https://github.com/Naerian/playnite-nx-display-session/wiki)
+Source pages for the GitHub wiki live under [`wiki/`](wiki/).
 
 ## Support
 
