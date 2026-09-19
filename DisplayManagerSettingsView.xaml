@@ -376,66 +376,60 @@
                         </Border>
                         <TextBlock Text="{DynamicResource LOCDisplayManager_HdrHelp}" Style="{StaticResource SectionSubtitleText}" />
 
-                        <Border Style="{StaticResource SettingsCard}">
-                            <StackPanel>
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_HdrPolicyTitle}" Style="{StaticResource FieldLabel}" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_HdrPolicyHelp}" Style="{StaticResource HintText}" />
-                                <RadioButton x:Name="HdrPolicyNoneRadio"
-                                             GroupName="HdrPolicy"
-                                             Content="{DynamicResource LOCDisplayManager_HdrPolicyNone}"
-                                             Margin="0,8,0,0"
-                                             Checked="HdrPolicyRadio_OnChecked" />
-                                <RadioButton x:Name="HdrPolicyAllRadio"
-                                             GroupName="HdrPolicy"
-                                             Content="{DynamicResource LOCDisplayManager_HdrPolicyAllGames}"
-                                             Margin="0,8,0,0"
-                                             Checked="HdrPolicyRadio_OnChecked" />
-                                <RadioButton x:Name="HdrPolicyMetadataRadio"
-                                             GroupName="HdrPolicy"
-                                             Content="{DynamicResource LOCDisplayManager_HdrPolicyMetadata}"
-                                             Margin="0,8,0,0"
-                                             Checked="HdrPolicyRadio_OnChecked" />
-                            </StackPanel>
-                        </Border>
+                        <StackPanel Style="{StaticResource FieldGroup}">
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_HdrPolicyTitle}" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_HdrPolicyHelp}" Style="{StaticResource HintText}" />
+                            <RadioButton x:Name="HdrPolicyNoneRadio"
+                                         GroupName="HdrPolicy"
+                                         Content="{DynamicResource LOCDisplayManager_HdrPolicyNone}"
+                                         Margin="0,8,0,0"
+                                         Checked="HdrPolicyRadio_OnChecked" />
+                            <RadioButton x:Name="HdrPolicyAllRadio"
+                                         GroupName="HdrPolicy"
+                                         Content="{DynamicResource LOCDisplayManager_HdrPolicyAllGames}"
+                                         Margin="0,8,0,0"
+                                         Checked="HdrPolicyRadio_OnChecked" />
+                            <RadioButton x:Name="HdrPolicyMetadataRadio"
+                                         GroupName="HdrPolicy"
+                                         Content="{DynamicResource LOCDisplayManager_HdrPolicyMetadata}"
+                                         Margin="0,8,0,0"
+                                         Checked="HdrPolicyRadio_OnChecked" />
+                        </StackPanel>
 
-                        <Border Style="{StaticResource SettingsCard}">
-                            <StackPanel>
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_HdrMetadataTitle}" Style="{StaticResource FieldLabel}" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_HdrMetadataHelp}" Style="{StaticResource HintText}" />
-                                <TextBox x:Name="HdrMetadataNamesBox"
-                                         MinHeight="36"
-                                         Margin="0,4,0,0"
-                                         VerticalContentAlignment="Center"
-                                         LostFocus="HdrMetadataNamesBox_OnLostFocus" />
-                                <CheckBox x:Name="HdrIncludeTagsCheck"
-                                          Content="{DynamicResource LOCDisplayManager_HdrIncludeTags}"
-                                          Margin="0,12,0,0"
-                                          Checked="HdrIncludeTagsCheck_OnChanged"
-                                          Unchecked="HdrIncludeTagsCheck_OnChanged" />
-                                <TextBlock x:Name="HdrOverrideCountText"
-                                           Style="{StaticResource HintText}"
-                                           Margin="0,12,0,0" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_HdrGameMenuHint}"
-                                           Style="{StaticResource HintText}"
-                                           Margin="0,4,0,0" />
-                            </StackPanel>
-                        </Border>
+                        <StackPanel Style="{StaticResource FieldGroup}">
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_HdrMetadataTitle}" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_HdrMetadataHelp}" Style="{StaticResource HintText}" />
+                            <TextBox x:Name="HdrMetadataNamesBox"
+                                     MinHeight="36"
+                                     Margin="0,4,0,0"
+                                     VerticalContentAlignment="Center"
+                                     LostFocus="HdrMetadataNamesBox_OnLostFocus" />
+                            <CheckBox x:Name="HdrIncludeTagsCheck"
+                                      Content="{DynamicResource LOCDisplayManager_HdrIncludeTags}"
+                                      Margin="0,12,0,0"
+                                      Checked="HdrIncludeTagsCheck_OnChanged"
+                                      Unchecked="HdrIncludeTagsCheck_OnChanged" />
+                            <TextBlock x:Name="HdrOverrideCountText"
+                                       Style="{StaticResource HintText}"
+                                       Margin="0,12,0,0" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_HdrGameMenuHint}"
+                                       Style="{StaticResource HintText}"
+                                       Margin="0,4,0,0" />
+                        </StackPanel>
 
-                        <Border Style="{StaticResource SettingsCard}">
-                            <StackPanel>
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_HdrForceSdrTitle}" Style="{StaticResource FieldLabel}" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_HdrForceSdrHelp}" Style="{StaticResource HintText}" />
-                                <Button Content="{DynamicResource LOCDisplayManager_HdrWriteOffNow}"
-                                        Style="{StaticResource NarianPrimaryButton}"
-                                        MinWidth="180"
-                                        HorizontalAlignment="Left"
-                                        Margin="0,8,0,0"
-                                        Click="HdrWriteOffNow_OnClick" />
-                                <TextBlock x:Name="HdrStatusText"
-                                           Style="{StaticResource HintText}"
-                                           Margin="0,12,0,0" />
-                            </StackPanel>
-                        </Border>
+                        <StackPanel Style="{StaticResource FieldGroup}">
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_HdrForceSdrTitle}" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_HdrForceSdrHelp}" Style="{StaticResource HintText}" />
+                            <Button Content="{DynamicResource LOCDisplayManager_HdrWriteOffNow}"
+                                    Style="{StaticResource NarianPrimaryButton}"
+                                    MinWidth="180"
+                                    HorizontalAlignment="Left"
+                                    Margin="0,8,0,0"
+                                    Click="HdrWriteOffNow_OnClick" />
+                            <TextBlock x:Name="HdrStatusText"
+                                       Style="{StaticResource HintText}"
+                                       Margin="0,12,0,0" />
+                        </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
