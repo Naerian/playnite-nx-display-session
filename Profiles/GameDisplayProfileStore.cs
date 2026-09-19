@@ -49,6 +49,11 @@ namespace PlayniteDisplayManager.Profiles
             return GetProfile(game)?.RefreshRateOverride ?? GameRefreshRateOverride.Inherit;
         }
 
+        public string GetAssociatedAudioDeviceId(Game game)
+        {
+            return GetProfile(game)?.AssociatedAudioDeviceId;
+        }
+
         public int CountNonInherit()
         {
             lock (syncRoot)
@@ -91,6 +96,21 @@ namespace PlayniteDisplayManager.Profiles
             {
                 var profile = GetOrCreateUnlocked(game.Id);
                 profile.RefreshRateOverride = refreshOverride;
+                PersistUnlocked(game.Id, profile);
+            }
+        }
+
+        public void SetAssociatedAudioDeviceId(Game game, string deviceId)
+        {
+            if (game == null)
+            {
+                return;
+            }
+
+            lock (syncRoot)
+            {
+                var profile = GetOrCreateUnlocked(game.Id);
+                profile.AssociatedAudioDeviceId = string.IsNullOrWhiteSpace(deviceId) ? null : deviceId.Trim();
                 PersistUnlocked(game.Id, profile);
             }
         }

@@ -30,16 +30,24 @@ namespace PlayniteDisplayManager.Profiles
         [DataMember(Name = "refreshRateOverride")]
         public GameRefreshRateOverride RefreshRateOverride { get; set; } = GameRefreshRateOverride.Inherit;
 
+        /// <summary>
+        /// Optional WASAPI device id for Audio Switcher. Display Manager never switches audio itself.
+        /// </summary>
+        [DataMember(Name = "associatedAudioDeviceId")]
+        public string AssociatedAudioDeviceId { get; set; }
+
         public bool IsEmpty =>
             HdrOverride == GameHdrOverride.Inherit &&
-            RefreshRateOverride == GameRefreshRateOverride.Inherit;
+            RefreshRateOverride == GameRefreshRateOverride.Inherit &&
+            string.IsNullOrWhiteSpace(AssociatedAudioDeviceId);
 
         public GameDisplayProfile Clone()
         {
             return new GameDisplayProfile
             {
                 HdrOverride = HdrOverride,
-                RefreshRateOverride = RefreshRateOverride
+                RefreshRateOverride = RefreshRateOverride,
+                AssociatedAudioDeviceId = AssociatedAudioDeviceId
             };
         }
     }

@@ -27,6 +27,7 @@ namespace PlayniteDisplayManager
         private NightLightPolicy nightLightPolicy = NightLightPolicy.DoNotTouch;
         private RefreshRatePolicy globalRefreshRatePolicy = RefreshRatePolicy.Native;
         private bool showDesktopTopPanel = true;
+        private bool enableAudioSwitcherHook = true;
 
         public const int CurrentSettingsSchemaVersion = 1;
 
@@ -52,6 +53,7 @@ namespace PlayniteDisplayManager
                 NightLightPolicy = savedSettings.NightLightPolicy;
                 GlobalRefreshRatePolicy = savedSettings.GlobalRefreshRatePolicy;
                 ShowDesktopTopPanel = savedSettings.ShowDesktopTopPanel;
+                EnableAudioSwitcherHook = savedSettings.EnableAudioSwitcherHook;
             }
 
             AppearancePreset = SettingsAppearance.Normalize(AppearancePreset);
@@ -135,6 +137,15 @@ namespace PlayniteDisplayManager
         {
             get => showDesktopTopPanel;
             set => SetValue(ref showDesktopTopPanel, value);
+        }
+
+        /// <summary>
+        /// When true and Audio Switcher is loaded, apply AssociatedAudioDeviceId via soft reflection.
+        /// </summary>
+        public bool EnableAudioSwitcherHook
+        {
+            get => enableAudioSwitcherHook;
+            set => SetValue(ref enableAudioSwitcherHook, value);
         }
 
         public List<DisplayDeviceAlias> DisplayAliases
@@ -228,6 +239,7 @@ namespace PlayniteDisplayManager
             NightLightPolicy = editingClone.NightLightPolicy;
             GlobalRefreshRatePolicy = editingClone.GlobalRefreshRatePolicy;
             ShowDesktopTopPanel = editingClone.ShowDesktopTopPanel;
+            EnableAudioSwitcherHook = editingClone.EnableAudioSwitcherHook;
             editingClone = null;
             RefreshDisplays();
             OnPropertyChanged(nameof(HdrMetadataMatchNamesText));

@@ -39,6 +39,7 @@ namespace PlayniteDisplayManager
                 SyncHdrMetadataControls();
                 SyncRefreshRateRadios();
                 SyncDesktopAccessControls();
+                SyncAudioSwitcherControls();
                 UpdateOverview();
             };
             Loaded += OnLoaded;
@@ -55,6 +56,7 @@ namespace PlayniteDisplayManager
             SyncHdrMetadataControls();
             SyncRefreshRateRadios();
             SyncDesktopAccessControls();
+            SyncAudioSwitcherControls();
             UpdateOverview();
         }
 
@@ -666,6 +668,34 @@ namespace PlayniteDisplayManager
 
             settings.ShowDesktopTopPanel = ShowDesktopTopPanelCheck.IsChecked == true;
             settings.Plugin?.NotifyDisplaysChanged();
+        }
+
+        private void SyncAudioSwitcherControls()
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            var plugin = settings?.Plugin;
+            if (EnableAudioSwitcherHookCheck != null && settings != null)
+            {
+                EnableAudioSwitcherHookCheck.IsChecked = settings.EnableAudioSwitcherHook;
+            }
+
+            if (AudioSwitcherStatusText != null && plugin != null)
+            {
+                AudioSwitcherStatusText.Text = plugin.AudioSwitcher?.GetStatusLabel(plugin.Loc)
+                    ?? (TryFindResource("LOCDisplayManager_AudioSwitcherMissing") as string
+                        ?? "Audio Switcher is not installed.");
+            }
+        }
+
+        private void EnableAudioSwitcherHookCheck_OnChanged(object sender, RoutedEventArgs e)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null || EnableAudioSwitcherHookCheck == null)
+            {
+                return;
+            }
+
+            settings.EnableAudioSwitcherHook = EnableAudioSwitcherHookCheck.IsChecked == true;
         }
 
         private void SyncRefreshRateRadios()

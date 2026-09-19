@@ -6,7 +6,7 @@ Designed for HTPC / couch setups (TV plus another screen): choose which display 
 
 ## Status
 
-Early (`0.1.0`). Chrome, displays, RestoreHost, HDR, Hz, EnableSystemHdr migration, Theme API v1 (DisplayList / HdrStatus), and Desktop top panel are in place. Audio Switcher hook is next.
+Early (`0.1.0`). Chrome, displays, RestoreHost, HDR, Hz, Theme API, Desktop top panel, and soft Audio Switcher hook are in place. Wiki EN/ES polish is next.
 
 ## Documentation
 
@@ -16,6 +16,8 @@ Early (`0.1.0`). Chrome, displays, RestoreHost, HDR, Hz, EnableSystemHdr migrati
 - [Luz nocturna recortada (ES)](docs/NIGHT-LIGHT.es.md)
 - [Theme API v1 (EN)](docs/THEME-API.md)
 - [Theme API v1 (ES)](docs/THEME-API.es.md)
+- [Audio Switcher hook (EN)](docs/AUDIO-SWITCHER.md)
+- [Hook Audio Switcher (ES)](docs/AUDIO-SWITCHER.es.md)
 
 ## Requirements
 

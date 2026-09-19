@@ -501,6 +501,24 @@
 
                         <Border Style="{StaticResource SettingsCard}">
                             <StackPanel>
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_AudioSwitcherTitle}" Style="{StaticResource FieldLabel}" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_AudioSwitcherHelp}" Style="{StaticResource HintText}" />
+                                <TextBlock x:Name="AudioSwitcherStatusText"
+                                           Style="{StaticResource BodyText}"
+                                           Margin="0,0,0,8" />
+                                <CheckBox x:Name="EnableAudioSwitcherHookCheck"
+                                          Content="{DynamicResource LOCDisplayManager_EnableAudioSwitcherHook}"
+                                          Margin="0,8,0,0"
+                                          Checked="EnableAudioSwitcherHookCheck_OnChanged"
+                                          Unchecked="EnableAudioSwitcherHookCheck_OnChanged" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_AudioSwitcherGameMenuHint}"
+                                           Style="{StaticResource HintText}"
+                                           Margin="0,12,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource SettingsCard}">
+                            <StackPanel>
                                 <TextBlock Text="{DynamicResource LOCDisplayManager_NightLightTitle}" Style="{StaticResource FieldLabel}" />
                                 <TextBlock Text="{DynamicResource LOCDisplayManager_NightLightExperimentalBadge}"
                                            Style="{StaticResource HintText}"

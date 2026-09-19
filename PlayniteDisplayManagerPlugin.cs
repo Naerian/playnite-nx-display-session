@@ -10,6 +10,7 @@ using Playnite.SDK;
 using Playnite.SDK.Events;
 using Playnite.SDK.Models;
 using Playnite.SDK.Plugins;
+using PlayniteDisplayManager.Audio;
 using PlayniteDisplayManager.Displays;
 using PlayniteDisplayManager.Hdr;
 using PlayniteDisplayManager.Profiles;
@@ -24,6 +25,7 @@ namespace PlayniteDisplayManager
         private readonly ILogger logger;
         private readonly HdrService hdr = new HdrService();
         private readonly RefreshRateService refreshRates = new RefreshRateService();
+        private AudioSwitcherBridge audioSwitcher;
         private DisplayManagerSettings settings;
         private GameDisplayProfileStore gameProfiles;
         private NativeHdrFlagMigration nativeHdrMigration;
@@ -33,6 +35,8 @@ namespace PlayniteDisplayManager
         private DisplaySnapshot gameSessionSnapshot;
         private Guid? activeGameId;
         private string activeGameName;
+        private string sessionPreviousAudioDeviceId;
+        private bool sessionAppliedAudioDevice;
         private TopPanelItem desktopTopPanelItem;
 
         public override Guid Id { get; } = Guid.Parse("9c2e4a71-b8d3-4f6a-a1c5-0e7d92f3b846");
@@ -45,6 +49,8 @@ namespace PlayniteDisplayManager
 
         public RefreshRateService RefreshRates => refreshRates;
 
+        public AudioSwitcherBridge AudioSwitcher => audioSwitcher;
+
         public GameDisplayProfileStore GameProfiles => gameProfiles;
 
         public DisplayManagerThemeApi Theme { get; }
@@ -56,6 +62,7 @@ namespace PlayniteDisplayManager
             Topology = new DisplayTopologyService();
             gameProfiles = new GameDisplayProfileStore(GetPluginUserDataPath());
             nativeHdrMigration = new NativeHdrFlagMigration(PlayniteApi, logger, GetPluginUserDataPath());
+            audioSwitcher = new AudioSwitcherBridge(PlayniteApi, logger);
             Theme = new DisplayManagerThemeApi(this);
             Properties = new GenericPluginProperties
             {
@@ -376,6 +383,42 @@ namespace PlayniteDisplayManager
                     Loc("LOCDisplayManager_GameHzHighest")),
                 args,
                 GameRefreshRateOverride.HighestDetected);
+
+            var audioSection = "Display Manager|" + Loc("LOCDisplayManager_GameMenuAudioSection");
+            var associated = games.Count == 1
+                ? gameProfiles.GetAssociatedAudioDeviceId(games[0])
+                : null;
+
+            yield return CreateAudioDeviceMenuItem(
+                audioSection,
+                CheckedMenuLabel(string.IsNullOrWhiteSpace(associated),
+                    Loc("LOCDisplayManager_GameAudioNone")),
+                args,
+                null);
+
+            if (audioSwitcher != null && audioSwitcher.IsAvailable)
+            {
+                foreach (var device in audioSwitcher.GetPlaybackDevices())
+                {
+                    var deviceId = device.Id;
+                    yield return CreateAudioDeviceMenuItem(
+                        audioSection,
+                        CheckedMenuLabel(
+                            string.Equals(associated, deviceId, StringComparison.OrdinalIgnoreCase),
+                            device.Name),
+                        args,
+                        deviceId);
+                }
+            }
+            else
+            {
+                yield return new GameMenuItem
+                {
+                    MenuSection = audioSection,
+                    Description = Loc("LOCDisplayManager_AudioSwitcherMissing"),
+                    Action = _ => { }
+                };
+            }
         }
 
         public override void OnGameStarting(OnGameStartingEventArgs args)
@@ -417,10 +460,17 @@ namespace PlayniteDisplayManager
 
             var hdrPlan = PlanHdrSession(game);
             var hzPlan = PlanRefreshRateSession(game);
-            if (hdrPlan.Action == HdrSessionAction.None && !hzPlan.ShouldApply)
+            var audioDeviceId = settings.EnableAudioSwitcherHook
+                ? gameProfiles?.GetAssociatedAudioDeviceId(game)
+                : null;
+            var wantsAudio = !string.IsNullOrWhiteSpace(audioDeviceId) &&
+                             audioSwitcher != null &&
+                             audioSwitcher.IsAvailable;
+
+            if (hdrPlan.Action == HdrSessionAction.None && !hzPlan.ShouldApply && !wantsAudio)
             {
                 logger.Info("Display session skipped for " + game.Name +
-                            " (HDR: " + hdrPlan.Reason + "; Hz: " + hzPlan.Reason + ").");
+                            " (HDR: " + hdrPlan.Reason + "; Hz: " + hzPlan.Reason + "; audio: none).");
                 return;
             }
 
@@ -455,10 +505,26 @@ namespace PlayniteDisplayManager
                 gameSessionSnapshot = snapshot;
                 activeGameId = game.Id;
                 activeGameName = game.Name;
+                sessionPreviousAudioDeviceId = null;
+                sessionAppliedAudioDevice = false;
 
                 EnsureRestoreClient();
                 restoreClient.Arm(snapshot);
                 StartRestoreHeartbeat();
+
+                if (wantsAudio)
+                {
+                    sessionPreviousAudioDeviceId = audioSwitcher.TryGetCurrentPlaybackDeviceId();
+                    if (audioSwitcher.TrySetPlaybackDevice(audioDeviceId, out var audioError))
+                    {
+                        sessionAppliedAudioDevice = true;
+                        logger.Info("Audio Switcher playback set for " + activeGameName + ".");
+                    }
+                    else
+                    {
+                        logger.Warn("Audio Switcher hook failed: " + audioError);
+                    }
+                }
 
                 if (hzPlan.ShouldApply && hzPlan.TargetHz.HasValue && primary != null)
                 {
@@ -481,7 +547,7 @@ namespace PlayniteDisplayManager
                 if (applyWrites.Count == 0)
                 {
                     logger.Info("HDR plan " + hdrPlan.Action + " (" + hdrPlan.Reason +
-                                "): no advanced-color-capable target; lease armed for topology/Hz.");
+                                "): no advanced-color-capable target; lease armed for topology/Hz/audio.");
                     return;
                 }
 
@@ -529,6 +595,10 @@ namespace PlayniteDisplayManager
                 activeGameId = null;
                 var name = activeGameName;
                 activeGameName = null;
+                var restoreAudio = sessionAppliedAudioDevice;
+                var previousAudio = sessionPreviousAudioDeviceId;
+                sessionAppliedAudioDevice = false;
+                sessionPreviousAudioDeviceId = null;
 
                 if (snapshot != null)
                 {
@@ -545,6 +615,18 @@ namespace PlayniteDisplayManager
                     {
                         logger.Info("Session restored (" + reason + ")" +
                                     (string.IsNullOrWhiteSpace(name) ? "." : " for " + name + "."));
+                    }
+                }
+
+                if (restoreAudio && !string.IsNullOrWhiteSpace(previousAudio) && audioSwitcher != null)
+                {
+                    if (audioSwitcher.TrySetPlaybackDevice(previousAudio, out var audioError))
+                    {
+                        logger.Info("Audio Switcher playback restored after session.");
+                    }
+                    else
+                    {
+                        logger.Warn("Audio Switcher restore failed: " + audioError);
                     }
                 }
 
@@ -902,6 +984,43 @@ namespace PlayniteDisplayManager
                     {
                         PlayniteApi.Dialogs.ShowMessage(
                             first.Name + ": " + DescribeRefreshOverride(refreshOverride),
+                            Loc("LOCDisplayManager_PluginName"));
+                    }
+                }
+            };
+        }
+
+        private GameMenuItem CreateAudioDeviceMenuItem(
+            string menuSection,
+            string description,
+            GetGameMenuItemsArgs request,
+            string deviceId)
+        {
+            return new GameMenuItem
+            {
+                MenuSection = menuSection,
+                Description = description,
+                Action = actionArgs =>
+                {
+                    var games = actionArgs?.Games ?? request.Games;
+                    if (games == null)
+                    {
+                        return;
+                    }
+
+                    foreach (var game in games)
+                    {
+                        gameProfiles.SetAssociatedAudioDeviceId(game, deviceId);
+                    }
+
+                    var first = games.FirstOrDefault();
+                    if (first != null)
+                    {
+                        var label = string.IsNullOrWhiteSpace(deviceId)
+                            ? Loc("LOCDisplayManager_GameAudioNone")
+                            : description.TrimStart('✓', ' ');
+                        PlayniteApi.Dialogs.ShowMessage(
+                            first.Name + ": " + label,
                             Loc("LOCDisplayManager_PluginName"));
                     }
                 }

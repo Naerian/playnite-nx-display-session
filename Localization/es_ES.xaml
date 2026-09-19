@@ -121,6 +121,14 @@
     <sys:String x:Key="LOCDisplayManager_DesktopAccessTitle">Acceso en Escritorio</sys:String>
     <sys:String x:Key="LOCDisplayManager_DesktopAccessHelp">Botón opcional en el panel superior de Playnite Escritorio. Abre los ajustes de Display Manager.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ShowDesktopTopPanel">Mostrar en el panel superior</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AudioSwitcherTitle">Audio Switcher</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AudioSwitcherHelp">Enlace opcional. Display Manager no cambia el audio por su cuenta — pide a Audio Switcher por reflexión suave cuando ese plugin está cargado.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AudioSwitcherInstalled">Audio Switcher está instalado y cargado.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AudioSwitcherMissing">Audio Switcher no está instalado (o no cargado). Asocia un dispositivo cuando esté disponible.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_EnableAudioSwitcherHook">Aplicar dispositivo de reproducción asociado al iniciar el juego (vía Audio Switcher)</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AudioSwitcherGameMenuHint">Asociación por juego: menú contextual → Display Manager → Audio.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_GameMenuAudioSection">Audio</sys:String>
+    <sys:String x:Key="LOCDisplayManager_GameAudioNone">Sin dispositivo de reproducción asociado</sys:String>
     <sys:String x:Key="LOCDisplayManager_NightLightTitle">Luz nocturna</sys:String>
     <sys:String x:Key="LOCDisplayManager_NightLightExperimentalBadge">Experimental — recortado en esta versión</sys:String>
     <sys:String x:Key="LOCDisplayManager_NightLightCutHelp">Windows no ofrece una API pública de Luz nocturna fiable en Windows 10 y Windows 11. Escrituras no documentadas en CloudStore pueden dejar la Luz nocturna rota hasta cerrar sesión. Por eso Display Manager no la apaga (ni enciende) durante los juegos. Usa Ajustes de Windows si necesitas cambiarla.</sys:String>
