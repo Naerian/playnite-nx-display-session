@@ -16,13 +16,21 @@ namespace PlayniteDisplayManager
 {
     public partial class DisplayManagerSettingsView : UserControl
     {
+        private readonly bool themeStandaloneWindow;
+        private ScrollViewer hostScrollViewer;
+        private Window hostWindow;
         private PlayniteDisplayManagerPlugin subscribedPlugin;
         private DisplaySnapshot topologyTrialSnapshot;
         private DispatcherTimer topologyTrialTimer;
         private int topologyTrialSecondsLeft;
 
-        public DisplayManagerSettingsView()
+        public DisplayManagerSettingsView() : this(false)
         {
+        }
+
+        public DisplayManagerSettingsView(bool themeStandaloneWindow)
+        {
+            this.themeStandaloneWindow = themeStandaloneWindow;
             InitializeComponent();
             AboutVersionText.Text = string.Format(
                 TryFindResource("LOCDisplayManager_VersionAuthorFormat") as string ?? "Display Manager {0} · Narian",
@@ -50,6 +58,12 @@ namespace PlayniteDisplayManager
         {
             ApplyAppearancePreset();
             BuildAppearancePresetChips();
+            ApplyPreferredWindowSize();
+            AttachToHost();
+            Dispatcher.BeginInvoke(new Action(AttachToHost), DispatcherPriority.Loaded);
+            Dispatcher.BeginInvoke(new Action(AttachToHost), DispatcherPriority.ApplicationIdle);
+            Dispatcher.BeginInvoke(new Action(FillSelectedContentHosts), DispatcherPriority.Loaded);
+            Dispatcher.BeginInvoke(new Action(FillSelectedContentHosts), DispatcherPriority.ApplicationIdle);
             RebuildDisplayCards();
             RefreshTopologyTargetBox();
             SyncHdrPolicyRadios();
@@ -64,6 +78,7 @@ namespace PlayniteDisplayManager
         {
             StopTopologyTrialTimer(restore: true);
             UnsubscribeDisplaysChanged();
+            DetachFromHost();
         }
 
         private void SubscribeDisplaysChanged()
@@ -110,7 +125,230 @@ namespace PlayniteDisplayManager
                 ? settings.AppearancePreset
                 : SettingsAppearance.Midnight;
             SettingsAppearance.Apply(this, preset);
+
+            if (themeStandaloneWindow)
+            {
+                SettingsAppearance.ApplyWindow(Window.GetWindow(this), preset);
+            }
+
             RefreshAppearancePresetChips();
+        }
+
+        private void RootTabsSelectionChanged(object sender, SelectionChangedEventArgs args)
+        {
+            Dispatcher.BeginInvoke(new Action(FillSelectedContentHosts), DispatcherPriority.Loaded);
+        }
+
+        private void AttachToHost()
+        {
+            DetachFromHost();
+            hostScrollViewer = FindAncestorScrollViewer();
+            if (hostScrollViewer != null)
+            {
+                hostScrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+                hostScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+                hostScrollViewer.SizeChanged += OnHostSizeChanged;
+            }
+
+            hostWindow = Window.GetWindow(this);
+            if (hostWindow != null)
+            {
+                hostWindow.SizeChanged += OnHostSizeChanged;
+            }
+
+            ApplyViewportSize();
+        }
+
+        private void DetachFromHost()
+        {
+            if (hostScrollViewer != null)
+            {
+                hostScrollViewer.SizeChanged -= OnHostSizeChanged;
+                hostScrollViewer = null;
+            }
+
+            if (hostWindow != null)
+            {
+                hostWindow.SizeChanged -= OnHostSizeChanged;
+                hostWindow = null;
+            }
+        }
+
+        private void OnHostSizeChanged(object sender, SizeChangedEventArgs args)
+        {
+            ApplyViewportSize();
+            FillSelectedContentHosts();
+        }
+
+        private void FillSelectedContentHosts()
+        {
+            StretchSelectedContent(this);
+        }
+
+        private static void StretchSelectedContent(DependencyObject root)
+        {
+            if (root == null)
+            {
+                return;
+            }
+
+            var count = VisualTreeHelper.GetChildrenCount(root);
+            for (var i = 0; i < count; i++)
+            {
+                var child = VisualTreeHelper.GetChild(root, i);
+                var presenter = child as ContentPresenter;
+                if (presenter != null && presenter.Name == "PART_SelectedContentHost")
+                {
+                    presenter.HorizontalAlignment = HorizontalAlignment.Stretch;
+                    presenter.VerticalAlignment = VerticalAlignment.Stretch;
+                    var content = presenter.Content as FrameworkElement;
+                    if (content == null && VisualTreeHelper.GetChildrenCount(presenter) > 0)
+                    {
+                        content = VisualTreeHelper.GetChild(presenter, 0) as FrameworkElement;
+                    }
+
+                    if (content != null)
+                    {
+                        content.HorizontalAlignment = HorizontalAlignment.Stretch;
+                        content.VerticalAlignment = VerticalAlignment.Stretch;
+                        content.ClearValue(WidthProperty);
+                        content.ClearValue(HeightProperty);
+                    }
+                }
+
+                StretchSelectedContent(child);
+            }
+        }
+
+        private void ApplyViewportSize()
+        {
+            double width = 0;
+            double height = 0;
+            if (hostScrollViewer != null)
+            {
+                width = hostScrollViewer.ViewportWidth > 8
+                    ? hostScrollViewer.ViewportWidth
+                    : hostScrollViewer.ActualWidth;
+                height = hostScrollViewer.ViewportHeight > 8
+                    ? hostScrollViewer.ViewportHeight
+                    : hostScrollViewer.ActualHeight;
+            }
+
+            if (width < 8 || height < 8)
+            {
+                var slot = FindWindowGridSlot();
+                if (slot.Width > 8)
+                {
+                    width = slot.Width;
+                }
+                if (slot.Height > 8)
+                {
+                    height = slot.Height;
+                }
+            }
+
+            if ((width < 8 || height < 8) && hostWindow != null)
+            {
+                var content = hostWindow.Content as FrameworkElement;
+                if (content != null)
+                {
+                    if (width < 8)
+                    {
+                        width = content.ActualWidth;
+                    }
+                    if (height < 8)
+                    {
+                        height = content.ActualHeight;
+                    }
+                }
+            }
+
+            if (width > 8 && Math.Abs(Width - width) > 1)
+            {
+                Width = width;
+            }
+
+            if (height > 8 && Math.Abs(Height - height) > 1)
+            {
+                Height = height;
+            }
+
+            FillSelectedContentHosts();
+        }
+
+        private Size FindWindowGridSlot()
+        {
+            for (var parent = VisualTreeHelper.GetParent(this);
+                 parent != null;
+                 parent = VisualTreeHelper.GetParent(parent))
+            {
+                if (parent is Window)
+                {
+                    break;
+                }
+
+                var grid = parent as Grid;
+                if (grid == null || grid.RowDefinitions.Count < 2 || grid.ActualWidth < 400)
+                {
+                    continue;
+                }
+
+                var rowHeight = grid.RowDefinitions[0].ActualHeight;
+                if (rowHeight > 200)
+                {
+                    return new Size(grid.ActualWidth, rowHeight);
+                }
+            }
+
+            return new Size(0, 0);
+        }
+
+        private ScrollViewer FindAncestorScrollViewer()
+        {
+            for (var parent = VisualTreeHelper.GetParent(this);
+                 parent != null;
+                 parent = VisualTreeHelper.GetParent(parent))
+            {
+                var scrollViewer = parent as ScrollViewer;
+                if (scrollViewer != null)
+                {
+                    return scrollViewer;
+                }
+
+                if (parent is Window)
+                {
+                    return null;
+                }
+            }
+
+            return null;
+        }
+
+        private void ApplyPreferredWindowSize()
+        {
+            var window = Window.GetWindow(this);
+            if (window == null)
+            {
+                return;
+            }
+
+            window.SizeToContent = SizeToContent.Manual;
+            if (window.MinWidth < 1000)
+            {
+                window.MinWidth = 1000;
+            }
+            if (window.MinHeight < 700)
+            {
+                window.MinHeight = 700;
+            }
+            if (window.ActualWidth < 1100 && window.Width < 1100)
+            {
+                window.Width = 1100;
+            }
+            if (window.ActualHeight < 780 && window.Height < 780)
+            {
+                window.Height = 780;
+            }
         }
 
         private void BuildAppearancePresetChips()

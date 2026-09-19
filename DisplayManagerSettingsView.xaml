@@ -206,7 +206,7 @@
     </UserControl.Resources>
 
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="16,16">
-        <TabControl x:Name="RootTabs" Style="{StaticResource TopTabs}">
+        <TabControl x:Name="RootTabs" Style="{StaticResource TopTabs}" SelectionChanged="RootTabsSelectionChanged">
             <TabItem>
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">

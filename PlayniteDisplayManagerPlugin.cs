@@ -38,6 +38,7 @@ namespace PlayniteDisplayManager
         private string sessionPreviousAudioDeviceId;
         private bool sessionAppliedAudioDevice;
         private TopPanelItem desktopTopPanelItem;
+        private bool openingStandaloneSettings;
 
         public override Guid Id { get; } = Guid.Parse("9c2e4a71-b8d3-4f6a-a1c5-0e7d92f3b846");
 
@@ -126,7 +127,20 @@ namespace PlayniteDisplayManager
 
         public override UserControl GetSettingsView(bool firstRunSettings)
         {
-            return new DisplayManagerSettingsView();
+            return new DisplayManagerSettingsView(openingStandaloneSettings);
+        }
+
+        private bool OpenStandaloneSettingsView()
+        {
+            openingStandaloneSettings = true;
+            try
+            {
+                return OpenSettingsView();
+            }
+            finally
+            {
+                openingStandaloneSettings = false;
+            }
         }
 
         public override Control GetGameViewControl(GetGameViewControlArgs args)
@@ -158,7 +172,7 @@ namespace PlayniteDisplayManager
                 desktopTopPanelItem = new TopPanelItem
                 {
                     Icon = new DisplayManagerTopPanelControl(this),
-                    Activated = () => OpenSettingsView()
+                    Activated = () => OpenStandaloneSettingsView()
                 };
             }
 
@@ -184,7 +198,7 @@ namespace PlayniteDisplayManager
             {
                 Description = Loc("LOCDisplayManager_OpenSettings"),
                 MenuSection = "@Display Manager",
-                Action = _ => OpenSettingsView()
+                Action = _ => OpenStandaloneSettingsView()
             };
             yield return new MainMenuItem
             {
