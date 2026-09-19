@@ -10,6 +10,13 @@ using PlayniteDisplayManager.Refresh;
 
 namespace PlayniteDisplayManager
 {
+    public enum DesktopTopPanelDisplayMode
+    {
+        IconAndText = 0,
+        Icon = 1,
+        Text = 2
+    }
+
     public sealed class DisplayManagerSettings : ObservableObject, ISettings
     {
         private readonly PlayniteDisplayManagerPlugin plugin;
@@ -26,10 +33,14 @@ namespace PlayniteDisplayManager
         private bool nativeHdrConflictNotified;
         private NightLightPolicy nightLightPolicy = NightLightPolicy.DoNotTouch;
         private RefreshRatePolicy globalRefreshRatePolicy = RefreshRatePolicy.Native;
+        private double? preferredRefreshRateHz;
         private bool showDesktopTopPanel = true;
+        private DesktopTopPanelDisplayMode desktopTopPanelDisplayMode = DesktopTopPanelDisplayMode.IconAndText;
         private bool enableAudioSwitcherHook = true;
+        private bool showNotifications = true;
+        private bool notifyNativeHdrConflict = true;
 
-        public const int CurrentSettingsSchemaVersion = 1;
+        public const int CurrentSettingsSchemaVersion = 2;
 
         public DisplayManagerSettings()
         {
@@ -52,12 +63,17 @@ namespace PlayniteDisplayManager
                 NativeHdrConflictNotified = savedSettings.NativeHdrConflictNotified;
                 NightLightPolicy = savedSettings.NightLightPolicy;
                 GlobalRefreshRatePolicy = savedSettings.GlobalRefreshRatePolicy;
+                PreferredRefreshRateHz = savedSettings.PreferredRefreshRateHz;
                 ShowDesktopTopPanel = savedSettings.ShowDesktopTopPanel;
+                DesktopTopPanelDisplayMode = savedSettings.DesktopTopPanelDisplayMode;
                 EnableAudioSwitcherHook = savedSettings.EnableAudioSwitcherHook;
+                ShowNotifications = savedSettings.ShowNotifications;
+                NotifyNativeHdrConflict = savedSettings.NotifyNativeHdrConflict;
             }
 
             AppearancePreset = SettingsAppearance.Normalize(AppearancePreset);
             HdrMetadataMatchNames = HdrMetadataMatcher.NormalizeMatchNames(HdrMetadataMatchNames).ToList();
+            MigrateRefreshRateLegacy();
             SettingsSchemaVersion = CurrentSettingsSchemaVersion;
             RefreshDisplays();
         }
@@ -89,7 +105,6 @@ namespace PlayniteDisplayManager
             set => SetValue(ref globalHdrPolicy, value);
         }
 
-        /// <summary>Feature/Tag names that indicate HDR (case-insensitive). Defaults: HDR, HDR10, …</summary>
         public List<string> HdrMetadataMatchNames
         {
             get => hdrMetadataMatchNames;
@@ -97,55 +112,71 @@ namespace PlayniteDisplayManager
                 HdrMetadataMatcher.NormalizeMatchNames(value).ToList());
         }
 
-        /// <summary>When true, Tags are scanned in addition to Features for policy 3.</summary>
         public bool IncludeTagsInHdrMetadataMatch
         {
             get => includeTagsInHdrMetadataMatch;
             set => SetValue(ref includeTagsInHdrMetadataMatch, value);
         }
 
-        /// <summary>True after the user finished (or skipped) the setup wizard migration step at least once.</summary>
         public bool NativeHdrMigrationCompleted
         {
             get => nativeHdrMigrationCompleted;
             set => SetValue(ref nativeHdrMigrationCompleted, value);
         }
 
-        /// <summary>One-shot toast when NX clears a conflicting EnableSystemHdr at launch.</summary>
         public bool NativeHdrConflictNotified
         {
             get => nativeHdrConflictNotified;
             set => SetValue(ref nativeHdrConflictNotified, value);
         }
 
-        /// <summary>v1 only supports DoNotTouch — see NightLightStatus.</summary>
         public NightLightPolicy NightLightPolicy
         {
             get => nightLightPolicy;
             set => SetValue(ref nightLightPolicy, NightLightPolicy.DoNotTouch);
         }
 
-        /// <summary>Optional refresh-rate preference for game sessions (primary, same resolution).</summary>
         public RefreshRatePolicy GlobalRefreshRatePolicy
         {
             get => globalRefreshRatePolicy;
             set => SetValue(ref globalRefreshRatePolicy, value);
         }
 
-        /// <summary>Desktop top-panel button (opens settings).</summary>
+        /// <summary>Target Hz when GlobalRefreshRatePolicy is ExactHz.</summary>
+        public double? PreferredRefreshRateHz
+        {
+            get => preferredRefreshRateHz;
+            set => SetValue(ref preferredRefreshRateHz, value);
+        }
+
         public bool ShowDesktopTopPanel
         {
             get => showDesktopTopPanel;
             set => SetValue(ref showDesktopTopPanel, value);
         }
 
-        /// <summary>
-        /// When true and Audio Switcher is loaded, apply AssociatedAudioDeviceId via soft reflection.
-        /// </summary>
+        public DesktopTopPanelDisplayMode DesktopTopPanelDisplayMode
+        {
+            get => desktopTopPanelDisplayMode;
+            set => SetValue(ref desktopTopPanelDisplayMode, value);
+        }
+
         public bool EnableAudioSwitcherHook
         {
             get => enableAudioSwitcherHook;
             set => SetValue(ref enableAudioSwitcherHook, value);
+        }
+
+        public bool ShowNotifications
+        {
+            get => showNotifications;
+            set => SetValue(ref showNotifications, value);
+        }
+
+        public bool NotifyNativeHdrConflict
+        {
+            get => notifyNativeHdrConflict;
+            set => SetValue(ref notifyNativeHdrConflict, value);
         }
 
         public List<DisplayDeviceAlias> DisplayAliases
@@ -183,6 +214,39 @@ namespace PlayniteDisplayManager
             new AppearancePresetOption { Value = SettingsAppearance.Ocean, DisplayName = plugin?.Loc("LOCDisplayManager_PresetOcean") ?? "Ocean" },
             new AppearancePresetOption { Value = SettingsAppearance.Ember, DisplayName = plugin?.Loc("LOCDisplayManager_PresetEmber") ?? "Ember" }
         };
+
+        [DontSerialize]
+        public List<AppearancePresetOption> DesktopTopPanelDisplayModeOptions => new List<AppearancePresetOption>
+        {
+            new AppearancePresetOption
+            {
+                Value = nameof(DesktopTopPanelDisplayMode.Icon),
+                DisplayName = plugin?.Loc("LOCDisplayManager_TopPanelModeIcon") ?? "Icon"
+            },
+            new AppearancePresetOption
+            {
+                Value = nameof(DesktopTopPanelDisplayMode.Text),
+                DisplayName = plugin?.Loc("LOCDisplayManager_TopPanelModeText") ?? "Text"
+            },
+            new AppearancePresetOption
+            {
+                Value = nameof(DesktopTopPanelDisplayMode.IconAndText),
+                DisplayName = plugin?.Loc("LOCDisplayManager_TopPanelModeIconAndText") ?? "Icon and text"
+            }
+        };
+
+        [DontSerialize]
+        public string DesktopTopPanelDisplayModeValue
+        {
+            get => DesktopTopPanelDisplayMode.ToString();
+            set
+            {
+                if (Enum.TryParse(value, true, out DesktopTopPanelDisplayMode mode))
+                {
+                    DesktopTopPanelDisplayMode = mode;
+                }
+            }
+        }
 
         public void RefreshDisplays()
         {
@@ -238,17 +302,23 @@ namespace PlayniteDisplayManager
             NativeHdrConflictNotified = editingClone.NativeHdrConflictNotified;
             NightLightPolicy = editingClone.NightLightPolicy;
             GlobalRefreshRatePolicy = editingClone.GlobalRefreshRatePolicy;
+            PreferredRefreshRateHz = editingClone.PreferredRefreshRateHz;
             ShowDesktopTopPanel = editingClone.ShowDesktopTopPanel;
+            DesktopTopPanelDisplayMode = editingClone.DesktopTopPanelDisplayMode;
             EnableAudioSwitcherHook = editingClone.EnableAudioSwitcherHook;
+            ShowNotifications = editingClone.ShowNotifications;
+            NotifyNativeHdrConflict = editingClone.NotifyNativeHdrConflict;
             editingClone = null;
             RefreshDisplays();
             OnPropertyChanged(nameof(HdrMetadataMatchNamesText));
+            OnPropertyChanged(nameof(DesktopTopPanelDisplayModeValue));
         }
 
         public void EndEdit()
         {
             AppearancePreset = SettingsAppearance.Normalize(AppearancePreset);
             HdrMetadataMatchNames = HdrMetadataMatcher.NormalizeMatchNames(HdrMetadataMatchNames).ToList();
+            MigrateRefreshRateLegacy();
             DisplayAliases = PersistAliases(AvailableDisplays, DisplayAliases);
             plugin.SavePluginSettings(this);
             plugin.ReloadSettings();
@@ -259,6 +329,13 @@ namespace PlayniteDisplayManager
         {
             errors = new List<string>();
             return true;
+        }
+
+        private void MigrateRefreshRateLegacy()
+        {
+            var hz = PreferredRefreshRateHz;
+            GlobalRefreshRatePolicy = RefreshRateService.NormalizeLegacyPolicy(GlobalRefreshRatePolicy, ref hz);
+            PreferredRefreshRateHz = hz;
         }
 
         private List<DisplayDeviceAlias> PersistAliases(

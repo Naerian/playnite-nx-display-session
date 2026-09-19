@@ -11,14 +11,17 @@ namespace PlayniteDisplayManager.Refresh
         /// <summary>Leave the current refresh rate alone.</summary>
         Native = 0,
 
-        /// <summary>Prefer ~60 Hz at the current resolution.</summary>
+        /// <summary>Legacy — migrated to ExactHz (~60).</summary>
         Prefer60 = 1,
 
-        /// <summary>Prefer ~120 Hz at the current resolution.</summary>
+        /// <summary>Legacy — migrated to ExactHz (~120).</summary>
         Prefer120 = 2,
 
         /// <summary>Highest rate EnumDisplaySettings reports for the current resolution.</summary>
-        HighestDetected = 3
+        HighestDetected = 3,
+
+        /// <summary>Use PreferredRefreshRateHz (matched to an available rate on the target).</summary>
+        ExactHz = 4
     }
 
     public enum GameRefreshRateOverride
@@ -85,9 +88,21 @@ namespace PlayniteDisplayManager.Refresh
         public RefreshRatePlan Plan(
             RefreshRatePolicy globalPolicy,
             GameRefreshRateOverride gameOverride,
-            DisplayInfo primary)
+            DisplayInfo target,
+            double? preferredHz = null)
         {
             var policy = ResolvePolicy(globalPolicy, gameOverride);
+            if (policy == RefreshRatePolicy.Prefer60)
+            {
+                policy = RefreshRatePolicy.ExactHz;
+                preferredHz = preferredHz ?? 60;
+            }
+            else if (policy == RefreshRatePolicy.Prefer120)
+            {
+                policy = RefreshRatePolicy.ExactHz;
+                preferredHz = preferredHz ?? 120;
+            }
+
             if (policy == RefreshRatePolicy.Native)
             {
                 return new RefreshRatePlan
@@ -100,32 +115,36 @@ namespace PlayniteDisplayManager.Refresh
                 };
             }
 
-            if (primary == null || !primary.IsConnected)
+            if (target == null || !target.IsConnected)
             {
                 return new RefreshRatePlan
                 {
                     ShouldApply = false,
                     EffectivePolicy = policy,
-                    Reason = "no primary display"
+                    Reason = "no target display"
                 };
             }
 
-            var available = GetAvailableRates(primary);
-            double? target = null;
+            var available = GetAvailableRates(target);
+            double? resolved = null;
             switch (policy)
             {
-                case RefreshRatePolicy.Prefer60:
-                    target = FindClosest(available, 60);
-                    break;
-                case RefreshRatePolicy.Prefer120:
-                    target = FindClosest(available, 120);
+                case RefreshRatePolicy.ExactHz:
+                    if (preferredHz.HasValue)
+                    {
+                        resolved = FindClosest(available, preferredHz.Value) ?? preferredHz;
+                        if (resolved.HasValue && !available.Any(r => Math.Abs(r - resolved.Value) < 0.6))
+                        {
+                            resolved = FindClosest(available, preferredHz.Value);
+                        }
+                    }
                     break;
                 case RefreshRatePolicy.HighestDetected:
-                    target = available.Count > 0 ? available.Max() : (double?)null;
+                    resolved = available.Count > 0 ? available.Max() : (double?)null;
                     break;
             }
 
-            if (!target.HasValue)
+            if (!resolved.HasValue)
             {
                 return new RefreshRatePlan
                 {
@@ -135,24 +154,24 @@ namespace PlayniteDisplayManager.Refresh
                 };
             }
 
-            if (primary.RefreshRateHz > 0 &&
-                Math.Abs(primary.RefreshRateHz - target.Value) < 0.6)
+            if (target.RefreshRateHz > 0 &&
+                Math.Abs(target.RefreshRateHz - resolved.Value) < 0.6)
             {
                 return new RefreshRatePlan
                 {
                     ShouldApply = false,
-                    TargetHz = target,
+                    TargetHz = resolved,
                     EffectivePolicy = policy,
-                    Reason = "already at " + target.Value.ToString("0.###") + " Hz"
+                    Reason = "already at " + resolved.Value.ToString("0.###") + " Hz"
                 };
             }
 
             return new RefreshRatePlan
             {
                 ShouldApply = true,
-                TargetHz = target,
+                TargetHz = resolved,
                 EffectivePolicy = policy,
-                Reason = "apply " + target.Value.ToString("0.###") + " Hz"
+                Reason = "apply " + resolved.Value.ToString("0.###") + " Hz"
             };
         }
 
@@ -190,7 +209,6 @@ namespace PlayniteDisplayManager.Refresh
                 return false;
             }
 
-            // Temporary mode for this session — topology snapshot restore brings the prior rate back.
             var apply = ChangeDisplaySettingsEx(display.GdiDeviceName, ref mode, IntPtr.Zero, 0, IntPtr.Zero);
             if (apply != 0)
             {
@@ -220,6 +238,23 @@ namespace PlayniteDisplayManager.Refresh
             }
         }
 
+        public static RefreshRatePolicy NormalizeLegacyPolicy(RefreshRatePolicy policy, ref double? preferredHz)
+        {
+            if (policy == RefreshRatePolicy.Prefer60)
+            {
+                preferredHz = preferredHz ?? 60;
+                return RefreshRatePolicy.ExactHz;
+            }
+
+            if (policy == RefreshRatePolicy.Prefer120)
+            {
+                preferredHz = preferredHz ?? 120;
+                return RefreshRatePolicy.ExactHz;
+            }
+
+            return policy;
+        }
+
         private static double? FindClosest(IReadOnlyList<double> available, double desired)
         {
             if (available == null || available.Count == 0)
@@ -239,7 +274,6 @@ namespace PlayniteDisplayManager.Refresh
                 }
             }
 
-            // Accept 59.94 for 60, 119.88 for 120, etc.
             if (best.HasValue && bestDelta <= 1.5)
             {
                 return best;

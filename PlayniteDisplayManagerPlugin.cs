@@ -671,7 +671,8 @@ namespace PlayniteDisplayManager
             return refreshRates.Plan(
                 settings?.GlobalRefreshRatePolicy ?? RefreshRatePolicy.Native,
                 gameProfiles?.GetRefreshRateOverride(game) ?? GameRefreshRateOverride.Inherit,
-                primary);
+                primary,
+                settings?.PreferredRefreshRateHz);
         }
 
         public bool GameHasHdrMetadata(Game game)
@@ -732,15 +733,44 @@ namespace PlayniteDisplayManager
         {
             switch (settings?.GlobalRefreshRatePolicy ?? RefreshRatePolicy.Native)
             {
+                case RefreshRatePolicy.ExactHz:
                 case RefreshRatePolicy.Prefer60:
-                    return Loc("LOCDisplayManager_RefreshPolicy60");
                 case RefreshRatePolicy.Prefer120:
-                    return Loc("LOCDisplayManager_RefreshPolicy120");
+                    if (settings?.PreferredRefreshRateHz > 0)
+                    {
+                        return string.Format(
+                            Loc("LOCDisplayManager_RefreshPolicyExactFormat"),
+                            settings.PreferredRefreshRateHz.Value);
+                    }
+                    return Loc("LOCDisplayManager_RefreshPolicyExact");
                 case RefreshRatePolicy.HighestDetected:
                     return Loc("LOCDisplayManager_RefreshPolicyHighest");
                 default:
                     return Loc("LOCDisplayManager_RefreshPolicyNative");
             }
+        }
+
+        public string GetHdrActionOverviewText()
+        {
+            switch (settings?.GlobalHdrPolicy ?? GlobalHdrPolicy.DoNotManage)
+            {
+                case GlobalHdrPolicy.OnForAllGames:
+                    return Loc("LOCDisplayManager_OverviewActionAlwaysOn");
+                case GlobalHdrPolicy.OnWhenMetadataIndicates:
+                    return Loc("LOCDisplayManager_OverviewActionMetadata");
+                default:
+                    return Loc("LOCDisplayManager_OverviewActionDoNotManage");
+            }
+        }
+
+        public string GetActiveSessionOverviewText()
+        {
+            if (activeGameId.HasValue && !string.IsNullOrWhiteSpace(activeGameName))
+            {
+                return string.Format(Loc("LOCDisplayManager_OverviewSessionActiveFormat"), activeGameName);
+            }
+
+            return Loc("LOCDisplayManager_OverviewSessionIdle");
         }
 
         public Game GetSelectedLibraryGame()
@@ -769,6 +799,13 @@ namespace PlayniteDisplayManager
 
             if (settings == null || settings.NativeHdrConflictNotified)
             {
+                return;
+            }
+
+            if (!settings.ShowNotifications || !settings.NotifyNativeHdrConflict)
+            {
+                settings.NativeHdrConflictNotified = true;
+                SavePluginSettings(settings);
                 return;
             }
 
@@ -884,17 +921,11 @@ namespace PlayniteDisplayManager
                     return Loc("LOCDisplayManager_OverviewGameHdrNone");
                 }
 
-                var hasMeta = GameHasHdrMetadata(selected);
                 var plan = PlanHdrSession(selected);
-                var metaText = hasMeta
-                    ? Loc("LOCDisplayManager_OverviewGameHdrYes")
-                    : Loc("LOCDisplayManager_OverviewGameHdrNo");
-                var actionText = DescribePlanAction(plan);
                 return string.Format(
-                    Loc("LOCDisplayManager_OverviewGameHdrFormat"),
+                    Loc("LOCDisplayManager_OverviewGameHdrSimpleFormat"),
                     selected.Name,
-                    metaText,
-                    actionText);
+                    DescribePlanAction(plan));
             }
             catch (Exception ex)
             {

@@ -13,18 +13,45 @@ namespace PlayniteDisplayManager.Displays
             ushort productCodeId,
             uint? serial,
             string adapterPath,
-            uint connectorInstance)
+            uint connectorInstance,
+            string monitorDevicePath = null)
         {
+            var adapter = string.IsNullOrWhiteSpace(adapterPath) ? "unknown-adapter" : adapterPath.Trim();
+            var connectorKey = adapter + "|" + connectorInstance;
+
             if (edidIdsValid && (manufactureId != 0 || productCodeId != 0))
             {
-                var serialPart = serial.HasValue && serial.Value != 0
-                    ? serial.Value.ToString("X8")
-                    : "NOSERIAL";
-                return $"{EdidPrefix}{manufactureId:X4}-{productCodeId:X4}-{serialPart}";
+                if (serial.HasValue && serial.Value != 0)
+                {
+                    return EdidPrefix + manufactureId.ToString("X4") + "-" + productCodeId.ToString("X4") + "-" +
+                           serial.Value.ToString("X8");
+                }
+
+                // Identical panels often share manufacture/product with serial 0 — disambiguate by connector.
+                return EdidPrefix + manufactureId.ToString("X4") + "-" + productCodeId.ToString("X4") +
+                       "-NOSERIAL|" + connectorKey;
             }
 
-            var adapter = string.IsNullOrWhiteSpace(adapterPath) ? "unknown-adapter" : adapterPath.Trim();
-            return $"{ConnectorPrefix}{adapter}|{connectorInstance}";
+            return ConnectorPrefix + connectorKey;
+        }
+
+        /// <summary>
+        /// Append a stable PnP-path suffix when two targets still collide after the primary id rules.
+        /// </summary>
+        public static string Disambiguate(string id, string monitorDevicePath)
+        {
+            if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(monitorDevicePath))
+            {
+                return id;
+            }
+
+            var hash = monitorDevicePath.Trim().GetHashCode().ToString("X8");
+            if (id.IndexOf("#" + hash, StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return id;
+            }
+
+            return id + "#" + hash;
         }
 
         public static string FormatManufacturerCode(ushort manufactureId)

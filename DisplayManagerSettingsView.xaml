@@ -55,6 +55,12 @@
             <Style x:Key="PageSection" TargetType="StackPanel">
                 <Setter Property="Margin" Value="0,0,0,24" />
             </Style>
+            <Style x:Key="FieldGroup" TargetType="StackPanel">
+                <Setter Property="Margin" Value="0,0,0,16" />
+            </Style>
+            <Style x:Key="IndentedHintText" TargetType="TextBlock" BasedOn="{StaticResource HintText}">
+                <Setter Property="Margin" Value="24,8,0,16" />
+            </Style>
             <Style x:Key="SettingsCard" TargetType="Border">
                 <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource Narian.Border}" />
@@ -243,85 +249,46 @@
                             </StackPanel>
                         </Border>
 
-                        <UniformGrid Columns="2">
-                            <Border Style="{StaticResource SummaryCard}" Margin="0,0,8,16">
-                                <StackPanel>
-                                    <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewDisplays}"
-                                               FontWeight="SemiBold"
-                                               Margin="0,0,0,8" />
-                                    <TextBlock x:Name="OverviewDisplaysText"
-                                               Style="{StaticResource BodyText}" />
-                                    <WrapPanel x:Name="OverviewDisplayPills" Margin="0,12,0,0" />
-                                </StackPanel>
-                            </Border>
-                            <Border Style="{StaticResource SummaryCard}" Margin="8,0,0,16">
-                                <StackPanel>
-                                    <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewHdr}"
-                                               FontWeight="SemiBold"
-                                               Margin="0,0,0,8" />
-                                    <TextBlock x:Name="OverviewHdrText"
-                                               Text="{DynamicResource LOCDisplayManager_OverviewHdrUnknown}"
-                                               Style="{StaticResource BodyText}" />
-                                    <Border Style="{StaticResource SummaryPill}" Margin="0,12,0,0" HorizontalAlignment="Left">
-                                        <TextBlock x:Name="OverviewHdrBadge"
-                                                   Text="{DynamicResource LOCDisplayManager_StatusUnknown}"
-                                                   FontSize="12" />
-                                    </Border>
-                                </StackPanel>
-                            </Border>
-                            <Border Style="{StaticResource SummaryCard}" Margin="0,0,8,16">
-                                <StackPanel>
-                                    <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewPolicy}"
-                                               FontWeight="SemiBold"
-                                               Margin="0,0,0,8" />
-                                    <TextBlock x:Name="OverviewPolicyText"
-                                               Text="{DynamicResource LOCDisplayManager_OverviewPolicyUnset}"
-                                               Style="{StaticResource BodyText}" />
-                                </StackPanel>
-                            </Border>
-                            <Border Style="{StaticResource SummaryCard}" Margin="8,0,0,16">
-                                <StackPanel>
-                                    <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewSession}"
-                                               FontWeight="SemiBold"
-                                               Margin="0,0,0,8" />
-                                    <TextBlock x:Name="OverviewSessionText"
-                                               Text="{DynamicResource LOCDisplayManager_OverviewSessionIdle}"
-                                               Style="{StaticResource BodyText}" />
-                                </StackPanel>
-                            </Border>
-                        </UniformGrid>
+                        <StackPanel Style="{StaticResource FieldGroup}">
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewDisplays}" Style="{StaticResource FieldLabel}" />
+                            <TextBlock x:Name="OverviewDisplaysText" Style="{StaticResource BodyText}" />
+                            <WrapPanel x:Name="OverviewDisplayPills" Margin="0,12,0,0" />
+                        </StackPanel>
 
-                        <Border Style="{StaticResource SettingsCard}" Margin="0,8,0,0">
-                            <StackPanel>
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewGameHdr}"
-                                           Style="{StaticResource FieldLabel}" />
-                                <TextBlock x:Name="OverviewGameHdrText"
-                                           Style="{StaticResource BodyText}"
-                                           Margin="0,4,0,0"
-                                           Text="{DynamicResource LOCDisplayManager_OverviewGameHdrNone}" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewNativeHdr}"
-                                           Style="{StaticResource FieldLabel}"
-                                           Margin="0,16,0,0" />
-                                <TextBlock x:Name="OverviewNativeHdrText"
-                                           Style="{StaticResource BodyText}"
-                                           Margin="0,4,0,0"
-                                           Text="{DynamicResource LOCDisplayManager_OverviewNativeHdrClear}" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewNightLight}"
-                                           Style="{StaticResource FieldLabel}"
-                                           Margin="0,16,0,0" />
-                                <TextBlock x:Name="OverviewNightLightText"
-                                           Style="{StaticResource BodyText}"
-                                           Margin="0,4,0,0"
-                                           Text="{DynamicResource LOCDisplayManager_OverviewNightLightCut}" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewRefreshRate}"
-                                           Style="{StaticResource FieldLabel}"
-                                           Margin="0,16,0,0" />
-                                <TextBlock x:Name="OverviewRefreshRateText"
-                                           Style="{StaticResource BodyText}"
-                                           Margin="0,4,0,0"
-                                           Text="{DynamicResource LOCDisplayManager_RefreshPolicyNative}" />
-                            </StackPanel>
-                        </Border>
+                        <StackPanel Style="{StaticResource FieldGroup}">
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewWhenLaunching}" Style="{StaticResource FieldLabel}" />
+                            <TextBlock x:Name="OverviewPolicyText"
+                                       Text="{DynamicResource LOCDisplayManager_OverviewPolicyUnset}"
+                                       Style="{StaticResource BodyText}" />
+                        </StackPanel>
+
+                        <StackPanel Style="{StaticResource FieldGroup}">
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewGameHdr}" Style="{StaticResource FieldLabel}" />
+                            <TextBlock x:Name="OverviewGameHdrText"
+                                       Style="{StaticResource BodyText}"
+                                       Text="{DynamicResource LOCDisplayManager_OverviewGameHdrNone}" />
+                        </StackPanel>
+
+                        <StackPanel Style="{StaticResource FieldGroup}">
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewSession}" Style="{StaticResource FieldLabel}" />
+                            <TextBlock x:Name="OverviewSessionText"
+                                       Text="{DynamicResource LOCDisplayManager_OverviewSessionIdle}"
+                                       Style="{StaticResource BodyText}" />
+                        </StackPanel>
+
+                        <StackPanel Style="{StaticResource FieldGroup}">
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewNativeHdr}" Style="{StaticResource FieldLabel}" />
+                            <TextBlock x:Name="OverviewNativeHdrText"
+                                       Style="{StaticResource BodyText}"
+                                       Text="{DynamicResource LOCDisplayManager_OverviewNativeHdrClear}" />
+                        </StackPanel>
+
+                        <StackPanel Style="{StaticResource FieldGroup}">
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewRefreshRate}" Style="{StaticResource FieldLabel}" />
+                            <TextBlock x:Name="OverviewRefreshRateText"
+                                       Style="{StaticResource BodyText}"
+                                       Text="{DynamicResource LOCDisplayManager_RefreshPolicyNative}" />
+                        </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -456,8 +423,8 @@
 
                         <Border Style="{StaticResource SettingsCard}">
                             <StackPanel>
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_HdrAcmTitle}" Style="{StaticResource FieldLabel}" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_HdrAcmHelp}" Style="{StaticResource HintText}" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_HdrForceSdrTitle}" Style="{StaticResource FieldLabel}" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_HdrForceSdrHelp}" Style="{StaticResource HintText}" />
                                 <Button Content="{DynamicResource LOCDisplayManager_HdrWriteOffNow}"
                                         Style="{StaticResource NarianPrimaryButton}"
                                         MinWidth="180"
@@ -487,82 +454,66 @@
                         </Border>
                         <TextBlock Text="{DynamicResource LOCDisplayManager_GeneralHelp}" Style="{StaticResource SectionSubtitleText}" />
 
-                        <Border Style="{StaticResource SettingsCard}">
-                            <StackPanel>
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_DesktopAccessTitle}" Style="{StaticResource FieldLabel}" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_DesktopAccessHelp}" Style="{StaticResource HintText}" />
-                                <CheckBox x:Name="ShowDesktopTopPanelCheck"
-                                          Content="{DynamicResource LOCDisplayManager_ShowDesktopTopPanel}"
-                                          Margin="0,8,0,0"
-                                          Checked="ShowDesktopTopPanelCheck_OnChanged"
-                                          Unchecked="ShowDesktopTopPanelCheck_OnChanged" />
+                        <StackPanel Style="{StaticResource FieldGroup}">
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_DesktopAccessTitle}" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_DesktopAccessHelp}" Style="{StaticResource HintText}" />
+                            <CheckBox x:Name="ShowDesktopTopPanelCheck"
+                                      Content="{DynamicResource LOCDisplayManager_ShowDesktopTopPanel}"
+                                      Margin="0,8,0,0"
+                                      Checked="ShowDesktopTopPanelCheck_OnChanged"
+                                      Unchecked="ShowDesktopTopPanelCheck_OnChanged" />
+                            <StackPanel Margin="24,16,0,0"
+                                        IsEnabled="{Binding ShowDesktopTopPanel}">
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_TopPanelDisplayMode}" Style="{StaticResource FieldLabel}" />
+                                <ComboBox ItemsSource="{Binding DesktopTopPanelDisplayModeOptions}"
+                                          DisplayMemberPath="DisplayName"
+                                          SelectedValuePath="Value"
+                                          SelectedValue="{Binding DesktopTopPanelDisplayModeValue, Mode=TwoWay}"
+                                          MinHeight="36" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_TopPanelDisplayModeHelp}"
+                                           Style="{StaticResource HintText}" />
                             </StackPanel>
-                        </Border>
+                        </StackPanel>
 
-                        <Border Style="{StaticResource SettingsCard}">
-                            <StackPanel>
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_AudioSwitcherTitle}" Style="{StaticResource FieldLabel}" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_AudioSwitcherHelp}" Style="{StaticResource HintText}" />
-                                <TextBlock x:Name="AudioSwitcherStatusText"
-                                           Style="{StaticResource BodyText}"
-                                           Margin="0,0,0,8" />
-                                <CheckBox x:Name="EnableAudioSwitcherHookCheck"
-                                          Content="{DynamicResource LOCDisplayManager_EnableAudioSwitcherHook}"
-                                          Margin="0,8,0,0"
-                                          Checked="EnableAudioSwitcherHookCheck_OnChanged"
-                                          Unchecked="EnableAudioSwitcherHookCheck_OnChanged" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_AudioSwitcherGameMenuHint}"
-                                           Style="{StaticResource HintText}"
-                                           Margin="0,12,0,0" />
-                            </StackPanel>
-                        </Border>
+                        <StackPanel Style="{StaticResource FieldGroup}">
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_AudioSwitcherTitle}" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_AudioSwitcherHelp}" Style="{StaticResource HintText}" />
+                            <TextBlock x:Name="AudioSwitcherStatusText"
+                                       Style="{StaticResource BodyText}"
+                                       Margin="0,0,0,8" />
+                            <CheckBox x:Name="EnableAudioSwitcherHookCheck"
+                                      Content="{DynamicResource LOCDisplayManager_EnableAudioSwitcherHook}"
+                                      Margin="0,8,0,0"
+                                      Checked="EnableAudioSwitcherHookCheck_OnChanged"
+                                      Unchecked="EnableAudioSwitcherHookCheck_OnChanged" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_AudioSwitcherGameMenuHint}"
+                                       Style="{StaticResource HintText}"
+                                       Margin="0,12,0,0" />
+                        </StackPanel>
 
-                        <Border Style="{StaticResource SettingsCard}">
-                            <StackPanel>
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_NightLightTitle}" Style="{StaticResource FieldLabel}" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_NightLightExperimentalBadge}"
-                                           Style="{StaticResource HintText}"
-                                           Margin="0,0,0,8" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_NightLightCutHelp}" Style="{StaticResource BodyText}" />
-                                <RadioButton IsChecked="True"
-                                             IsEnabled="False"
-                                             Content="{DynamicResource LOCDisplayManager_NightLightDoNotTouch}"
-                                             Margin="0,16,0,0" />
-                            </StackPanel>
-                        </Border>
-
-                        <Border Style="{StaticResource SettingsCard}">
-                            <StackPanel>
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_RefreshRateTitle}" Style="{StaticResource FieldLabel}" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_RefreshRateHelp}" Style="{StaticResource HintText}" />
-                                <TextBlock x:Name="RefreshRateDetectedText"
-                                           Style="{StaticResource BodyText}"
-                                           Margin="0,0,0,8" />
-                                <RadioButton x:Name="RefreshNativeRadio"
-                                             GroupName="RefreshRatePolicy"
-                                             Content="{DynamicResource LOCDisplayManager_RefreshPolicyNative}"
-                                             Margin="0,8,0,0"
-                                             Checked="RefreshRateRadio_OnChecked" />
-                                <RadioButton x:Name="Refresh60Radio"
-                                             GroupName="RefreshRatePolicy"
-                                             Content="{DynamicResource LOCDisplayManager_RefreshPolicy60}"
-                                             Margin="0,8,0,0"
-                                             Checked="RefreshRateRadio_OnChecked" />
-                                <RadioButton x:Name="Refresh120Radio"
-                                             GroupName="RefreshRatePolicy"
-                                             Content="{DynamicResource LOCDisplayManager_RefreshPolicy120}"
-                                             Margin="0,8,0,0"
-                                             Checked="RefreshRateRadio_OnChecked" />
-                                <RadioButton x:Name="RefreshHighestRadio"
-                                             GroupName="RefreshRatePolicy"
-                                             Content="{DynamicResource LOCDisplayManager_RefreshPolicyHighest}"
-                                             Margin="0,8,0,0"
-                                             Checked="RefreshRateRadio_OnChecked" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_RefreshRateGameMenuHint}"
-                                           Style="{StaticResource HintText}"
-                                           Margin="0,12,0,0" />
-                            </StackPanel>
-                        </Border>
+                        <StackPanel Style="{StaticResource FieldGroup}">
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_RefreshRateTitle}" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_RefreshRateHelp}" Style="{StaticResource HintText}" />
+                            <TextBlock x:Name="RefreshRateDetectedText"
+                                       Style="{StaticResource BodyText}"
+                                       Margin="0,0,0,8" />
+                            <RadioButton x:Name="RefreshPolicyNativeRadio"
+                                         GroupName="RefreshRatePolicy"
+                                         Tag="Native"
+                                         Content="{DynamicResource LOCDisplayManager_RefreshPolicyNative}"
+                                         Margin="0,8,0,0"
+                                         Checked="RefreshRateRadio_OnChecked" />
+                            <StackPanel x:Name="RefreshRateExactPanel" />
+                            <RadioButton x:Name="RefreshPolicyHighestRadio"
+                                         GroupName="RefreshRatePolicy"
+                                         Tag="HighestDetected"
+                                         Content="{DynamicResource LOCDisplayManager_RefreshPolicyHighest}"
+                                         Margin="0,8,0,0"
+                                         Checked="RefreshRateRadio_OnChecked" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_RefreshRateGameMenuHint}"
+                                       Style="{StaticResource HintText}"
+                                       Margin="0,12,0,0" />
+                        </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -576,10 +527,26 @@
                 </TabItem.Header>
                 <ScrollViewer Style="{StaticResource FillScrollViewer}">
                     <StackPanel Margin="8,8,8,16">
-                        <Border Style="{StaticResource PageHeader}">
-                            <TextBlock Text="{DynamicResource LOCDisplayManager_NotificationsTab}" Style="{StaticResource SectionHeaderText}" />
-                        </Border>
-                        <TextBlock Text="{DynamicResource LOCDisplayManager_TabComingSoon}" Style="{StaticResource SectionSubtitleText}" />
+                        <StackPanel Style="{StaticResource PageSection}">
+                            <Border Style="{StaticResource PageHeader}">
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_NotificationsTab}" Style="{StaticResource SectionHeaderText}" />
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Style="{StaticResource FieldGroup}">
+                            <CheckBox Content="{DynamicResource LOCDisplayManager_ShowNotifications}"
+                                      IsChecked="{Binding ShowNotifications}" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_ShowNotificationsHelp}"
+                                       Style="{StaticResource IndentedHintText}" />
+                        </StackPanel>
+
+                        <StackPanel Margin="24,0,0,0"
+                                    IsEnabled="{Binding ShowNotifications}">
+                            <CheckBox Content="{DynamicResource LOCDisplayManager_NotifyNativeHdrConflict}"
+                                      IsChecked="{Binding NotifyNativeHdrConflict}" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_NotifyNativeHdrConflictHelp}"
+                                       Style="{StaticResource IndentedHintText}" />
+                        </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -657,31 +624,72 @@
                 </TabItem.Header>
                 <ScrollViewer Style="{StaticResource FillScrollViewer}">
                     <StackPanel Margin="8,8,8,16">
+                        <StackPanel Style="{StaticResource PageSection}">
+                            <Border Style="{StaticResource PageHeader}">
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_AboutTab}" Style="{StaticResource SectionHeaderText}" />
+                            </Border>
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_AboutDescription}" Style="{StaticResource SectionSubtitleText}" />
+                        </StackPanel>
+
+                        <TextBlock x:Name="AboutVersionText"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,16" />
+
                         <Border Style="{StaticResource SettingsCard}">
                             <StackPanel>
-                                <TextBlock x:Name="AboutVersionText"
-                                           FontSize="20"
-                                           FontWeight="SemiBold"
-                                           Margin="0,0,0,8" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_AboutBlurb}" Style="{StaticResource BodyText}" Margin="0,0,0,16" />
-                                <TextBlock>
-                                    <Hyperlink NavigateUri="https://github.com/Naerian/playnite-nx-display-session"
-                                               RequestNavigate="Hyperlink_OnRequestNavigate">
-                                        GitHub
-                                    </Hyperlink>
-                                    <Run Text=" · " />
-                                    <Hyperlink NavigateUri="https://github.com/Naerian/playnite-nx-display-session/wiki"
-                                               RequestNavigate="Hyperlink_OnRequestNavigate">
-                                        Wiki
-                                    </Hyperlink>
-                                    <Run Text=" · " />
-                                    <Hyperlink NavigateUri="https://ko-fi.com/naerian"
-                                               RequestNavigate="Hyperlink_OnRequestNavigate">
-                                        Ko-fi
-                                    </Hyperlink>
-                                </TextBlock>
+                                <Border Style="{StaticResource SectionHeaderBorder}">
+                                    <TextBlock Text="{DynamicResource LOCDisplayManager_AboutPurposeTitle}" Style="{StaticResource SectionHeaderText}" />
+                                </Border>
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_AboutDisplays}" TextWrapping="Wrap" Margin="0,0,0,8" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_AboutProfiles}" TextWrapping="Wrap" Margin="0,0,0,8" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_AboutIntegration}" TextWrapping="Wrap" />
                             </StackPanel>
                         </Border>
+
+                        <Grid Margin="0,24,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <StackPanel Style="{StaticResource PageSection}" Margin="0,0,0,16">
+                                    <Border Style="{StaticResource PageHeader}">
+                                        <TextBlock Text="{DynamicResource LOCDisplayManager_ProjectLinksTitle}" Style="{StaticResource SectionHeaderText}" />
+                                    </Border>
+                                </StackPanel>
+                                <WrapPanel>
+                                    <Button Content="{DynamicResource LOCDisplayManager_OpenGitHub}"
+                                            Tag="https://github.com/Naerian/playnite-nx-display-session"
+                                            MinWidth="100"
+                                            Margin="0,0,8,8"
+                                            Click="OpenExternalButton" />
+                                    <Button Content="{DynamicResource LOCDisplayManager_OpenWiki}"
+                                            Tag="https://github.com/Naerian/playnite-nx-display-session/wiki"
+                                            MinWidth="100"
+                                            Margin="0,0,8,8"
+                                            Click="OpenExternalButton" />
+                                    <Button Content="{DynamicResource LOCDisplayManager_ReportIssue}"
+                                            Tag="https://github.com/Naerian/playnite-nx-display-session/issues/new"
+                                            MinWidth="140"
+                                            Margin="0,0,0,8"
+                                            Click="OpenExternalButton" />
+                                </WrapPanel>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <StackPanel Style="{StaticResource PageSection}" Margin="0,0,0,16">
+                                    <Border Style="{StaticResource PageHeader}">
+                                        <TextBlock Text="{DynamicResource LOCDisplayManager_SupportTitle}" Style="{StaticResource SectionHeaderText}" />
+                                    </Border>
+                                </StackPanel>
+                                <Button Content="{DynamicResource LOCDisplayManager_KoFiSupport}"
+                                        Tag="https://ko-fi.com/naerian"
+                                        HorizontalAlignment="Left"
+                                        MinWidth="150"
+                                        Padding="16,8"
+                                        Click="OpenExternalButton" />
+                            </StackPanel>
+                        </Grid>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

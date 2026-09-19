@@ -100,6 +100,24 @@ namespace PlayniteDisplayManager.Theme
             private set => SetValue(ref displaysSummary, value);
         }
 
+        public bool ShowTopPanelIcon
+        {
+            get
+            {
+                var mode = plugin.Settings?.DesktopTopPanelDisplayMode ?? DesktopTopPanelDisplayMode.IconAndText;
+                return mode == DesktopTopPanelDisplayMode.Icon || mode == DesktopTopPanelDisplayMode.IconAndText;
+            }
+        }
+
+        public bool ShowTopPanelText
+        {
+            get
+            {
+                var mode = plugin.Settings?.DesktopTopPanelDisplayMode ?? DesktopTopPanelDisplayMode.IconAndText;
+                return mode == DesktopTopPanelDisplayMode.Text || mode == DesktopTopPanelDisplayMode.IconAndText;
+            }
+        }
+
         public void Refresh()
         {
             try
@@ -145,6 +163,8 @@ namespace PlayniteDisplayManager.Theme
                 OnPropertyChanged(nameof(SupportsHdrMetadata));
                 OnPropertyChanged(nameof(SupportsTopPanel));
                 OnPropertyChanged(nameof(SupportsRefreshRatePolicy));
+                OnPropertyChanged(nameof(ShowTopPanelIcon));
+                OnPropertyChanged(nameof(ShowTopPanelText));
             }
             catch (Exception)
             {

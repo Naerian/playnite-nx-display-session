@@ -23,6 +23,7 @@ namespace PlayniteDisplayManager
         private DisplaySnapshot topologyTrialSnapshot;
         private DispatcherTimer topologyTrialTimer;
         private int topologyTrialSecondsLeft;
+        private bool syncingRefreshRadios;
 
         public DisplayManagerSettingsView() : this(false)
         {
@@ -837,14 +838,15 @@ namespace PlayniteDisplayManager
 
             if (OverviewPolicyText != null)
             {
-                OverviewPolicyText.Text = settings?.Plugin?.GetHdrPolicyOverviewText()
+                OverviewPolicyText.Text = settings?.Plugin?.GetHdrActionOverviewText()
+                    ?? settings?.Plugin?.GetHdrPolicyOverviewText()
                     ?? (TryFindResource("LOCDisplayManager_OverviewPolicyUnset") as string ?? "Not configured yet.");
             }
 
-            if (OverviewHdrText != null)
+            if (OverviewSessionText != null)
             {
-                OverviewHdrText.Text = TryFindResource("LOCDisplayManager_OverviewHdrUnknown") as string
-                    ?? "Unknown — Display Manager does not trust readback under Automatic Color Management.";
+                OverviewSessionText.Text = settings?.Plugin?.GetActiveSessionOverviewText()
+                    ?? (TryFindResource("LOCDisplayManager_OverviewSessionIdle") as string ?? "No game session.");
             }
 
             if (OverviewGameHdrText != null)
@@ -861,13 +863,6 @@ namespace PlayniteDisplayManager
                         ?? "No games have Playnite’s native Enable HDR flag set.");
             }
 
-            if (OverviewNightLightText != null)
-            {
-                OverviewNightLightText.Text = settings?.Plugin?.GetNightLightOverviewText()
-                    ?? (TryFindResource("LOCDisplayManager_OverviewNightLightCut") as string
-                        ?? "Not managed — Windows has no supported Night Light API across Win10+Win11.");
-            }
-
             if (OverviewRefreshRateText != null)
             {
                 OverviewRefreshRateText.Text = settings?.Plugin?.GetRefreshRateOverviewText()
@@ -878,11 +873,6 @@ namespace PlayniteDisplayManager
             SyncHdrMetadataControls();
             SyncNativeHdrMigrationStatus();
             SyncRefreshRateRadios();
-
-            if (OverviewHdrBadge != null)
-            {
-                OverviewHdrBadge.Text = TryFindResource("LOCDisplayManager_StatusUnknown") as string ?? "Unknown";
-            }
         }
 
         private void SyncDesktopAccessControls()
@@ -894,6 +884,7 @@ namespace PlayniteDisplayManager
             }
 
             ShowDesktopTopPanelCheck.IsChecked = settings.ShowDesktopTopPanel;
+            // DesktopTopPanelDisplayMode ComboBox uses TwoWay binding to DesktopTopPanelDisplayModeValue.
         }
 
         private void ShowDesktopTopPanelCheck_OnChanged(object sender, RoutedEventArgs e)
@@ -906,6 +897,7 @@ namespace PlayniteDisplayManager
 
             settings.ShowDesktopTopPanel = ShowDesktopTopPanelCheck.IsChecked == true;
             settings.Plugin?.NotifyDisplaysChanged();
+            settings.Plugin?.Theme?.Refresh();
         }
 
         private void SyncAudioSwitcherControls()
@@ -939,31 +931,16 @@ namespace PlayniteDisplayManager
         private void SyncRefreshRateRadios()
         {
             var settings = DataContext as DisplayManagerSettings;
-            if (settings == null || RefreshNativeRadio == null)
+            if (settings == null || RefreshPolicyNativeRadio == null)
             {
                 return;
             }
 
-            switch (settings.GlobalRefreshRatePolicy)
-            {
-                case RefreshRatePolicy.Prefer60:
-                    Refresh60Radio.IsChecked = true;
-                    break;
-                case RefreshRatePolicy.Prefer120:
-                    Refresh120Radio.IsChecked = true;
-                    break;
-                case RefreshRatePolicy.HighestDetected:
-                    RefreshHighestRadio.IsChecked = true;
-                    break;
-                default:
-                    RefreshNativeRadio.IsChecked = true;
-                    break;
-            }
+            var primary = settings.AvailableDisplays?.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
+                ?? settings.AvailableDisplays?.FirstOrDefault(d => d.IsConnected);
 
             if (RefreshRateDetectedText != null)
             {
-                var primary = settings.AvailableDisplays?.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
-                    ?? settings.AvailableDisplays?.FirstOrDefault(d => d.IsConnected);
                 if (primary == null)
                 {
                     RefreshRateDetectedText.Text = TryFindResource("LOCDisplayManager_RefreshRateDetectedNone") as string
@@ -984,34 +961,105 @@ namespace PlayniteDisplayManager
                         list);
                 }
             }
+
+            syncingRefreshRadios = true;
+            try
+            {
+                if (RefreshRateExactPanel != null)
+                {
+                    RefreshRateExactPanel.Children.Clear();
+                    var rates = settings.Plugin?.RefreshRates?.GetAvailableRates(primary) ?? Array.Empty<double>();
+                    var preferred = settings.PreferredRefreshRateHz;
+                    var exactSelected = settings.GlobalRefreshRatePolicy == RefreshRatePolicy.ExactHz
+                        || settings.GlobalRefreshRatePolicy == RefreshRatePolicy.Prefer60
+                        || settings.GlobalRefreshRatePolicy == RefreshRatePolicy.Prefer120;
+
+                    foreach (var rate in rates)
+                    {
+                        var format = TryFindResource("LOCDisplayManager_RefreshPolicyExactFormat") as string
+                            ?? "{0:0.###} Hz";
+                        var radio = new RadioButton
+                        {
+                            GroupName = "RefreshRatePolicy",
+                            Content = string.Format(format, rate),
+                            Tag = rate,
+                            Margin = new Thickness(0, 8, 0, 0),
+                            IsChecked = exactSelected
+                                && preferred.HasValue
+                                && Math.Abs(preferred.Value - rate) < 0.05
+                        };
+                        radio.Checked += RefreshRateRadio_OnChecked;
+                        RefreshRateExactPanel.Children.Add(radio);
+                    }
+                }
+
+                switch (settings.GlobalRefreshRatePolicy)
+                {
+                    case RefreshRatePolicy.HighestDetected:
+                        RefreshPolicyHighestRadio.IsChecked = true;
+                        break;
+                    case RefreshRatePolicy.ExactHz:
+                    case RefreshRatePolicy.Prefer60:
+                    case RefreshRatePolicy.Prefer120:
+                        if (RefreshRateExactPanel == null
+                            || !RefreshRateExactPanel.Children.OfType<RadioButton>().Any(r => r.IsChecked == true))
+                        {
+                            RefreshPolicyNativeRadio.IsChecked = true;
+                        }
+                        break;
+                    default:
+                        RefreshPolicyNativeRadio.IsChecked = true;
+                        break;
+                }
+            }
+            finally
+            {
+                syncingRefreshRadios = false;
+            }
         }
 
         private void RefreshRateRadio_OnChecked(object sender, RoutedEventArgs e)
         {
+            if (syncingRefreshRadios)
+            {
+                return;
+            }
+
             var settings = DataContext as DisplayManagerSettings;
             if (settings == null)
             {
                 return;
             }
 
-            if (Refresh60Radio?.IsChecked == true)
+            var radio = sender as RadioButton;
+            if (radio == null || radio.IsChecked != true)
             {
-                settings.GlobalRefreshRatePolicy = RefreshRatePolicy.Prefer60;
+                return;
             }
-            else if (Refresh120Radio?.IsChecked == true)
-            {
-                settings.GlobalRefreshRatePolicy = RefreshRatePolicy.Prefer120;
-            }
-            else if (RefreshHighestRadio?.IsChecked == true)
+
+            if (ReferenceEquals(radio, RefreshPolicyHighestRadio)
+                || string.Equals(radio.Tag as string, "HighestDetected", StringComparison.OrdinalIgnoreCase))
             {
                 settings.GlobalRefreshRatePolicy = RefreshRatePolicy.HighestDetected;
+                settings.PreferredRefreshRateHz = null;
+            }
+            else if (radio.Tag is double hz)
+            {
+                settings.GlobalRefreshRatePolicy = RefreshRatePolicy.ExactHz;
+                settings.PreferredRefreshRateHz = hz;
             }
             else
             {
                 settings.GlobalRefreshRatePolicy = RefreshRatePolicy.Native;
+                settings.PreferredRefreshRateHz = null;
             }
 
-            UpdateOverview();
+            if (OverviewRefreshRateText != null)
+            {
+                OverviewRefreshRateText.Text = settings.Plugin?.GetRefreshRateOverviewText()
+                    ?? (TryFindResource("LOCDisplayManager_RefreshPolicyNative") as string
+                        ?? "Native (do not change refresh rate)");
+            }
         }
 
         private void SyncNativeHdrMigrationStatus()
@@ -1263,6 +1311,25 @@ namespace PlayniteDisplayManager
             }
 
             e.Handled = true;
+        }
+
+        private void OpenExternalButton(object sender, RoutedEventArgs e)
+        {
+            var button = sender as Button;
+            var url = button?.Tag as string;
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                return;
+            }
+
+            try
+            {
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            }
+            catch
+            {
+                // Best-effort navigation from About buttons.
+            }
         }
 
         private static string GetInstalledVersion()

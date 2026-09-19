@@ -59,11 +59,17 @@ namespace PlayniteDisplayManager.Displays
                         targetName.edidProductCodeId,
                         serial,
                         adapterName.adapterDevicePath,
-                        targetName.connectorInstance);
+                        targetName.connectorInstance,
+                        targetName.monitorDevicePath);
 
                     if (!seenIds.Add(id))
                     {
-                        continue;
+                        // Same EDID serial on two panels: harden with monitor PnP path.
+                        id = DisplayIdentity.Disambiguate(id, targetName.monitorDevicePath);
+                        if (!seenIds.Add(id))
+                        {
+                            continue;
+                        }
                     }
 
                     GetSourceSize(path, modes, out var width, out var height);
