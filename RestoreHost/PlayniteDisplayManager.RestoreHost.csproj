@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net462</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>PlayniteDisplayManager.RestoreHost</AssemblyName>
+    <RootNamespace>PlayniteDisplayManager.RestoreHost</RootNamespace>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>..\bin\$(Configuration)\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net462" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Displays\DisplayNative.cs" Link="Displays\DisplayNative.cs" />
+    <Compile Include="..\Displays\DisplayConnectionState.cs" Link="Displays\DisplayConnectionState.cs" />
+    <Compile Include="..\Displays\DisplayInfo.cs" Link="Displays\DisplayInfo.cs" />
+    <Compile Include="..\Displays\DisplayDeviceAlias.cs" Link="Displays\DisplayDeviceAlias.cs" />
+    <Compile Include="..\Displays\DisplayIdentity.cs" Link="Displays\DisplayIdentity.cs" />
+    <Compile Include="..\Displays\DisplayEdidReader.cs" Link="Displays\DisplayEdidReader.cs" />
+    <Compile Include="..\Displays\DisplayEnumerator.cs" Link="Displays\DisplayEnumerator.cs" />
+    <Compile Include="..\Displays\DisplaySnapshot.cs" Link="Displays\DisplaySnapshot.cs" />
+    <Compile Include="..\Displays\DisplayTopologyService.cs" Link="Displays\DisplayTopologyService.cs" />
+  </ItemGroup>
+</Project>

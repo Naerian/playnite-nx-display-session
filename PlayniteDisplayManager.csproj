@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Runtime.Serialization" />
     <PackageReference Include="PlayniteSDK" Version="6.16.0" PrivateAssets="all" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net462" Version="1.0.3" PrivateAssets="all" />
   </ItemGroup>

@@ -9,6 +9,22 @@ namespace PlayniteDisplayManager.Displays
         public const uint QDC_ONLY_ACTIVE_PATHS = 0x00000002;
         public const uint QDC_VIRTUAL_MODE_AWARE = 0x00000010;
 
+        public const uint SDC_TOPOLOGY_INTERNAL = 0x00000001;
+        public const uint SDC_TOPOLOGY_CLONE = 0x00000002;
+        public const uint SDC_TOPOLOGY_EXTEND = 0x00000004;
+        public const uint SDC_TOPOLOGY_EXTERNAL = 0x00000008;
+        public const uint SDC_TOPOLOGY_SUPPLIED = 0x00000010;
+        public const uint SDC_USE_SUPPLIED_DISPLAY_CONFIG = 0x00000020;
+        public const uint SDC_VALIDATE = 0x00000040;
+        public const uint SDC_APPLY = 0x00000080;
+        public const uint SDC_NO_OPTIMIZATION = 0x00000100;
+        public const uint SDC_SAVE_TO_DATABASE = 0x00000200;
+        public const uint SDC_ALLOW_CHANGES = 0x00000400;
+        public const uint SDC_PATH_PERSIST_IF_REQUIRED = 0x00000800;
+        public const uint SDC_FORCE_MODE_ENUMERATION = 0x00001000;
+        public const uint SDC_ALLOW_PATH_ORDER_CHANGES = 0x00002000;
+        public const uint SDC_VIRTUAL_MODE_AWARE = 0x00008000;
+
         public const uint DISPLAYCONFIG_PATH_ACTIVE = 0x00000001;
         public const uint DISPLAYCONFIG_TARGET_IN_USE = 0x00000001;
 
@@ -291,5 +307,13 @@ namespace PlayniteDisplayManager.Displays
 
         [DllImport("user32.dll", EntryPoint = "DisplayConfigGetDeviceInfo")]
         public static extern int DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_ADAPTER_NAME deviceName);
+
+        [DllImport("user32.dll")]
+        public static extern int SetDisplayConfig(
+            uint numPathArrayElements,
+            [In] DISPLAYCONFIG_PATH_INFO[] pathArray,
+            uint numModeInfoArrayElements,
+            [In] DISPLAYCONFIG_MODE_INFO[] modeInfoArray,
+            uint flags);
     }
 }

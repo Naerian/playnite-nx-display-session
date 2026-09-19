@@ -5,9 +5,12 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
+using System.Windows.Threading;
 using Playnite.SDK;
+using Playnite.SDK.Events;
 using Playnite.SDK.Plugins;
 using PlayniteDisplayManager.Displays;
+using PlayniteDisplayManager.Restore;
 
 namespace PlayniteDisplayManager
 {
@@ -16,15 +19,20 @@ namespace PlayniteDisplayManager
         private readonly ILogger logger;
         private DisplayManagerSettings settings;
         private ResourceDictionary englishFallbackResources;
+        private DisplayRestoreClient restoreClient;
+        private DispatcherTimer restoreHeartbeatTimer;
 
         public override Guid Id { get; } = Guid.Parse("9c2e4a71-b8d3-4f6a-a1c5-0e7d92f3b846");
 
         public DisplayEnumerator Displays { get; }
 
+        public DisplayTopologyService Topology { get; }
+
         public PlayniteDisplayManagerPlugin(IPlayniteAPI playniteApi) : base(playniteApi)
         {
             logger = LogManager.GetLogger();
-            Displays = new DisplayEnumerator(logger);
+            Displays = new DisplayEnumerator();
+            Topology = new DisplayTopologyService();
             Properties = new GenericPluginProperties
             {
                 HasSettings = true
@@ -77,6 +85,76 @@ namespace PlayniteDisplayManager
                 MenuSection = "@Display Manager",
                 Action = _ => OpenSettingsView()
             };
+        }
+
+        public override void OnApplicationStopped(OnApplicationStoppedEventArgs args)
+        {
+            StopRestoreHeartbeat();
+            if (restoreClient != null)
+            {
+                // Graceful unload: disarm without forcing host restore; dispose sends SHUTDOWN.
+                try { restoreClient.Disarm(); } catch { /* ignore */ }
+                restoreClient.Dispose();
+                restoreClient = null;
+            }
+        }
+
+        /// <summary>
+        /// Captures the current topology and arms RestoreHost (fake apply for lease testing).
+        /// </summary>
+        public string ArmRestoreLeaseForTest()
+        {
+            var snapshot = Topology.CaptureSnapshot();
+            EnsureRestoreClient();
+            var path = restoreClient.Arm(snapshot);
+            StartRestoreHeartbeat();
+            return path;
+        }
+
+        public void DisarmRestoreLease()
+        {
+            StopRestoreHeartbeat();
+            restoreClient?.Disarm();
+        }
+
+        public bool TryRestoreSnapshotNow(out string error)
+        {
+            var snapshot = Topology.CaptureSnapshot();
+            return Topology.TryRestoreSnapshot(snapshot, out error);
+        }
+
+        private void EnsureRestoreClient()
+        {
+            if (restoreClient == null)
+            {
+                restoreClient = new DisplayRestoreClient(logger);
+            }
+        }
+
+        private void StartRestoreHeartbeat()
+        {
+            if (restoreHeartbeatTimer != null)
+            {
+                return;
+            }
+
+            restoreHeartbeatTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(2)
+            };
+            restoreHeartbeatTimer.Tick += (_, __) => restoreClient?.Heartbeat();
+            restoreHeartbeatTimer.Start();
+        }
+
+        private void StopRestoreHeartbeat()
+        {
+            if (restoreHeartbeatTimer == null)
+            {
+                return;
+            }
+
+            restoreHeartbeatTimer.Stop();
+            restoreHeartbeatTimer = null;
         }
 
         private void EnsureEnglishFallbackResources()

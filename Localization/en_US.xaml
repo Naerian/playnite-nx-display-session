@@ -40,6 +40,13 @@
     <sys:String x:Key="LOCDisplayManager_GeneralTab">General</sys:String>
     <sys:String x:Key="LOCDisplayManager_NotificationsTab">Notifications</sys:String>
     <sys:String x:Key="LOCDisplayManager_MaintenanceTab">Maintenance</sys:String>
+    <sys:String x:Key="LOCDisplayManager_MaintenanceHelp">Diagnostics and restore-lease tools. Backup/export arrives in a later step.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RestoreLeaseTitle">RestoreHost lease test</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RestoreLeaseHelp">Captures the current display topology and arms the external RestoreHost without changing displays (fake apply). If Playnite dies or heartbeats stop for 30 seconds, the host reapplies the snapshot.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RestoreLeaseArm">Arm restore lease</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RestoreLeaseDisarm">Disarm</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RestoreLeaseArmedFormat">Lease armed. Snapshot: {0}. Kill Playnite (or stop heartbeats) to verify host restore. Log: %TEMP%\PlayniteDisplayManager-RestoreHost.log</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RestoreLeaseDisarmed">Lease disarmed.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutTab">About</sys:String>
     <sys:String x:Key="LOCDisplayManager_TabComingSoon">This section lands in a later step.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutBlurb">Applies a Windows display profile when a game starts and restores the desktop when it stops. Built for HTPC / couch setups.</sys:String>

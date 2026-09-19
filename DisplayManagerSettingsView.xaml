@@ -389,7 +389,28 @@
                         <Border Style="{StaticResource PageHeader}">
                             <TextBlock Text="{DynamicResource LOCDisplayManager_MaintenanceTab}" Style="{StaticResource SectionHeaderText}" />
                         </Border>
-                        <TextBlock Text="{DynamicResource LOCDisplayManager_TabComingSoon}" Style="{StaticResource SectionSubtitleText}" />
+                        <TextBlock Text="{DynamicResource LOCDisplayManager_MaintenanceHelp}" Style="{StaticResource SectionSubtitleText}" />
+
+                        <Border Style="{StaticResource SettingsCard}">
+                            <StackPanel>
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_RestoreLeaseTitle}" Style="{StaticResource FieldLabel}" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_RestoreLeaseHelp}" Style="{StaticResource HintText}" />
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                    <Button Content="{DynamicResource LOCDisplayManager_RestoreLeaseArm}"
+                                            Style="{StaticResource NarianPrimaryButton}"
+                                            MinWidth="160"
+                                            Margin="0,0,8,0"
+                                            Click="ArmRestoreLease_OnClick" />
+                                    <Button Content="{DynamicResource LOCDisplayManager_RestoreLeaseDisarm}"
+                                            MinWidth="160"
+                                            MinHeight="36"
+                                            Click="DisarmRestoreLease_OnClick" />
+                                </StackPanel>
+                                <TextBlock x:Name="RestoreLeaseStatusText"
+                                           Style="{StaticResource HintText}"
+                                           Margin="0,12,0,0" />
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

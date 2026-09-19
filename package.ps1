@@ -7,10 +7,15 @@ param(
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $project = Join-Path $root "PlayniteDisplayManager.csproj"
+$hostProject = Join-Path $root "RestoreHost\PlayniteDisplayManager.RestoreHost.csproj"
 $extensionYaml = Join-Path $root "extension.yaml"
 
 if (-not (Test-Path -LiteralPath $project)) {
     throw "Project file was not found at $project"
+}
+
+if (-not (Test-Path -LiteralPath $hostProject)) {
+    throw "RestoreHost project was not found at $hostProject"
 }
 
 if (-not (Test-Path -LiteralPath $ToolboxPath)) {
@@ -38,9 +43,19 @@ if ($LASTEXITCODE -ne 0) {
     throw "dotnet restore failed with exit code $LASTEXITCODE"
 }
 
+dotnet restore $hostProject
+if ($LASTEXITCODE -ne 0) {
+    throw "dotnet restore (RestoreHost) failed with exit code $LASTEXITCODE"
+}
+
 dotnet clean $project -c $Configuration
 if ($LASTEXITCODE -ne 0) {
     throw "dotnet clean failed with exit code $LASTEXITCODE"
+}
+
+dotnet clean $hostProject -c $Configuration
+if ($LASTEXITCODE -ne 0) {
+    throw "dotnet clean (RestoreHost) failed with exit code $LASTEXITCODE"
 }
 
 dotnet build $project -c $Configuration --no-restore
@@ -48,9 +63,22 @@ if ($LASTEXITCODE -ne 0) {
     throw "dotnet build failed with exit code $LASTEXITCODE"
 }
 
+dotnet build $hostProject -c $Configuration --no-restore
+if ($LASTEXITCODE -ne 0) {
+    throw "dotnet build (RestoreHost) failed with exit code $LASTEXITCODE"
+}
+
 $build = Join-Path $root "bin\$Configuration"
+$hostExe = Join-Path $build "PlayniteDisplayManager.RestoreHost.exe"
+Write-Host "Running RestoreHost --self-test..."
+& $hostExe --self-test
+if ($LASTEXITCODE -ne 0) {
+    throw "RestoreHost --self-test failed with exit code $LASTEXITCODE"
+}
+
 $required = @(
     (Join-Path $build "PlayniteDisplayManager.dll"),
+    $hostExe,
     (Join-Path $build "extension.yaml"),
     (Join-Path $build "README.md"),
     (Join-Path $build "Localization"),
@@ -82,6 +110,11 @@ Copy-Item -LiteralPath (Join-Path $build "PlayniteDisplayManager.dll") -Destinat
 $pdb = Join-Path $build "PlayniteDisplayManager.pdb"
 if (Test-Path -LiteralPath $pdb) {
     Copy-Item -LiteralPath $pdb -Destination $stage
+}
+Copy-Item -LiteralPath $hostExe -Destination $stage
+$hostPdb = Join-Path $build "PlayniteDisplayManager.RestoreHost.pdb"
+if (Test-Path -LiteralPath $hostPdb) {
+    Copy-Item -LiteralPath $hostPdb -Destination $stage
 }
 Copy-Item -LiteralPath (Join-Path $build "extension.yaml") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $build "README.md") -Destination $stage

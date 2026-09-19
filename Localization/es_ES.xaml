@@ -40,6 +40,13 @@
     <sys:String x:Key="LOCDisplayManager_GeneralTab">General</sys:String>
     <sys:String x:Key="LOCDisplayManager_NotificationsTab">Notificaciones</sys:String>
     <sys:String x:Key="LOCDisplayManager_MaintenanceTab">Mantenimiento</sys:String>
+    <sys:String x:Key="LOCDisplayManager_MaintenanceHelp">Herramientas de diagnóstico y lease de restore. La copia de seguridad llega en un paso posterior.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RestoreLeaseTitle">Prueba de lease RestoreHost</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RestoreLeaseHelp">Captura la topología actual y arma el RestoreHost externo sin cambiar pantallas (apply falso). Si Playnite muere o faltan heartbeats 30 segundos, el host reaplica el snapshot.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RestoreLeaseArm">Armar lease de restore</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RestoreLeaseDisarm">Desarmar</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RestoreLeaseArmedFormat">Lease armado. Snapshot: {0}. Mata Playnite (o corta heartbeats) para verificar el restore. Log: %TEMP%\PlayniteDisplayManager-RestoreHost.log</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RestoreLeaseDisarmed">Lease desarmado.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutTab">Acerca de</sys:String>
     <sys:String x:Key="LOCDisplayManager_TabComingSoon">Esta sección llega en un paso posterior.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutBlurb">Aplica un perfil de imagen de Windows al lanzar un juego y restaura el escritorio al salir. Pensado para HTPC / sofá.</sys:String>

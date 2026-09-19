@@ -1,19 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
-using Playnite.SDK;
 using static PlayniteDisplayManager.Displays.DisplayNative;
 
 namespace PlayniteDisplayManager.Displays
 {
     public sealed class DisplayEnumerator
     {
-        private readonly ILogger logger;
-
-        public DisplayEnumerator(ILogger logger = null)
+        public DisplayEnumerator()
         {
-            this.logger = logger;
         }
 
         /// <summary>
@@ -29,7 +26,7 @@ namespace PlayniteDisplayManager.Displays
                     flags = QDC_ONLY_ACTIVE_PATHS;
                     if (!TryQuery(flags, out paths, out modes))
                     {
-                        logger?.Warn("QueryDisplayConfig failed; no displays enumerated.");
+                        Debug.WriteLine("Display Manager: QueryDisplayConfig failed; no displays enumerated.");
                         return Array.Empty<DisplayInfo>();
                     }
                 }
@@ -117,7 +114,7 @@ namespace PlayniteDisplayManager.Displays
             }
             catch (Exception ex)
             {
-                logger?.Error(ex, "Failed to enumerate displays.");
+                Debug.WriteLine(ex);
                 return Array.Empty<DisplayInfo>();
             }
         }

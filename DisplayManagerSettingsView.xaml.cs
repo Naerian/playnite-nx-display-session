@@ -214,6 +214,37 @@ namespace PlayniteDisplayManager
             RefreshDisplaysInternal();
         }
 
+        private void ArmRestoreLease_OnClick(object sender, RoutedEventArgs e)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            var plugin = settings?.Plugin;
+            if (plugin == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var path = plugin.ArmRestoreLeaseForTest();
+                RestoreLeaseStatusText.Text = string.Format(
+                    TryFindResource("LOCDisplayManager_RestoreLeaseArmedFormat") as string
+                    ?? "Lease armed. Snapshot: {0}. Kill Playnite (or stop heartbeats) to verify host restore. Log: %TEMP%\\PlayniteDisplayManager-RestoreHost.log",
+                    path);
+            }
+            catch (Exception ex)
+            {
+                RestoreLeaseStatusText.Text = ex.Message;
+            }
+        }
+
+        private void DisarmRestoreLease_OnClick(object sender, RoutedEventArgs e)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            settings?.Plugin?.DisarmRestoreLease();
+            RestoreLeaseStatusText.Text = TryFindResource("LOCDisplayManager_RestoreLeaseDisarmed") as string
+                ?? "Lease disarmed.";
+        }
+
         private void RefreshDisplaysInternal()
         {
             var settings = DataContext as DisplayManagerSettings;

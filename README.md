@@ -6,7 +6,7 @@ Designed for HTPC / couch setups (TV plus another screen): choose which display 
 
 ## Status
 
-Early (`0.1.0`). Settings chrome and live display enumeration (EDID identity + aliases) are in place. Apply/restore topology, RestoreHost, and HDR ownership land in later steps.
+Early (`0.1.0`). Settings chrome, live display enumeration, and RestoreHost lease (external snapshot reapply) are in place. Primary/topology apply and HDR ownership land next.
 
 ## Requirements
 
