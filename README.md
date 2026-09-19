@@ -6,7 +6,7 @@ Designed for HTPC / couch setups (TV plus another screen): choose which display 
 
 ## Status
 
-Early skeleton (`0.1.0`). Packaging and plugin identity are in place; display apply/restore and HDR ownership land in later steps.
+Early (`0.1.0`). Packaging identity and Narian settings chrome (Overview + appearance presets) are in place; display apply/restore and HDR ownership land in later steps.
 
 ## Requirements
 
