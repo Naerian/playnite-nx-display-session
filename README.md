@@ -6,7 +6,7 @@ Designed for HTPC / couch setups (TV plus another screen): choose which display 
 
 ## Status
 
-Early (`0.1.0`). Chrome, displays, RestoreHost, topology trial, HDR (policies + overrides + EnableSystemHdr migration) are in place. Night Light was evaluated and **cut** (documented). Optional refresh (Hz) is next.
+Early (`0.1.0`). Chrome, displays, RestoreHost, topology trial, HDR, EnableSystemHdr migration, optional refresh rate (Hz), and Night Light cut are in place. Menus / Theme API polish is next.
 
 ## Documentation
 

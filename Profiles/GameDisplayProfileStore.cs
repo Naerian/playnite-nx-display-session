@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Playnite.SDK.Data;
 using Playnite.SDK.Models;
+using PlayniteDisplayManager.Refresh;
 
 namespace PlayniteDisplayManager.Profiles
 {
@@ -43,6 +44,11 @@ namespace PlayniteDisplayManager.Profiles
             return GetProfile(game)?.HdrOverride ?? GameHdrOverride.Inherit;
         }
 
+        public GameRefreshRateOverride GetRefreshRateOverride(Game game)
+        {
+            return GetProfile(game)?.RefreshRateOverride ?? GameRefreshRateOverride.Inherit;
+        }
+
         public int CountNonInherit()
         {
             lock (syncRoot)
@@ -68,19 +74,24 @@ namespace PlayniteDisplayManager.Profiles
 
             lock (syncRoot)
             {
-                if (hdrOverride == GameHdrOverride.Inherit)
-                {
-                    profiles.Remove(game.Id);
-                }
-                else
-                {
-                    profiles[game.Id] = new GameDisplayProfile
-                    {
-                        HdrOverride = hdrOverride
-                    };
-                }
+                var profile = GetOrCreateUnlocked(game.Id);
+                profile.HdrOverride = hdrOverride;
+                PersistUnlocked(game.Id, profile);
+            }
+        }
 
-                Save();
+        public void SetRefreshRateOverride(Game game, GameRefreshRateOverride refreshOverride)
+        {
+            if (game == null)
+            {
+                return;
+            }
+
+            lock (syncRoot)
+            {
+                var profile = GetOrCreateUnlocked(game.Id);
+                profile.RefreshRateOverride = refreshOverride;
+                PersistUnlocked(game.Id, profile);
             }
         }
 
@@ -96,6 +107,30 @@ namespace PlayniteDisplayManager.Profiles
                 profiles.Remove(game.Id);
                 Save();
             }
+        }
+
+        private GameDisplayProfile GetOrCreateUnlocked(Guid gameId)
+        {
+            if (profiles.TryGetValue(gameId, out var existing) && existing != null)
+            {
+                return existing.Clone();
+            }
+
+            return new GameDisplayProfile();
+        }
+
+        private void PersistUnlocked(Guid gameId, GameDisplayProfile profile)
+        {
+            if (profile == null || profile.IsEmpty)
+            {
+                profiles.Remove(gameId);
+            }
+            else
+            {
+                profiles[gameId] = profile;
+            }
+
+            Save();
         }
 
         private void Load()

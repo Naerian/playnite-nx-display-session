@@ -313,6 +313,13 @@
                                            Style="{StaticResource BodyText}"
                                            Margin="0,4,0,0"
                                            Text="{DynamicResource LOCDisplayManager_OverviewNightLightCut}" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewRefreshRate}"
+                                           Style="{StaticResource FieldLabel}"
+                                           Margin="0,16,0,0" />
+                                <TextBlock x:Name="OverviewRefreshRateText"
+                                           Style="{StaticResource BodyText}"
+                                           Margin="0,4,0,0"
+                                           Text="{DynamicResource LOCDisplayManager_RefreshPolicyNative}" />
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -491,6 +498,39 @@
                                              IsEnabled="False"
                                              Content="{DynamicResource LOCDisplayManager_NightLightDoNotTouch}"
                                              Margin="0,16,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource SettingsCard}">
+                            <StackPanel>
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_RefreshRateTitle}" Style="{StaticResource FieldLabel}" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_RefreshRateHelp}" Style="{StaticResource HintText}" />
+                                <TextBlock x:Name="RefreshRateDetectedText"
+                                           Style="{StaticResource BodyText}"
+                                           Margin="0,0,0,8" />
+                                <RadioButton x:Name="RefreshNativeRadio"
+                                             GroupName="RefreshRatePolicy"
+                                             Content="{DynamicResource LOCDisplayManager_RefreshPolicyNative}"
+                                             Margin="0,8,0,0"
+                                             Checked="RefreshRateRadio_OnChecked" />
+                                <RadioButton x:Name="Refresh60Radio"
+                                             GroupName="RefreshRatePolicy"
+                                             Content="{DynamicResource LOCDisplayManager_RefreshPolicy60}"
+                                             Margin="0,8,0,0"
+                                             Checked="RefreshRateRadio_OnChecked" />
+                                <RadioButton x:Name="Refresh120Radio"
+                                             GroupName="RefreshRatePolicy"
+                                             Content="{DynamicResource LOCDisplayManager_RefreshPolicy120}"
+                                             Margin="0,8,0,0"
+                                             Checked="RefreshRateRadio_OnChecked" />
+                                <RadioButton x:Name="RefreshHighestRadio"
+                                             GroupName="RefreshRatePolicy"
+                                             Content="{DynamicResource LOCDisplayManager_RefreshPolicyHighest}"
+                                             Margin="0,8,0,0"
+                                             Checked="RefreshRateRadio_OnChecked" />
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_RefreshRateGameMenuHint}"
+                                           Style="{StaticResource HintText}"
+                                           Margin="0,12,0,0" />
                             </StackPanel>
                         </Border>
                     </StackPanel>

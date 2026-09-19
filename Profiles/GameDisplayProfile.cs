@@ -1,4 +1,5 @@
 using System.Runtime.Serialization;
+using PlayniteDisplayManager.Refresh;
 
 namespace PlayniteDisplayManager.Profiles
 {
@@ -26,13 +27,19 @@ namespace PlayniteDisplayManager.Profiles
         [DataMember(Name = "hdrOverride")]
         public GameHdrOverride HdrOverride { get; set; } = GameHdrOverride.Inherit;
 
-        public bool IsEmpty => HdrOverride == GameHdrOverride.Inherit;
+        [DataMember(Name = "refreshRateOverride")]
+        public GameRefreshRateOverride RefreshRateOverride { get; set; } = GameRefreshRateOverride.Inherit;
+
+        public bool IsEmpty =>
+            HdrOverride == GameHdrOverride.Inherit &&
+            RefreshRateOverride == GameRefreshRateOverride.Inherit;
 
         public GameDisplayProfile Clone()
         {
             return new GameDisplayProfile
             {
-                HdrOverride = HdrOverride
+                HdrOverride = HdrOverride,
+                RefreshRateOverride = RefreshRateOverride
             };
         }
     }

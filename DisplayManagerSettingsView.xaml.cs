@@ -10,6 +10,7 @@ using System.Windows.Navigation;
 using System.Windows.Threading;
 using PlayniteDisplayManager.Displays;
 using PlayniteDisplayManager.Hdr;
+using PlayniteDisplayManager.Refresh;
 
 namespace PlayniteDisplayManager
 {
@@ -36,6 +37,7 @@ namespace PlayniteDisplayManager
                 RefreshTopologyTargetBox();
                 SyncHdrPolicyRadios();
                 SyncHdrMetadataControls();
+                SyncRefreshRateRadios();
                 UpdateOverview();
             };
             Loaded += OnLoaded;
@@ -50,6 +52,7 @@ namespace PlayniteDisplayManager
             RefreshTopologyTargetBox();
             SyncHdrPolicyRadios();
             SyncHdrMetadataControls();
+            SyncRefreshRateRadios();
             UpdateOverview();
         }
 
@@ -623,13 +626,99 @@ namespace PlayniteDisplayManager
                         ?? "Not managed — Windows has no supported Night Light API across Win10+Win11.");
             }
 
+            if (OverviewRefreshRateText != null)
+            {
+                OverviewRefreshRateText.Text = settings?.Plugin?.GetRefreshRateOverviewText()
+                    ?? (TryFindResource("LOCDisplayManager_RefreshPolicyNative") as string
+                        ?? "Native (do not change refresh rate)");
+            }
+
             SyncHdrMetadataControls();
             SyncNativeHdrMigrationStatus();
+            SyncRefreshRateRadios();
 
             if (OverviewHdrBadge != null)
             {
                 OverviewHdrBadge.Text = TryFindResource("LOCDisplayManager_StatusUnknown") as string ?? "Unknown";
             }
+        }
+
+        private void SyncRefreshRateRadios()
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null || RefreshNativeRadio == null)
+            {
+                return;
+            }
+
+            switch (settings.GlobalRefreshRatePolicy)
+            {
+                case RefreshRatePolicy.Prefer60:
+                    Refresh60Radio.IsChecked = true;
+                    break;
+                case RefreshRatePolicy.Prefer120:
+                    Refresh120Radio.IsChecked = true;
+                    break;
+                case RefreshRatePolicy.HighestDetected:
+                    RefreshHighestRadio.IsChecked = true;
+                    break;
+                default:
+                    RefreshNativeRadio.IsChecked = true;
+                    break;
+            }
+
+            if (RefreshRateDetectedText != null)
+            {
+                var primary = settings.AvailableDisplays?.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
+                    ?? settings.AvailableDisplays?.FirstOrDefault(d => d.IsConnected);
+                if (primary == null)
+                {
+                    RefreshRateDetectedText.Text = TryFindResource("LOCDisplayManager_RefreshRateDetectedNone") as string
+                        ?? "No primary display detected.";
+                }
+                else
+                {
+                    var rates = settings.Plugin?.RefreshRates?.GetAvailableRates(primary) ?? Array.Empty<double>();
+                    var list = rates.Count == 0
+                        ? "—"
+                        : string.Join(", ", rates.Select(r => r.ToString("0.###") + " Hz"));
+                    var format = TryFindResource("LOCDisplayManager_RefreshRateDetectedFormat") as string
+                        ?? "{0}: current {1:0.###} Hz · available at this resolution: {2}";
+                    RefreshRateDetectedText.Text = string.Format(
+                        format,
+                        primary.EffectiveName,
+                        primary.RefreshRateHz,
+                        list);
+                }
+            }
+        }
+
+        private void RefreshRateRadio_OnChecked(object sender, RoutedEventArgs e)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null)
+            {
+                return;
+            }
+
+            if (Refresh60Radio?.IsChecked == true)
+            {
+                settings.GlobalRefreshRatePolicy = RefreshRatePolicy.Prefer60;
+            }
+            else if (Refresh120Radio?.IsChecked == true)
+            {
+                settings.GlobalRefreshRatePolicy = RefreshRatePolicy.Prefer120;
+            }
+            else if (RefreshHighestRadio?.IsChecked == true)
+            {
+                settings.GlobalRefreshRatePolicy = RefreshRatePolicy.HighestDetected;
+            }
+            else
+            {
+                settings.GlobalRefreshRatePolicy = RefreshRatePolicy.Native;
+            }
+
+            UpdateOverview();
         }
 
         private void SyncNativeHdrMigrationStatus()

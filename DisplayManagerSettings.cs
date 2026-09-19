@@ -6,6 +6,7 @@ using Playnite.SDK.Data;
 using PlayniteDisplayManager.Displays;
 using PlayniteDisplayManager.Hdr;
 using PlayniteDisplayManager.NightLight;
+using PlayniteDisplayManager.Refresh;
 
 namespace PlayniteDisplayManager
 {
@@ -23,7 +24,8 @@ namespace PlayniteDisplayManager
         private bool includeTagsInHdrMetadataMatch;
         private bool nativeHdrMigrationCompleted;
         private bool nativeHdrConflictNotified;
-        private NightLight.NightLightPolicy nightLightPolicy = NightLight.NightLightPolicy.DoNotTouch;
+        private NightLightPolicy nightLightPolicy = NightLightPolicy.DoNotTouch;
+        private RefreshRatePolicy globalRefreshRatePolicy = RefreshRatePolicy.Native;
 
         public const int CurrentSettingsSchemaVersion = 1;
 
@@ -47,6 +49,7 @@ namespace PlayniteDisplayManager
                 NativeHdrMigrationCompleted = savedSettings.NativeHdrMigrationCompleted;
                 NativeHdrConflictNotified = savedSettings.NativeHdrConflictNotified;
                 NightLightPolicy = savedSettings.NightLightPolicy;
+                GlobalRefreshRatePolicy = savedSettings.GlobalRefreshRatePolicy;
             }
 
             AppearancePreset = SettingsAppearance.Normalize(AppearancePreset);
@@ -116,6 +119,13 @@ namespace PlayniteDisplayManager
         {
             get => nightLightPolicy;
             set => SetValue(ref nightLightPolicy, NightLightPolicy.DoNotTouch);
+        }
+
+        /// <summary>Optional refresh-rate preference for game sessions (primary, same resolution).</summary>
+        public RefreshRatePolicy GlobalRefreshRatePolicy
+        {
+            get => globalRefreshRatePolicy;
+            set => SetValue(ref globalRefreshRatePolicy, value);
         }
 
         public List<DisplayDeviceAlias> DisplayAliases
@@ -207,6 +217,7 @@ namespace PlayniteDisplayManager
             NativeHdrMigrationCompleted = editingClone.NativeHdrMigrationCompleted;
             NativeHdrConflictNotified = editingClone.NativeHdrConflictNotified;
             NightLightPolicy = editingClone.NightLightPolicy;
+            GlobalRefreshRatePolicy = editingClone.GlobalRefreshRatePolicy;
             editingClone = null;
             RefreshDisplays();
             OnPropertyChanged(nameof(HdrMetadataMatchNamesText));

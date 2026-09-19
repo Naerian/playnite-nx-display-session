@@ -13,6 +13,7 @@ using Playnite.SDK.Plugins;
 using PlayniteDisplayManager.Displays;
 using PlayniteDisplayManager.Hdr;
 using PlayniteDisplayManager.Profiles;
+using PlayniteDisplayManager.Refresh;
 using PlayniteDisplayManager.Restore;
 
 namespace PlayniteDisplayManager
@@ -21,6 +22,7 @@ namespace PlayniteDisplayManager
     {
         private readonly ILogger logger;
         private readonly HdrService hdr = new HdrService();
+        private readonly RefreshRateService refreshRates = new RefreshRateService();
         private DisplayManagerSettings settings;
         private GameDisplayProfileStore gameProfiles;
         private NativeHdrFlagMigration nativeHdrMigration;
@@ -38,6 +40,8 @@ namespace PlayniteDisplayManager
         public DisplayTopologyService Topology { get; }
 
         public HdrService Hdr => hdr;
+
+        public RefreshRateService RefreshRates => refreshRates;
 
         public GameDisplayProfileStore GameProfiles => gameProfiles;
 
@@ -209,36 +213,74 @@ namespace PlayniteDisplayManager
                 yield break;
             }
 
-            var section = "Display Manager|" + Loc("LOCDisplayManager_GameMenuHdrSection");
-            var current = games.Select(g => gameProfiles.GetHdrOverride(g)).ToList();
+            var hdrSection = "Display Manager|" + Loc("LOCDisplayManager_GameMenuHdrSection");
+            var hdrCurrent = games.Select(g => gameProfiles.GetHdrOverride(g)).ToList();
 
             yield return CreateHdrOverrideMenuItem(
-                section,
-                CheckedMenuLabel(current.All(o => o == GameHdrOverride.Inherit),
+                hdrSection,
+                CheckedMenuLabel(hdrCurrent.All(o => o == GameHdrOverride.Inherit),
                     Loc("LOCDisplayManager_GameHdrInherit")),
                 args,
                 GameHdrOverride.Inherit);
 
             yield return CreateHdrOverrideMenuItem(
-                section,
-                CheckedMenuLabel(current.All(o => o == GameHdrOverride.ForceOn),
+                hdrSection,
+                CheckedMenuLabel(hdrCurrent.All(o => o == GameHdrOverride.ForceOn),
                     Loc("LOCDisplayManager_GameHdrForceOn")),
                 args,
                 GameHdrOverride.ForceOn);
 
             yield return CreateHdrOverrideMenuItem(
-                section,
-                CheckedMenuLabel(current.All(o => o == GameHdrOverride.ForceOff),
+                hdrSection,
+                CheckedMenuLabel(hdrCurrent.All(o => o == GameHdrOverride.ForceOff),
                     Loc("LOCDisplayManager_GameHdrForceOff")),
                 args,
                 GameHdrOverride.ForceOff);
 
             yield return CreateHdrOverrideMenuItem(
-                section,
-                CheckedMenuLabel(current.All(o => o == GameHdrOverride.DoNotTouch),
+                hdrSection,
+                CheckedMenuLabel(hdrCurrent.All(o => o == GameHdrOverride.DoNotTouch),
                     Loc("LOCDisplayManager_GameHdrDoNotTouch")),
                 args,
                 GameHdrOverride.DoNotTouch);
+
+            var hzSection = "Display Manager|" + Loc("LOCDisplayManager_GameMenuHzSection");
+            var hzCurrent = games.Select(g => gameProfiles.GetRefreshRateOverride(g)).ToList();
+
+            yield return CreateRefreshOverrideMenuItem(
+                hzSection,
+                CheckedMenuLabel(hzCurrent.All(o => o == GameRefreshRateOverride.Inherit),
+                    Loc("LOCDisplayManager_GameHzInherit")),
+                args,
+                GameRefreshRateOverride.Inherit);
+
+            yield return CreateRefreshOverrideMenuItem(
+                hzSection,
+                CheckedMenuLabel(hzCurrent.All(o => o == GameRefreshRateOverride.Native),
+                    Loc("LOCDisplayManager_GameHzNative")),
+                args,
+                GameRefreshRateOverride.Native);
+
+            yield return CreateRefreshOverrideMenuItem(
+                hzSection,
+                CheckedMenuLabel(hzCurrent.All(o => o == GameRefreshRateOverride.Prefer60),
+                    Loc("LOCDisplayManager_GameHz60")),
+                args,
+                GameRefreshRateOverride.Prefer60);
+
+            yield return CreateRefreshOverrideMenuItem(
+                hzSection,
+                CheckedMenuLabel(hzCurrent.All(o => o == GameRefreshRateOverride.Prefer120),
+                    Loc("LOCDisplayManager_GameHz120")),
+                args,
+                GameRefreshRateOverride.Prefer120);
+
+            yield return CreateRefreshOverrideMenuItem(
+                hzSection,
+                CheckedMenuLabel(hzCurrent.All(o => o == GameRefreshRateOverride.HighestDetected),
+                    Loc("LOCDisplayManager_GameHzHighest")),
+                args,
+                GameRefreshRateOverride.HighestDetected);
         }
 
         public override void OnGameStarting(OnGameStartingEventArgs args)
@@ -278,10 +320,12 @@ namespace PlayniteDisplayManager
             // NX owns HDR: never stack with Playnite's native EnableSystemHdr restore.
             ClearNativeHdrConflictIfNeeded(game);
 
-            var plan = PlanHdrSession(game);
-            if (plan.Action == HdrSessionAction.None)
+            var hdrPlan = PlanHdrSession(game);
+            var hzPlan = PlanRefreshRateSession(game);
+            if (hdrPlan.Action == HdrSessionAction.None && !hzPlan.ShouldApply)
             {
-                logger.Info("HDR session skipped for " + game.Name + " (" + plan.Reason + ").");
+                logger.Info("Display session skipped for " + game.Name +
+                            " (HDR: " + hdrPlan.Reason + "; Hz: " + hzPlan.Reason + ").");
                 return;
             }
 
@@ -290,28 +334,26 @@ namespace PlayniteDisplayManager
                 EndGameSession("replace-session");
 
                 var live = Displays.GetDisplays().ToList();
-                List<HdrWriteTarget> applyWrites;
-                if (plan.Action == HdrSessionAction.Enable)
+                var primary = live.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
+                    ?? live.FirstOrDefault(d => d.IsConnected);
+
+                List<HdrWriteTarget> applyWrites = new List<HdrWriteTarget>();
+                List<HdrWriteTarget> offWrites = new List<HdrWriteTarget>();
+                if (hdrPlan.Action == HdrSessionAction.Enable)
                 {
                     applyWrites = hdr.BuildEnableWritesForPrimary(live);
+                    offWrites = applyWrites.Select(ToOffWrite).ToList();
                 }
-                else
+                else if (hdrPlan.Action == HdrSessionAction.Disable)
                 {
                     applyWrites = hdr.BuildForceOffWrites(live);
+                    offWrites = applyWrites.Select(ToOffWrite).ToList();
                 }
 
-                var offWrites = (applyWrites.Count > 0
-                        ? applyWrites
-                        : hdr.BuildForceOffWrites(live))
-                    .Select(w => new HdrWriteTarget
-                    {
-                        AdapterIdLow = w.AdapterIdLow,
-                        AdapterIdHigh = w.AdapterIdHigh,
-                        TargetId = w.TargetId,
-                        Enable = false,
-                        DisplayId = w.DisplayId,
-                        Name = w.Name
-                    }).ToList();
+                if (offWrites.Count == 0 && hdrPlan.Action != HdrSessionAction.None)
+                {
+                    offWrites = hdr.BuildForceOffWrites(live);
+                }
 
                 var snapshot = Topology.CaptureSnapshot();
                 snapshot.HdrRestoreWrites = offWrites;
@@ -323,28 +365,59 @@ namespace PlayniteDisplayManager
                 restoreClient.Arm(snapshot);
                 StartRestoreHeartbeat();
 
+                if (hzPlan.ShouldApply && hzPlan.TargetHz.HasValue && primary != null)
+                {
+                    if (refreshRates.TryApply(primary, hzPlan.TargetHz.Value, out var hzError))
+                    {
+                        logger.Info("Refresh rate set to " + hzPlan.TargetHz.Value.ToString("0.###") +
+                                    " Hz for " + activeGameName + " (" + hzPlan.Reason + ").");
+                    }
+                    else
+                    {
+                        logger.Warn("Refresh rate apply failed (" + hzPlan.Reason + "): " + hzError);
+                    }
+                }
+
+                if (hdrPlan.Action == HdrSessionAction.None)
+                {
+                    return;
+                }
+
                 if (applyWrites.Count == 0)
                 {
-                    logger.Info("HDR plan " + plan.Action + " (" + plan.Reason +
-                                "): no advanced-color-capable target; lease armed for topology only.");
+                    logger.Info("HDR plan " + hdrPlan.Action + " (" + hdrPlan.Reason +
+                                "): no advanced-color-capable target; lease armed for topology/Hz.");
                     return;
                 }
 
                 var written = hdr.ApplyHdrWrites(applyWrites, out var error);
                 if (written == 0)
                 {
-                    logger.Warn("HDR write failed (" + plan.Reason + "): " + error);
+                    logger.Warn("HDR write failed (" + hdrPlan.Reason + "): " + error);
                 }
                 else
                 {
-                    logger.Info("HDR " + plan.Action + " wrote " + written +
-                                " target(s) for " + activeGameName + " (" + plan.Reason + ").");
+                    logger.Info("HDR " + hdrPlan.Action + " wrote " + written +
+                                " target(s) for " + activeGameName + " (" + hdrPlan.Reason + ").");
                 }
             }
             catch (Exception ex)
             {
                 logger.Error(ex, "Failed to begin Display Manager game session.");
             }
+        }
+
+        private static HdrWriteTarget ToOffWrite(HdrWriteTarget w)
+        {
+            return new HdrWriteTarget
+            {
+                AdapterIdLow = w.AdapterIdLow,
+                AdapterIdHigh = w.AdapterIdHigh,
+                TargetId = w.TargetId,
+                Enable = false,
+                DisplayId = w.DisplayId,
+                Name = w.Name
+            };
         }
 
         private void EndGameSession(string reason)
@@ -399,6 +472,17 @@ namespace PlayniteDisplayManager
                 settings?.IncludeTagsInHdrMetadataMatch ?? false);
         }
 
+        public RefreshRatePlan PlanRefreshRateSession(Game game)
+        {
+            var primary = Displays.GetDisplays()
+                .FirstOrDefault(d => d.IsPrimary && d.IsConnected)
+                ?? Displays.GetDisplays().FirstOrDefault(d => d.IsConnected);
+            return refreshRates.Plan(
+                settings?.GlobalRefreshRatePolicy ?? RefreshRatePolicy.Native,
+                gameProfiles?.GetRefreshRateOverride(game) ?? GameRefreshRateOverride.Inherit,
+                primary);
+        }
+
         public bool GameHasHdrMetadata(Game game)
         {
             return HdrMetadataMatcher.GameIndicatesHdr(
@@ -451,6 +535,21 @@ namespace PlayniteDisplayManager
         public string GetNightLightOverviewText()
         {
             return Loc("LOCDisplayManager_OverviewNightLightCut");
+        }
+
+        public string GetRefreshRateOverviewText()
+        {
+            switch (settings?.GlobalRefreshRatePolicy ?? RefreshRatePolicy.Native)
+            {
+                case RefreshRatePolicy.Prefer60:
+                    return Loc("LOCDisplayManager_RefreshPolicy60");
+                case RefreshRatePolicy.Prefer120:
+                    return Loc("LOCDisplayManager_RefreshPolicy120");
+                case RefreshRatePolicy.HighestDetected:
+                    return Loc("LOCDisplayManager_RefreshPolicyHighest");
+                default:
+                    return Loc("LOCDisplayManager_RefreshPolicyNative");
+            }
         }
 
         private void ClearNativeHdrConflictIfNeeded(Game game)
@@ -668,6 +767,40 @@ namespace PlayniteDisplayManager
             };
         }
 
+        private GameMenuItem CreateRefreshOverrideMenuItem(
+            string menuSection,
+            string description,
+            GetGameMenuItemsArgs request,
+            GameRefreshRateOverride refreshOverride)
+        {
+            return new GameMenuItem
+            {
+                MenuSection = menuSection,
+                Description = description,
+                Action = actionArgs =>
+                {
+                    var games = actionArgs?.Games ?? request.Games;
+                    if (games == null)
+                    {
+                        return;
+                    }
+
+                    foreach (var game in games)
+                    {
+                        gameProfiles.SetRefreshRateOverride(game, refreshOverride);
+                    }
+
+                    var first = games.FirstOrDefault();
+                    if (first != null)
+                    {
+                        PlayniteApi.Dialogs.ShowMessage(
+                            first.Name + ": " + DescribeRefreshOverride(refreshOverride),
+                            Loc("LOCDisplayManager_PluginName"));
+                    }
+                }
+            };
+        }
+
         private string DescribeHdrOverride(GameHdrOverride hdrOverride)
         {
             switch (hdrOverride)
@@ -680,6 +813,23 @@ namespace PlayniteDisplayManager
                     return Loc("LOCDisplayManager_GameHdrDoNotTouch");
                 default:
                     return Loc("LOCDisplayManager_GameHdrInherit");
+            }
+        }
+
+        private string DescribeRefreshOverride(GameRefreshRateOverride refreshOverride)
+        {
+            switch (refreshOverride)
+            {
+                case GameRefreshRateOverride.Native:
+                    return Loc("LOCDisplayManager_GameHzNative");
+                case GameRefreshRateOverride.Prefer60:
+                    return Loc("LOCDisplayManager_GameHz60");
+                case GameRefreshRateOverride.Prefer120:
+                    return Loc("LOCDisplayManager_GameHz120");
+                case GameRefreshRateOverride.HighestDetected:
+                    return Loc("LOCDisplayManager_GameHzHighest");
+                default:
+                    return Loc("LOCDisplayManager_GameHzInherit");
             }
         }
 
