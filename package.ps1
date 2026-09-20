@@ -140,5 +140,25 @@ if (-not $package) {
     throw "Playnite Toolbox did not create a .pext package."
 }
 
+# Toolbox occasionally leaves a truncated zip (EOCD missing). Fail hard so we never
+# hand out an uninstallable .pext.
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+try {
+    $zip = [System.IO.Compression.ZipFile]::OpenRead($package.FullName)
+    try {
+        $entryCount = $zip.Entries.Count
+        if ($entryCount -lt 3) {
+            throw "Package looks empty ($entryCount entries)."
+        }
+        Write-Host "Package ZIP OK ($entryCount entries)."
+    }
+    finally {
+        $zip.Dispose()
+    }
+}
+catch {
+    throw "Generated .pext is not a valid zip (Playnite will refuse install): $($_.Exception.Message)"
+}
+
 Write-Host "Package created: $($package.FullName)"
 Get-FileHash -LiteralPath $package.FullName -Algorithm SHA256
