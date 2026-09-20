@@ -5,8 +5,9 @@ Display Manager is a Playnite GenericPlugin that owns **Windows display topology
 ## What it does
 
 - Lists active displays with EDID-based identity (stable across cable/GPU path changes when Windows exposes enough data).
-- Lets you choose a **primary display for games** (or keep the Windows default), with optional per-game overrides.
-- Owns **HDR** with three global policies, per-game overrides, and optional Features/Tags metadata matching.
+- Lets you choose a **primary display for games** via named topology profiles (or keep the Windows default), with missing-display fallback.
+- Owns **HDR** with three global policies, per-game and per-platform overrides, and optional Features/Tags metadata matching.
+- Optionally relocates Playnite Fullscreen onto the restored primary monitor after a session.
 - Changes **refresh rate** when configured (ChangeDisplaySettingsEx path).
 - Arms **RestoreHost** so topology/HDR restore survives Playnite crashes.
 - Exposes a **Theme API** (`SourceName` `DisplayManager`) and a Desktop top-panel shortcut.

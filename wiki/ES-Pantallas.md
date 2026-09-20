@@ -12,19 +12,19 @@ Si un dock, splitter o adaptador recorta el EDID, el matching puede caer a clave
 
 En Ajustes → Pantallas:
 
-- Elige la **pantalla principal para juegos**, o **Mantener la predeterminada de Windows** para no tocar la primaria del sistema.
-- Opcionalmente **apaga otras pantallas** al lanzar un juego (siempre se confirma en la prueba).
-- Renombra pantallas para Playnite, usa **Identificar** para ver una etiqueta en cada monitor y previsualiza la topología con los botones de prueba.
+- Gestiona **perfiles de topología** (paquetes con nombre). Uno es el **predeterminado al lanzar**.
+- Cada perfil define la **pantalla principal para juegos** (o Mantener la de Windows), si se **apagan otras pantallas**, y qué hacer si la preferida **falta** (primaria de Windows, pantalla de respaldo, o avisar y continuar).
+- Renombra pantallas, usa **Identificar** y previsualiza con la prueba corta.
 
-Overview y las cards de pantallas siguen en tiempo real la primaria configurada para juegos.
+## Perfiles por juego y por plataforma
 
-## Override de pantalla por juego
+Prioridad fija:
 
-Menú contextual → Display Manager → Pantalla:
+1. **Perfil por juego** (menú contextual)
+2. **Perfil por plataforma** (Ajustes → General → Perfiles de juego → Perfiles por plataforma)
+3. **Perfil de topología predeterminado** / HDR y refresco globales
 
-- **Mantener configuración global** — usa Ajustes → Pantallas.
-- **Mantener la predeterminada de Windows** — deja la primaria de Windows en este juego.
-- Una pantalla conectada concreta — esa pantalla será la primaria solo para ese juego.
+Menú contextual → Display Manager → Pantalla / HDR / Frecuencia: **Mantener configuración global** quita el override del juego para que apliquen plataforma y luego el predeterminado.
 
 ## Frecuencia de refresco
 

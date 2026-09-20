@@ -155,6 +155,21 @@ namespace PlayniteDisplayManager.Profiles
             }
         }
 
+        public void SetTopologyProfileId(Game game, Guid? topologyProfileId)
+        {
+            if (game == null)
+            {
+                return;
+            }
+
+            lock (syncRoot)
+            {
+                var profile = GetOrCreateUnlocked(game.Id);
+                profile.TopologyProfileId = topologyProfileId;
+                PersistUnlocked(game.Id, profile);
+            }
+        }
+
         public void ClearProfile(Game game)
         {
             if (game == null)

@@ -26,6 +26,7 @@ namespace PlayniteDisplayManager
         private readonly RefreshRateService refreshRates = new RefreshRateService();
         private DisplayManagerSettings settings;
         private GameDisplayProfileStore gameProfiles;
+        private PlatformProfileStore platformProfiles;
         private NativeHdrFlagMigration nativeHdrMigration;
         private ResourceDictionary englishFallbackResources;
         private DisplayRestoreClient restoreClient;
@@ -48,6 +49,8 @@ namespace PlayniteDisplayManager
 
         public GameDisplayProfileStore GameProfiles => gameProfiles;
 
+        public PlatformProfileStore PlatformProfiles => platformProfiles;
+
         public DisplayManagerThemeApi Theme { get; }
 
         public PlayniteDisplayManagerPlugin(IPlayniteAPI playniteApi) : base(playniteApi)
@@ -56,6 +59,7 @@ namespace PlayniteDisplayManager
             Displays = new DisplayEnumerator();
             Topology = new DisplayTopologyService();
             gameProfiles = new GameDisplayProfileStore(GetPluginUserDataPath());
+            platformProfiles = new PlatformProfileStore(GetPluginUserDataPath());
             nativeHdrMigration = new NativeHdrFlagMigration(PlayniteApi, logger, GetPluginUserDataPath());
             Theme = new DisplayManagerThemeApi(this);
             Properties = new GenericPluginProperties
@@ -241,8 +245,14 @@ namespace PlayniteDisplayManager
                 return;
             }
 
+            var defaults = settings.GetDefaultTopologyProfile();
             var draft = new SetupWizardDraft
             {
+                PreferredPlayDisplayId = defaults?.PreferredPlayDisplayId ?? settings.PreferredPlayDisplayId,
+                TurnOffOtherDisplays = defaults?.TurnOffOtherDisplays ?? settings.TurnOffOtherDisplaysOnLaunch,
+                GlobalHdrPolicy = settings.GlobalHdrPolicy,
+                GlobalRefreshRatePolicy = settings.GlobalRefreshRatePolicy,
+                PreferredRefreshRateHz = settings.PreferredRefreshRateHz,
                 ClearNativeHdrFlags = true,
                 SetupWizardCompleted = settings.SetupWizardCompleted
             };
@@ -300,6 +310,19 @@ namespace PlayniteDisplayManager
             }
 
             settings.SetupWizardCompleted = true;
+            settings.GlobalHdrPolicy = draft.GlobalHdrPolicy;
+            settings.GlobalRefreshRatePolicy = draft.GlobalRefreshRatePolicy;
+            settings.PreferredRefreshRateHz = draft.PreferredRefreshRateHz;
+
+            var topology = settings.GetDefaultTopologyProfile();
+            if (topology != null)
+            {
+                topology.PreferredPlayDisplayId = draft.PreferredPlayDisplayId;
+                topology.TurnOffOtherDisplays = draft.TurnOffOtherDisplays;
+            }
+
+            settings.SyncLegacyFieldsFromDefaultTopology();
+
             if (draft.ClearNativeHdrFlags)
             {
                 var migration = nativeHdrMigration.ClearAllEnabled();
@@ -312,6 +335,8 @@ namespace PlayniteDisplayManager
 
             SavePluginSettings(settings);
             NotifyDisplaysChanged();
+            Theme?.Refresh();
+            RefreshTopPanelItem();
         }
 
         public override IEnumerable<GameMenuItem> GetGameMenuItems(GetGameMenuItemsArgs args)
@@ -431,18 +456,37 @@ namespace PlayniteDisplayManager
         }
 
         /// <summary>
-        /// Resolves the play display for a game: per-game override wins, then global setting.
-        /// null/empty means keep the current Windows primary.
+        /// Resolves Game > Platform > Default topology + globals.
         /// </summary>
-        private string ResolvePreferredPlayDisplayId(Game game)
+        public ResolvedSessionProfile ResolveSessionProfile(Game game)
         {
-            var profile = gameProfiles?.GetProfile(game);
-            if (profile != null && profile.HasPlayDisplayOverride)
+            var gameProfile = gameProfiles?.GetProfile(game);
+            var platformProfile = GetPlatformProfileForGame(game);
+            var defaultTopology = settings?.GetDefaultTopologyProfile();
+            return SessionProfileResolver.Resolve(
+                gameProfile,
+                platformProfile,
+                defaultTopology,
+                id => settings?.GetTopologyProfile(id));
+        }
+
+        private GameDisplayProfile GetPlatformProfileForGame(Game game)
+        {
+            if (game?.PlatformIds == null || platformProfiles == null)
             {
-                return profile.PreferredPlayDisplayId;
+                return null;
             }
 
-            return settings?.PreferredPlayDisplayId;
+            foreach (var platformId in game.PlatformIds)
+            {
+                var profile = platformProfiles.GetProfile(platformId);
+                if (profile != null && !profile.IsEmpty)
+                {
+                    return profile;
+                }
+            }
+
+            return null;
         }
 
         public override void OnGameStarting(OnGameStartingEventArgs args)
@@ -482,30 +526,44 @@ namespace PlayniteDisplayManager
             // NX owns HDR: never stack with Playnite's native EnableSystemHdr restore.
             ClearNativeHdrConflictIfNeeded(game);
 
-            var hdrPlan = PlanHdrSession(game);
-            var hzPlan = PlanRefreshRateSession(game);
+            var resolved = ResolveSessionProfile(game);
+            var hdrPlan = PlanHdrSession(game, resolved);
+            var hzPlan = PlanRefreshRateSession(game, resolved);
 
             var livePreview = Displays.GetDisplays().ToList();
             var currentPrimary = livePreview.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
                 ?? livePreview.FirstOrDefault(d => d.IsConnected);
-            var preferredId = ResolvePreferredPlayDisplayId(game);
+
+            var preferredId = resolved.PreferredPlayDisplayId;
             var preferredExists = !string.IsNullOrWhiteSpace(preferredId)
                 && livePreview.Any(d => d.IsConnected
                     && string.Equals(d.Id, preferredId, StringComparison.OrdinalIgnoreCase));
+
+            var missingPreferred = !string.IsNullOrWhiteSpace(preferredId) && !preferredExists;
+            if (missingPreferred)
+            {
+                NotifyMissingDisplay(game, preferredId, resolved);
+                preferredId = ResolveMissingDisplayFallback(resolved, livePreview, currentPrimary);
+                preferredExists = !string.IsNullOrWhiteSpace(preferredId)
+                    && livePreview.Any(d => d.IsConnected
+                        && string.Equals(d.Id, preferredId, StringComparison.OrdinalIgnoreCase));
+            }
+
             var wantsMakePrimary = preferredExists
                 && (currentPrimary == null
                     || !string.Equals(currentPrimary.Id, preferredId, StringComparison.OrdinalIgnoreCase));
             var topologyTargetId = preferredExists
                 ? preferredId
                 : currentPrimary?.Id;
-            var wantsTurnOffOthers = settings.TurnOffOtherDisplaysOnLaunch
+            var wantsTurnOffOthers = resolved.TurnOffOtherDisplays
                 && !string.IsNullOrWhiteSpace(topologyTargetId);
             var wantsTopology = wantsMakePrimary || wantsTurnOffOthers;
 
             if (hdrPlan.Action == HdrSessionAction.None && !hzPlan.ShouldApply && !wantsTopology)
             {
                 logger.Info("Display session skipped for " + game.Name +
-                            " (HDR: " + hdrPlan.Reason + "; Hz: " + hzPlan.Reason + "; topology: none).");
+                            " (HDR: " + hdrPlan.Reason + "; Hz: " + hzPlan.Reason +
+                            "; topology: none; source: " + resolved.Source + ").");
                 return;
             }
 
@@ -644,6 +702,7 @@ namespace PlayniteDisplayManager
 
                 if (snapshot != null)
                 {
+                    var restoreOk = false;
                     // Restore writes HDR off from snapshot.HdrRestoreWrites — no GET trust.
                     if (!Topology.TryRestoreSnapshot(snapshot, out var error))
                     {
@@ -655,8 +714,17 @@ namespace PlayniteDisplayManager
                     }
                     else
                     {
+                        restoreOk = true;
                         logger.Info("Session restored (" + reason + ")" +
                                     (string.IsNullOrWhiteSpace(name) ? "." : " for " + name + "."));
+                    }
+
+                    if (restoreOk
+                        && !string.Equals(reason, "replace-session", StringComparison.Ordinal)
+                        && settings?.RelocatePlayniteFullscreenAfterRestore == true
+                        && PlayniteApi.ApplicationInfo.Mode == ApplicationMode.Fullscreen)
+                    {
+                        PlayniteWindowRelocator.TryRelocateToPrimaryMonitor(logger);
                     }
                 }
 
@@ -669,29 +737,96 @@ namespace PlayniteDisplayManager
             }
         }
 
+        private string ResolveMissingDisplayFallback(
+            ResolvedSessionProfile resolved,
+            IList<DisplayInfo> live,
+            DisplayInfo currentPrimary)
+        {
+            if (resolved == null)
+            {
+                return currentPrimary?.Id;
+            }
+
+            if (resolved.MissingDisplayPolicy == MissingDisplayPolicy.UseFallbackDisplay
+                && !string.IsNullOrWhiteSpace(resolved.FallbackDisplayId)
+                && live.Any(d => d.IsConnected
+                    && string.Equals(d.Id, resolved.FallbackDisplayId, StringComparison.OrdinalIgnoreCase)))
+            {
+                return resolved.FallbackDisplayId;
+            }
+
+            return null; // Windows primary — no MakePrimary
+        }
+
+        private void NotifyMissingDisplay(Game game, string missingId, ResolvedSessionProfile resolved)
+        {
+            if (settings == null || !settings.ShowNotifications)
+            {
+                return;
+            }
+
+            var strong = resolved?.MissingDisplayPolicy == MissingDisplayPolicy.NotifyAndContinue;
+            if (!strong && resolved?.MissingDisplayPolicy == MissingDisplayPolicy.UseWindowsPrimary)
+            {
+                // Still notify lightly when preferred is missing.
+            }
+
+            var name = Displays.GetDisplays()
+                .FirstOrDefault(d => string.Equals(d.Id, missingId, StringComparison.OrdinalIgnoreCase))
+                ?.EffectiveName ?? missingId;
+            var text = string.Format(
+                Loc("LOCDisplayManager_MissingDisplayNotifyFormat"),
+                game?.Name ?? "?",
+                name);
+            try
+            {
+                PlayniteApi.Notifications.Add(new NotificationMessage(
+                    "DisplayManager-MissingDisplay-" + (game?.Id.ToString() ?? "x"),
+                    text,
+                    strong ? NotificationType.Error : NotificationType.Info));
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to show missing-display notification.");
+            }
+        }
+
         public HdrSessionPlan PlanHdrSession(Game game)
         {
+            return PlanHdrSession(game, ResolveSessionProfile(game));
+        }
+
+        public HdrSessionPlan PlanHdrSession(Game game, ResolvedSessionProfile resolved)
+        {
+            var synthetic = new GameDisplayProfile
+            {
+                HdrOverride = resolved?.HdrOverride ?? GameHdrOverride.Inherit
+            };
             return HdrSessionPlanner.Plan(
                 game,
                 settings?.GlobalHdrPolicy ?? GlobalHdrPolicy.DoNotManage,
-                gameProfiles?.GetProfile(game),
+                synthetic,
                 settings?.HdrMetadataMatchNames,
                 settings?.IncludeTagsInHdrMetadataMatch ?? false);
         }
 
         public RefreshRatePlan PlanRefreshRateSession(Game game)
         {
+            return PlanRefreshRateSession(game, ResolveSessionProfile(game));
+        }
+
+        public RefreshRatePlan PlanRefreshRateSession(Game game, ResolvedSessionProfile resolved)
+        {
             var primary = Displays.GetDisplays()
                 .FirstOrDefault(d => d.IsPrimary && d.IsConnected)
                 ?? Displays.GetDisplays().FirstOrDefault(d => d.IsConnected);
-            var profile = gameProfiles?.GetProfile(game);
-            var gameOverride = profile?.RefreshRateOverride ?? GameRefreshRateOverride.Inherit;
+            var gameOverride = resolved?.RefreshRateOverride ?? GameRefreshRateOverride.Inherit;
             double? preferredHz = settings?.PreferredRefreshRateHz;
             if (gameOverride == GameRefreshRateOverride.ExactHz
                 || gameOverride == GameRefreshRateOverride.Prefer60
                 || gameOverride == GameRefreshRateOverride.Prefer120)
             {
-                preferredHz = profile?.PreferredRefreshRateHz ?? preferredHz;
+                preferredHz = resolved?.PreferredRefreshRateHz ?? preferredHz;
             }
 
             return refreshRates.Plan(
@@ -987,7 +1122,8 @@ namespace PlayniteDisplayManager
                         HdrOverride = item.Value.HdrOverride,
                         RefreshRateOverride = item.Value.RefreshRateOverride,
                         PreferredRefreshRateHz = item.Value.PreferredRefreshRateHz,
-                        PreferredPlayDisplayId = item.Value.PreferredPlayDisplayId
+                        PreferredPlayDisplayId = item.Value.PreferredPlayDisplayId,
+                        TopologyProfileId = item.Value.TopologyProfileId
                     };
                 })
                 .OrderBy(e => e.GameName, StringComparer.CurrentCultureIgnoreCase)
@@ -1000,6 +1136,56 @@ namespace PlayniteDisplayManager
                 .Where(e => e != null && e.GameId != Guid.Empty)
                 .Select(e => new KeyValuePair<Guid, GameDisplayProfile>(e.GameId, e.ToProfile()));
             gameProfiles?.ReplaceProfiles(map);
+        }
+
+        public List<PlatformProfileEntry> GetPlatformProfileEntries()
+        {
+            var snapshots = platformProfiles?.GetProfilesSnapshot()
+                ?? new Dictionary<Guid, GameDisplayProfile>();
+            var platforms = PlayniteApi.Database.Platforms
+                .GroupBy(p => p.Id)
+                .ToDictionary(g => g.Key, g => g.First());
+
+            return snapshots
+                .Where(item => item.Value != null && !item.Value.IsEmpty)
+                .Select(item =>
+                {
+                    platforms.TryGetValue(item.Key, out var platform);
+                    return new PlatformProfileEntry
+                    {
+                        PlatformId = item.Key,
+                        PlatformName = !string.IsNullOrWhiteSpace(platform?.Name)
+                            ? platform.Name
+                            : Loc("LOCDisplayManager_UnknownPlatform") + " (" + item.Key + ")",
+                        HdrOverride = item.Value.HdrOverride,
+                        RefreshRateOverride = item.Value.RefreshRateOverride,
+                        PreferredRefreshRateHz = item.Value.PreferredRefreshRateHz,
+                        PreferredPlayDisplayId = item.Value.PreferredPlayDisplayId,
+                        TopologyProfileId = item.Value.TopologyProfileId
+                    };
+                })
+                .OrderBy(e => e.PlatformName, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+        }
+
+        public void ReplacePlatformProfiles(IEnumerable<PlatformProfileEntry> entries)
+        {
+            var map = (entries ?? Enumerable.Empty<PlatformProfileEntry>())
+                .Where(e => e != null && e.PlatformId != Guid.Empty)
+                .Select(e => new KeyValuePair<Guid, GameDisplayProfile>(e.PlatformId, e.ToProfile()));
+            platformProfiles?.ReplaceProfiles(map);
+        }
+
+        public bool ConfirmRemovePlatformProfile(string platformName)
+        {
+            var message = string.Format(
+                Loc("LOCDisplayManager_ConfirmRemovePlatformProfileMessage"),
+                platformName ?? Loc("LOCDisplayManager_UnknownPlatform"));
+            return PlayniteApi.Dialogs.ShowMessage(
+                message,
+                Loc("LOCDisplayManager_ConfirmRemoveProfileTitle"),
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning) == MessageBoxResult.Yes;
         }
 
         public bool ConfirmRemoveGameProfile(string gameName)

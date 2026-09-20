@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.Serialization;
 using PlayniteDisplayManager.Refresh;
 
@@ -19,7 +20,7 @@ namespace PlayniteDisplayManager.Profiles
     }
 
     /// <summary>
-    /// Per-game display profile stored in plugin user data (not as Playnite Features).
+    /// Per-game or per-platform display profile stored in plugin user data.
     /// </summary>
     [DataContract]
     public sealed class GameDisplayProfile
@@ -35,11 +36,15 @@ namespace PlayniteDisplayManager.Profiles
         public double? PreferredRefreshRateHz { get; set; }
 
         /// <summary>
-        /// Per-game play display. null = inherit global PreferredPlayDisplayId;
+        /// Per-game play display. null = inherit topology/global;
         /// empty string = keep Windows primary; otherwise a stable display id.
         /// </summary>
         [DataMember(Name = "preferredPlayDisplayId")]
         public string PreferredPlayDisplayId { get; set; }
+
+        /// <summary>Optional named topology profile to apply before field-level overrides.</summary>
+        [DataMember(Name = "topologyProfileId")]
+        public Guid? TopologyProfileId { get; set; }
 
         /// <summary>True when PreferredPlayDisplayId is set (including empty = Windows primary).</summary>
         public bool HasPlayDisplayOverride => PreferredPlayDisplayId != null;
@@ -47,7 +52,8 @@ namespace PlayniteDisplayManager.Profiles
         public bool IsEmpty =>
             HdrOverride == GameHdrOverride.Inherit &&
             RefreshRateOverride == GameRefreshRateOverride.Inherit &&
-            PreferredPlayDisplayId == null;
+            PreferredPlayDisplayId == null &&
+            TopologyProfileId == null;
 
         public GameDisplayProfile Clone()
         {
@@ -56,7 +62,8 @@ namespace PlayniteDisplayManager.Profiles
                 HdrOverride = HdrOverride,
                 RefreshRateOverride = RefreshRateOverride,
                 PreferredRefreshRateHz = PreferredRefreshRateHz,
-                PreferredPlayDisplayId = PreferredPlayDisplayId
+                PreferredPlayDisplayId = PreferredPlayDisplayId,
+                TopologyProfileId = TopologyProfileId
             };
         }
     }

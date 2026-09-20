@@ -12,19 +12,19 @@ If a dock, splitter, or adapter strips EDID, matching may fall back to weaker ke
 
 In Settings → Displays:
 
-- Choose the **primary display for games**, or **Keep Windows default** to leave the system primary unchanged.
-- Optionally **turn off other displays** when a game launches (always confirmed on trial apply).
-- Rename displays for Playnite, use **Identify** to flash a label on each monitor, and preview topology with the short trial buttons.
+- Manage **topology profiles** (named packages). One is the **default for launch**.
+- Each profile sets the **primary display for games** (or Keep Windows default), whether to **turn off other displays**, and what to do if the preferred display is **missing** (Windows primary, fallback display, or notify and continue).
+- Rename displays for Playnite, use **Identify**, and preview with the short trial buttons.
 
-The Overview and display cards follow the configured play primary in real time.
+## Per-game and platform profiles
 
-## Per-game display override
+Priority is always:
 
-Context menu → Display Manager → Display:
+1. **Game profile** (context menu)
+2. **Platform profile** (Settings → General → Game Profiles → Platform profiles)
+3. **Default topology profile** / global HDR and refresh settings
 
-- **Keep global settings** — use Settings → Displays.
-- **Keep Windows default** — leave the Windows primary for this game.
-- A specific connected display — make that screen primary for this game only.
+Context menu → Display Manager → Display / HDR / Refresh rate: **Keep global settings** clears the game override so platform then default apply.
 
 ## Refresh rate
 

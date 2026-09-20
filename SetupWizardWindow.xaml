@@ -1,7 +1,7 @@
 <Window x:Class="PlayniteDisplayManager.SetupWizardWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="" Width="560" SizeToContent="Height"
+        Title="" Width="620" SizeToContent="Height" MaxHeight="720"
         WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource Narian.Bg}"
@@ -38,6 +38,44 @@
                 <Setter Property="FontSize" Value="12"/>
                 <Setter Property="TextWrapping" Value="Wrap"/>
                 <Setter Property="Margin" Value="0,8,0,16"/>
+            </Style>
+            <Style x:Key="WizardFieldLabel" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="Margin" Value="0,0,0,6"/>
+            </Style>
+            <Style x:Key="WizardErrorCallout" TargetType="Border">
+                <Setter Property="Background" Value="#20E24B4B"/>
+                <Setter Property="BorderBrush" Value="#80E24B4B"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="4"/>
+                <Setter Property="Margin" Value="0,0,0,16"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Setter Property="ClipToBounds" Value="True"/>
+            </Style>
+            <Style x:Key="WizardErrorCalloutAccentBar" TargetType="Border">
+                <Setter Property="Width" Value="3"/>
+                <Setter Property="Background" Value="#FFE24B4B"/>
+            </Style>
+            <Style x:Key="WizardErrorCalloutGlyph" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+                <Setter Property="Foreground" Value="#FFE24B4B"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="Width" Value="20"/>
+                <Setter Property="TextAlignment" Value="Center"/>
+                <Setter Property="VerticalAlignment" Value="Top"/>
+                <Setter Property="Margin" Value="0,1,10,0"/>
+            </Style>
+            <Style x:Key="WizardErrorCalloutTitle" TargetType="TextBlock" BasedOn="{StaticResource WizardBody}">
+                <Setter Property="Foreground" Value="#FFE24B4B"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Margin" Value="0,0,0,4"/>
+            </Style>
+            <Style x:Key="WizardErrorCalloutBody" TargetType="TextBlock" BasedOn="{StaticResource WizardHint}">
+                <Setter Property="Foreground" Value="#FFE24B4B"/>
+                <Setter Property="Margin" Value="0"/>
+                <Setter Property="Opacity" Value="1"/>
             </Style>
             <Style x:Key="WizardSummaryLabel" TargetType="TextBlock">
                 <Setter Property="Foreground" Value="{DynamicResource Narian.TextMuted}"/>
@@ -108,31 +146,89 @@
                 <Border/>
             </DockPanel>
 
-            <StackPanel>
-                <Border Background="Transparent" Cursor="SizeAll" Padding="0,0,0,8"
-                        MouseLeftButtonDown="OnDragAreaMouseLeftButtonDown">
-                    <StackPanel>
-                        <TextBlock x:Name="StepLabel" Style="{StaticResource WizardStepLabel}" Margin="0,0,0,8"/>
-                        <TextBlock x:Name="StepTitle" Style="{StaticResource WizardTitle}"/>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                          MaxHeight="560">
+                <StackPanel>
+                    <Border Background="Transparent" Cursor="SizeAll" Padding="0,0,0,8"
+                            MouseLeftButtonDown="OnDragAreaMouseLeftButtonDown">
+                        <StackPanel>
+                            <TextBlock x:Name="StepLabel" Style="{StaticResource WizardStepLabel}" Margin="0,0,0,8"/>
+                            <TextBlock x:Name="StepTitle" Style="{StaticResource WizardTitle}"/>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock x:Name="StepHelp" Style="{StaticResource WizardBody}"/>
+
+                    <StackPanel x:Name="StepWelcome" Visibility="Collapsed">
+                        <TextBlock x:Name="WelcomeBody" Style="{StaticResource WizardBody}"/>
                     </StackPanel>
-                </Border>
-                <TextBlock x:Name="StepHelp" Style="{StaticResource WizardBody}"/>
 
-                <StackPanel x:Name="StepWelcome" Visibility="Collapsed">
-                    <TextBlock x:Name="WelcomeBody" Style="{StaticResource WizardBody}"/>
-                </StackPanel>
+                    <StackPanel x:Name="StepDisplay" Visibility="Collapsed">
+                        <TextBlock x:Name="DisplayTargetLabel" Style="{StaticResource WizardFieldLabel}"/>
+                        <DockPanel Margin="0,0,0,8" LastChildFill="True">
+                            <Button x:Name="IdentifyDisplayButton"
+                                    DockPanel.Dock="Right"
+                                    MinWidth="120"
+                                    MinHeight="36"
+                                    Margin="8,0,0,0"
+                                    Click="IdentifyDisplay_OnClick"/>
+                            <ComboBox x:Name="PlayDisplayBox"
+                                      MinHeight="36"
+                                      DisplayMemberPath="Name"
+                                      SelectedValuePath="Id"/>
+                        </DockPanel>
+                        <TextBlock x:Name="IdentifyDisplayHint" Style="{StaticResource WizardHint}" Margin="0,0,0,12"/>
+                        <CheckBox x:Name="TurnOffOthersCheck" Margin="0,4,0,0"/>
+                        <TextBlock x:Name="TurnOffOthersHelp" Style="{StaticResource WizardHint}"/>
+                    </StackPanel>
 
-                <StackPanel x:Name="StepMigration" Visibility="Collapsed">
-                    <TextBlock x:Name="MigrationCountText" Style="{StaticResource WizardBody}"/>
-                    <CheckBox x:Name="ClearNativeFlagsCheck" Margin="0,0,0,0"/>
-                    <TextBlock x:Name="MigrationHelp" Style="{StaticResource WizardHint}"/>
-                </StackPanel>
+                    <StackPanel x:Name="StepHdr" Visibility="Collapsed">
+                        <Border x:Name="HdrNoSupportCallout"
+                                Style="{StaticResource WizardErrorCallout}"
+                                Visibility="Collapsed">
+                            <DockPanel LastChildFill="True">
+                                <Border DockPanel.Dock="Left" Style="{StaticResource WizardErrorCalloutAccentBar}"/>
+                                <DockPanel Margin="12,10,12,10" LastChildFill="True">
+                                    <TextBlock DockPanel.Dock="Left"
+                                               Text="&#xE7BA;"
+                                               Style="{StaticResource WizardErrorCalloutGlyph}"/>
+                                    <StackPanel>
+                                        <TextBlock x:Name="HdrNoSupportTitle"
+                                                   Style="{StaticResource WizardErrorCalloutTitle}"/>
+                                        <TextBlock x:Name="HdrNoSupportBody"
+                                                   Style="{StaticResource WizardErrorCalloutBody}"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel x:Name="HdrOptionsPanel">
+                            <RadioButton x:Name="HdrNoneRadio" GroupName="WizardHdr" Margin="0,0,0,8"/>
+                            <RadioButton x:Name="HdrAllRadio" GroupName="WizardHdr" Margin="0,0,0,8"/>
+                            <RadioButton x:Name="HdrMetadataRadio" GroupName="WizardHdr" Margin="0,0,0,0"/>
+                            <TextBlock x:Name="HdrHelp" Style="{StaticResource WizardHint}"/>
+                        </StackPanel>
+                    </StackPanel>
 
-                <StackPanel x:Name="StepSummary" Visibility="Collapsed">
-                    <StackPanel x:Name="SummaryRows"/>
-                    <TextBlock x:Name="SummaryHelp" Style="{StaticResource WizardHint}" Margin="0,8,0,0"/>
+                    <StackPanel x:Name="StepRefresh" Visibility="Collapsed">
+                        <RadioButton x:Name="RefreshNativeRadio" GroupName="WizardRefresh" Margin="0,0,0,8"
+                                     Checked="RefreshRadio_OnChecked"/>
+                        <StackPanel x:Name="RefreshExactPanel"/>
+                        <RadioButton x:Name="RefreshHighestRadio" GroupName="WizardRefresh" Margin="0,8,0,0"
+                                     Checked="RefreshRadio_OnChecked"/>
+                        <TextBlock x:Name="RefreshHelp" Style="{StaticResource WizardHint}"/>
+                    </StackPanel>
+
+                    <StackPanel x:Name="StepMigration" Visibility="Collapsed">
+                        <TextBlock x:Name="MigrationCountText" Style="{StaticResource WizardBody}"/>
+                        <CheckBox x:Name="ClearNativeFlagsCheck" Margin="0,0,0,0"/>
+                        <TextBlock x:Name="MigrationHelp" Style="{StaticResource WizardHint}"/>
+                    </StackPanel>
+
+                    <StackPanel x:Name="StepSummary" Visibility="Collapsed">
+                        <StackPanel x:Name="SummaryRows"/>
+                        <TextBlock x:Name="SummaryHelp" Style="{StaticResource WizardHint}" Margin="0,8,0,0"/>
+                    </StackPanel>
                 </StackPanel>
-            </StackPanel>
+            </ScrollViewer>
         </DockPanel>
     </Border>
 </Window>

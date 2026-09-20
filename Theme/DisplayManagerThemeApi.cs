@@ -104,7 +104,7 @@ namespace PlayniteDisplayManager.Theme
         {
             get
             {
-                var mode = plugin.Settings?.DesktopTopPanelDisplayMode ?? DesktopTopPanelDisplayMode.IconAndText;
+                var mode = plugin.Settings?.DesktopTopPanelDisplayMode ?? DesktopTopPanelDisplayMode.Icon;
                 return mode == DesktopTopPanelDisplayMode.Icon || mode == DesktopTopPanelDisplayMode.IconAndText;
             }
         }
@@ -113,7 +113,7 @@ namespace PlayniteDisplayManager.Theme
         {
             get
             {
-                var mode = plugin.Settings?.DesktopTopPanelDisplayMode ?? DesktopTopPanelDisplayMode.IconAndText;
+                var mode = plugin.Settings?.DesktopTopPanelDisplayMode ?? DesktopTopPanelDisplayMode.Icon;
                 return mode == DesktopTopPanelDisplayMode.Text || mode == DesktopTopPanelDisplayMode.IconAndText;
             }
         }

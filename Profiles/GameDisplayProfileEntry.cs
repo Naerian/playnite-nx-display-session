@@ -20,6 +20,8 @@ namespace PlayniteDisplayManager.Profiles
         /// <summary>null = inherit; empty = Windows primary; otherwise display id.</summary>
         public string PreferredPlayDisplayId { get; set; }
 
+        public Guid? TopologyProfileId { get; set; }
+
         public GameDisplayProfile ToProfile()
         {
             return new GameDisplayProfile
@@ -27,7 +29,37 @@ namespace PlayniteDisplayManager.Profiles
                 HdrOverride = HdrOverride,
                 RefreshRateOverride = RefreshRateOverride,
                 PreferredRefreshRateHz = PreferredRefreshRateHz,
-                PreferredPlayDisplayId = PreferredPlayDisplayId
+                PreferredPlayDisplayId = PreferredPlayDisplayId,
+                TopologyProfileId = TopologyProfileId
+            };
+        }
+    }
+
+    public sealed class PlatformProfileEntry
+    {
+        public Guid PlatformId { get; set; }
+
+        public string PlatformName { get; set; }
+
+        public GameHdrOverride HdrOverride { get; set; } = GameHdrOverride.Inherit;
+
+        public GameRefreshRateOverride RefreshRateOverride { get; set; } = GameRefreshRateOverride.Inherit;
+
+        public double? PreferredRefreshRateHz { get; set; }
+
+        public string PreferredPlayDisplayId { get; set; }
+
+        public Guid? TopologyProfileId { get; set; }
+
+        public GameDisplayProfile ToProfile()
+        {
+            return new GameDisplayProfile
+            {
+                HdrOverride = HdrOverride,
+                RefreshRateOverride = RefreshRateOverride,
+                PreferredRefreshRateHz = PreferredRefreshRateHz,
+                PreferredPlayDisplayId = PreferredPlayDisplayId,
+                TopologyProfileId = TopologyProfileId
             };
         }
     }
