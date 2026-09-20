@@ -11,6 +11,7 @@
     <FileVersion>0.1.0.0</FileVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>bin\$(Configuration)\</OutputPath>
+    <DefaultItemExcludes>$(DefaultItemExcludes);RestoreHost\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>

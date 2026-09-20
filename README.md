@@ -31,8 +31,6 @@ Designed for HTPC / couch setups (TV plus another screen): choose which display 
 - [Luz nocturna recortada (ES)](docs/NIGHT-LIGHT.es.md)
 - [Theme API v1 (EN)](docs/THEME-API.md)
 - [Theme API v1 (ES)](docs/THEME-API.es.md)
-- [Audio Switcher hook (EN)](docs/AUDIO-SWITCHER.md)
-- [Hook Audio Switcher (ES)](docs/AUDIO-SWITCHER.es.md)
 
 Source pages for the GitHub wiki live under [`wiki/`](wiki/).
 

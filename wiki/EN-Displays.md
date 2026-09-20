@@ -8,17 +8,29 @@ Displays are identified primarily via **EDID** and CCD path info, not fragile de
 
 If a dock, splitter, or adapter strips EDID, matching may fall back to weaker keys — Overview and Displays settings show what the plugin resolved.
 
-## Target display
+## Primary display for games
 
-In Settings → Displays (and related Overview controls):
+In Settings → Displays:
 
-- Pick which active display is the **game target**.
-- Confirm secondary screens remain as you expect after apply/restore.
-- Use a short launch/quit cycle after changing the target to validate restore.
+- Choose the **primary display for games**, or **Keep Windows default** to leave the system primary unchanged.
+- Optionally **turn off other displays** when a game launches (always confirmed on trial apply).
+- Rename displays for Playnite, use **Identify** to flash a label on each monitor, and preview topology with the short trial buttons.
+
+The Overview and display cards follow the configured play primary in real time.
+
+## Per-game display override
+
+Context menu → Display Manager → Display:
+
+- **Keep global settings** — use Settings → Displays.
+- **Keep Windows default** — leave the Windows primary for this game.
+- A specific connected display — make that screen primary for this game only.
 
 ## Refresh rate
 
-When configured, Display Manager can change refresh rate on the session path (`ChangeDisplaySettingsEx`). Restore returns the previous mode with the topology snapshot / RestoreHost lease.
+When configured under Settings → General → Refresh rate, Display Manager can change refresh rate on the play-primary path (`ChangeDisplaySettingsEx`). Rates listed are those reported for that display at its current resolution. Restore returns the previous mode with the topology snapshot / RestoreHost lease.
+
+Per-game override: context menu → Display Manager → Refresh rate → **Keep global settings** or a specific policy/rate.
 
 ## What restore covers
 
@@ -31,9 +43,10 @@ When configured, Display Manager can change refresh rate on the session path (`C
 - Moving Playnite’s own Fullscreen window between monitors.
 - Per-game custom resolutions beyond the applied session topology.
 - Upscalers, VRR, CEC.
+- Audio device switching (use [Audio Switcher](https://github.com/Naerian/playnite-nx-audio-switcher) if you need that).
 
 ## Diagnostics
 
-- Overview lists resolved displays and the selected game’s effective HDR plan.
+- Overview lists resolved displays and session policies.
 - RestoreHost log: `%TEMP%\PlayniteDisplayManager-RestoreHost.log`
 - If restore appears stuck, check that RestoreHost is not held by a crashed lease (log + Task Manager).

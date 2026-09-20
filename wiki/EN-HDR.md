@@ -18,7 +18,7 @@ Default metadata names: `HDR`, `HDR10`, `Dolby Vision`, `Auto HDR`, `HDR10+`.
 
 Context menu → Display Manager → HDR:
 
-- **Inherit** — use global policy.
+- **Keep global settings** — use the global HDR policy.
 - **Force on** — write HDR on.
 - **Force off (SDR)** — write HDR off.
 - **Do not touch** — skip HDR writes for this game.

@@ -30,7 +30,10 @@ namespace PlayniteDisplayManager.Refresh
         Native = 1,
         Prefer60 = 2,
         Prefer120 = 3,
-        HighestDetected = 4
+        HighestDetected = 4,
+
+        /// <summary>Use PreferredRefreshRateHz on the per-game profile.</summary>
+        ExactHz = 5
     }
 
     public sealed class RefreshRatePlan
@@ -233,6 +236,8 @@ namespace PlayniteDisplayManager.Refresh
                     return RefreshRatePolicy.Prefer120;
                 case GameRefreshRateOverride.HighestDetected:
                     return RefreshRatePolicy.HighestDetected;
+                case GameRefreshRateOverride.ExactHz:
+                    return RefreshRatePolicy.ExactHz;
                 default:
                     return globalPolicy;
             }

@@ -26,6 +26,14 @@ namespace PlayniteDisplayManager
         private DispatcherTimer topologyTrialTimer;
         private int topologyTrialSecondsLeft;
         private bool syncingRefreshRadios;
+        private bool syncingTopologyTarget;
+        private const string WindowsPlayDisplayChoiceId = "__windows_primary__";
+
+        private sealed class PlayDisplayChoice
+        {
+            public string Id { get; set; }
+            public string EffectiveName { get; set; }
+        }
 
         public DisplayManagerSettingsView() : this(false)
         {
@@ -51,7 +59,6 @@ namespace PlayniteDisplayManager
                 SyncHdrMetadataControls();
                 SyncRefreshRateRadios();
                 SyncDesktopAccessControls();
-                SyncAudioSwitcherControls();
                 UpdateOverview();
             };
             Loaded += OnLoaded;
@@ -75,7 +82,6 @@ namespace PlayniteDisplayManager
             SyncHdrMetadataControls();
             SyncRefreshRateRadios();
             SyncDesktopAccessControls();
-            SyncAudioSwitcherControls();
             UpdateOverview();
         }
 
@@ -540,27 +546,106 @@ namespace PlayniteDisplayManager
             }
 
             var settings = DataContext as DisplayManagerSettings;
-            var previous = TopologyTargetBox.SelectedValue as string;
+            var previous = settings?.PreferredPlayDisplayId;
             var connected = settings?.AvailableDisplays?
                 .Where(d => d.IsConnected)
                 .ToList() ?? new System.Collections.Generic.List<DisplayInfo>();
-            TopologyTargetBox.ItemsSource = connected;
-            if (connected.Count == 0)
+
+            var choices = new System.Collections.Generic.List<PlayDisplayChoice>
             {
-                TopologyTargetBox.SelectedIndex = -1;
+                new PlayDisplayChoice
+                {
+                    Id = WindowsPlayDisplayChoiceId,
+                    EffectiveName = TryFindResource("LOCDisplayManager_PlayDisplayWindowsDefault") as string
+                        ?? "Keep Windows default"
+                }
+            };
+            choices.AddRange(connected.Select(d => new PlayDisplayChoice
+            {
+                Id = d.Id,
+                EffectiveName = d.EffectiveName
+            }));
+
+            syncingTopologyTarget = true;
+            try
+            {
+                TopologyTargetBox.ItemsSource = choices;
+                if (connected.Count == 0)
+                {
+                    TopologyTargetBox.SelectedValue = WindowsPlayDisplayChoiceId;
+                    if (settings != null)
+                    {
+                        settings.PreferredPlayDisplayId = null;
+                    }
+                }
+                else if (string.IsNullOrWhiteSpace(previous))
+                {
+                    TopologyTargetBox.SelectedValue = WindowsPlayDisplayChoiceId;
+                }
+                else if (connected.Any(d => string.Equals(d.Id, previous, StringComparison.OrdinalIgnoreCase)))
+                {
+                    TopologyTargetBox.SelectedValue = previous;
+                }
+                else
+                {
+                    TopologyTargetBox.SelectedValue = WindowsPlayDisplayChoiceId;
+                    if (settings != null)
+                    {
+                        settings.PreferredPlayDisplayId = null;
+                    }
+                }
+            }
+            finally
+            {
+                syncingTopologyTarget = false;
+            }
+
+            if (TopologyTurnOffOthersCheck != null && settings != null)
+            {
+                TopologyTurnOffOthersCheck.IsChecked = settings.TurnOffOtherDisplaysOnLaunch;
+            }
+
+            SyncHdrCapabilityUi();
+        }
+
+        private void TopologyTargetBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (syncingTopologyTarget)
+            {
                 return;
             }
 
-            if (!string.IsNullOrWhiteSpace(previous) &&
-                connected.Any(d => string.Equals(d.Id, previous, StringComparison.OrdinalIgnoreCase)))
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null || TopologyTargetBox == null)
             {
-                TopologyTargetBox.SelectedValue = previous;
+                return;
+            }
+
+            var selectedId = TopologyTargetBox.SelectedValue as string;
+            if (string.IsNullOrWhiteSpace(selectedId)
+                || string.Equals(selectedId, WindowsPlayDisplayChoiceId, StringComparison.Ordinal))
+            {
+                settings.PreferredPlayDisplayId = null;
             }
             else
             {
-                var primary = connected.FirstOrDefault(d => d.IsPrimary) ?? connected[0];
-                TopologyTargetBox.SelectedValue = primary.Id;
+                settings.PreferredPlayDisplayId = selectedId;
             }
+
+            RebuildDisplayCards();
+            SyncHdrCapabilityUi();
+            UpdateOverview();
+        }
+
+        private void TopologyTurnOffOthersCheck_OnChanged(object sender, RoutedEventArgs e)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null || TopologyTurnOffOthersCheck == null)
+            {
+                return;
+            }
+
+            settings.TurnOffOtherDisplaysOnLaunch = TopologyTurnOffOthersCheck.IsChecked == true;
         }
 
         private void TopologyTrialApply_OnClick(object sender, RoutedEventArgs e)
@@ -573,19 +658,30 @@ namespace PlayniteDisplayManager
             }
 
             var targetId = TopologyTargetBox?.SelectedValue as string;
-            if (string.IsNullOrWhiteSpace(targetId))
+            var makePrimary = true;
+            if (string.IsNullOrWhiteSpace(targetId)
+                || string.Equals(targetId, WindowsPlayDisplayChoiceId, StringComparison.Ordinal))
             {
-                TopologyTrialStatusText.Text = TryFindResource("LOCDisplayManager_TopologyTrialNoTarget") as string
-                    ?? "Select a connected display first.";
-                return;
+                var windowsPrimary = settings.AvailableDisplays?
+                    .FirstOrDefault(d => d.IsPrimary && d.IsConnected)
+                    ?? settings.AvailableDisplays?.FirstOrDefault(d => d.IsConnected);
+                if (windowsPrimary == null)
+                {
+                    TopologyTrialStatusText.Text = TryFindResource("LOCDisplayManager_TopologyTrialNoTarget") as string
+                        ?? "Select a connected display first.";
+                    return;
+                }
+
+                targetId = windowsPrimary.Id;
+                makePrimary = false;
             }
 
-            var makePrimary = TopologyMakePrimaryCheck?.IsChecked == true;
-            var turnOffOthers = TopologyTurnOffOthersCheck?.IsChecked == true;
+            var turnOffOthers = settings.TurnOffOtherDisplaysOnLaunch
+                || TopologyTurnOffOthersCheck?.IsChecked == true;
             if (!makePrimary && !turnOffOthers)
             {
                 TopologyTrialStatusText.Text = TryFindResource("LOCDisplayManager_TopologyTrialNothing") as string
-                    ?? "Enable make primary and/or turn off others.";
+                    ?? "Select the primary display for games first.";
                 return;
             }
 
@@ -770,14 +866,6 @@ namespace PlayniteDisplayManager
             {
                 HdrIncludeTagsCheck.IsChecked = settings.IncludeTagsInHdrMetadataMatch;
             }
-
-            if (HdrOverrideCountText != null)
-            {
-                var count = settings.Plugin?.GetGameHdrOverrideCount() ?? 0;
-                var format = TryFindResource("LOCDisplayManager_HdrOverrideCountFormat") as string
-                    ?? "{0} game(s) with an HDR override (not inherit).";
-                HdrOverrideCountText.Text = string.Format(format, count);
-            }
         }
 
         private void HdrMetadataNamesBox_OnLostFocus(object sender, RoutedEventArgs e)
@@ -831,92 +919,121 @@ namespace PlayniteDisplayManager
         {
             var settings = DataContext as DisplayManagerSettings;
             var displays = settings?.AvailableDisplays;
-            if (displays == null || displays.Count == 0)
-            {
-                OverviewDisplaysText.Text = TryFindResource("LOCDisplayManager_OverviewDisplaysNone") as string
-                    ?? "No displays detected.";
-                OverviewDisplayPills.Children.Clear();
-            }
-            else
-            {
-                var connected = displays.Count(d => d.IsConnected);
-                var format = TryFindResource("LOCDisplayManager_OverviewDisplaysFormat") as string
-                    ?? "{0} connected · primary: {1}";
-                var primary = settings.PrimaryDisplayName
-                    ?? (TryFindResource("LOCDisplayManager_StatusUnknown") as string ?? "Unknown");
-                OverviewDisplaysText.Text = string.Format(format, connected, primary);
+            var connected = displays?.Where(d => d.IsConnected).ToList()
+                ?? new System.Collections.Generic.List<DisplayInfo>();
+            var primary = connected.FirstOrDefault(d => d.IsPrimary) ?? connected.FirstOrDefault();
+            var playDisplay = ResolvePreferredPlayDisplay(settings, connected);
 
-                OverviewDisplayPills.Children.Clear();
-                foreach (var display in displays.Take(6))
+            if (OverviewDisplaysText != null)
+            {
+                if (connected.Count == 0)
                 {
-                    OverviewDisplayPills.Children.Add(CreatePill(BuildDisplayPillLabel(display)));
+                    OverviewDisplaysText.Text = TryFindResource("LOCDisplayManager_OverviewDisplaysNone") as string
+                        ?? "No displays detected.";
+                }
+                else
+                {
+                    var format = TryFindResource("LOCDisplayManager_OverviewDisplaysConnectedFormat") as string
+                        ?? "{0} connected display(s)";
+                    OverviewDisplaysText.Text = string.Format(format, connected.Count);
                 }
             }
 
+            if (OverviewDisplayPills != null)
+            {
+                OverviewDisplayPills.Children.Clear();
+                if (primary != null)
+                {
+                    OverviewDisplayPills.Children.Add(CreateStatusBadge(
+                        null,
+                        primary.EffectiveName,
+                        "PositiveRatingBrush"));
+                    OverviewDisplayPills.Children.Add(CreateStatusBadge(
+                        null,
+                        TryFindResource("LOCDisplayManager_StatusPrimary") as string ?? "Primary",
+                        "PositiveRatingBrush"));
+                    if (primary.Width > 0 && primary.Height > 0)
+                    {
+                        OverviewDisplayPills.Children.Add(CreateStatusBadge(
+                            null,
+                            primary.Width + "×" + primary.Height,
+                            "GlyphBrush",
+                            0.95));
+                    }
+
+                    if (primary.RefreshRateHz > 0)
+                    {
+                        OverviewDisplayPills.Children.Add(CreateStatusBadge(
+                            null,
+                            primary.RefreshRateHz.ToString("0.###") + " Hz",
+                            "GlyphBrush",
+                            0.95));
+                    }
+
+                    var primaryHdr = ProbeDisplayHdrSupported(settings, primary);
+                    OverviewDisplayPills.Children.Add(CreateStatusBadge(
+                        null,
+                        primaryHdr
+                            ? (TryFindResource("LOCDisplayManager_StatusHdrSupported") as string ?? "HDR supported")
+                            : (TryFindResource("LOCDisplayManager_StatusHdrNotSupported") as string ?? "No HDR"),
+                        primaryHdr ? "PositiveRatingBrush" : "GlyphBrush",
+                        primaryHdr ? 1.0 : 0.9));
+                }
+            }
+
+            var playHdrSupported = ProbeDisplayHdrSupported(settings, playDisplay);
             if (OverviewPolicyText != null)
             {
-                OverviewPolicyText.Text = settings?.Plugin?.GetHdrActionOverviewText()
-                    ?? settings?.Plugin?.GetHdrPolicyOverviewText()
-                    ?? (TryFindResource("LOCDisplayManager_OverviewPolicyUnset") as string ?? "Not configured yet.");
+                if (!playHdrSupported)
+                {
+                    OverviewPolicyText.Text = TryFindResource("LOCDisplayManager_HdrPrimaryNoSupport") as string
+                        ?? "The selected primary display does not support HDR.";
+                }
+                else
+                {
+                    OverviewPolicyText.Text = settings?.Plugin?.GetHdrActionOverviewText()
+                        ?? settings?.Plugin?.GetHdrPolicyOverviewText()
+                        ?? (TryFindResource("LOCDisplayManager_OverviewPolicyUnset") as string ?? "Not configured yet.");
+                }
+            }
+
+            if (OverviewHdrNoSupportText != null)
+            {
+                OverviewHdrNoSupportText.Visibility = Visibility.Collapsed;
             }
 
             if (OverviewPolicyPills != null)
             {
                 OverviewPolicyPills.Children.Clear();
-                var hdrLabel = TryFindResource("LOCDisplayManager_OverviewPolicy") as string ?? "HDR";
-                var hdrValue = GetHdrPolicyBadgeValue(settings);
-                var hdrBrush = settings?.GlobalHdrPolicy == GlobalHdrPolicy.DoNotManage
-                    ? "GlyphBrush"
-                    : "PositiveRatingBrush";
-                var hdrOpacity = settings?.GlobalHdrPolicy == GlobalHdrPolicy.DoNotManage ? 0.65 : 1.0;
-                OverviewPolicyPills.Children.Add(CreateStatusBadge(hdrLabel, hdrValue, hdrBrush, hdrOpacity));
-
-                var refreshLabel = TryFindResource("LOCDisplayManager_OverviewRefreshRate") as string ?? "Refresh rate";
-                var refreshValue = settings?.Plugin?.GetRefreshRateOverviewText()
-                    ?? (TryFindResource("LOCDisplayManager_RefreshPolicyNative") as string
-                        ?? "Native");
-                OverviewPolicyPills.Children.Add(CreateStatusBadge(refreshLabel, refreshValue, "GlyphBrush", 0.85));
-            }
-
-            if (OverviewSessionText != null)
-            {
-                OverviewSessionText.Text = settings?.Plugin?.GetActiveSessionOverviewText()
-                    ?? (TryFindResource("LOCDisplayManager_OverviewSessionIdle") as string ?? "No game session.");
-            }
-
-            var statusLabel = TryFindResource("LOCDisplayManager_Status") as string ?? "Status";
-            var sessionIdleText = TryFindResource("LOCDisplayManager_OverviewSessionIdle") as string ?? "No game session.";
-            var sessionOverview = settings?.Plugin?.GetActiveSessionOverviewText() ?? sessionIdleText;
-            var sessionIsIdle = string.Equals(sessionOverview, sessionIdleText, StringComparison.Ordinal);
-            if (OverviewSessionStatusText != null)
-            {
-                var sessionValue = sessionIsIdle
-                    ? (TryFindResource("LOCDisplayManager_StatusIdle") as string ?? "Idle")
-                    : (TryFindResource("LOCDisplayManager_StatusActive") as string ?? "Active");
-                OverviewSessionStatusText.Text = string.Format("{0}: {1}", statusLabel, sessionValue);
-                ApplyStatusBadgeAppearance(
-                    OverviewSessionStatusText,
-                    sessionIsIdle ? "GlyphBrush" : "PositiveRatingBrush",
-                    sessionIsIdle ? 0.65 : 1.0);
+                if (playHdrSupported)
+                {
+                    var hdrValue = GetHdrPolicyBadgeValue(settings);
+                    var managingHdr = settings?.GlobalHdrPolicy != GlobalHdrPolicy.DoNotManage;
+                    OverviewPolicyPills.Children.Add(CreateStatusBadge(
+                        null,
+                        hdrValue,
+                        managingHdr ? "PositiveRatingBrush" : "GlyphBrush",
+                        managingHdr ? 1.0 : 0.9));
+                }
             }
 
             if (OverviewNativeHdrText != null)
             {
                 OverviewNativeHdrText.Text = settings?.Plugin?.GetNativeHdrOverviewText()
                     ?? (TryFindResource("LOCDisplayManager_OverviewNativeHdrClear") as string
-                        ?? "No games have Playnite’s native Enable HDR flag set.");
+                        ?? "No games have Playnite's Enable HDR option turned on.");
             }
 
             var nativeEnabled = settings?.Plugin?.CountNativeHdrEnabledGames() ?? 0;
             if (OverviewNativeHdrStatusText != null)
             {
-                var nativeValue = nativeEnabled <= 0
-                    ? (TryFindResource("LOCDisplayManager_StatusOk") as string ?? "OK")
-                    : (TryFindResource("LOCDisplayManager_StatusConflict") as string ?? "Conflict");
-                OverviewNativeHdrStatusText.Text = string.Format("{0}: {1}", statusLabel, nativeValue);
+                var nativeValue = nativeEnabled > 0
+                    ? (TryFindResource("LOCDisplayManager_StatusEnabled") as string ?? "Enabled")
+                    : (TryFindResource("LOCDisplayManager_StatusDisabled") as string ?? "Disabled");
+                OverviewNativeHdrStatusText.Text = nativeValue;
                 ApplyStatusBadgeAppearance(
                     OverviewNativeHdrStatusText,
-                    nativeEnabled <= 0 ? "PositiveRatingBrush" : "WarningBrush");
+                    nativeEnabled > 0 ? "WarningBrush" : "PositiveRatingBrush");
             }
 
             if (OverviewRefreshRateText != null)
@@ -929,6 +1046,68 @@ namespace PlayniteDisplayManager
             SyncHdrMetadataControls();
             SyncNativeHdrMigrationStatus();
             SyncRefreshRateRadios();
+            SyncHdrCapabilityUi();
+        }
+
+        private static DisplayInfo ResolvePreferredPlayDisplay(
+            DisplayManagerSettings settings,
+            System.Collections.Generic.IList<DisplayInfo> connected)
+        {
+            if (connected == null || connected.Count == 0)
+            {
+                return null;
+            }
+
+            var preferredId = settings?.PreferredPlayDisplayId;
+            if (!string.IsNullOrWhiteSpace(preferredId))
+            {
+                var match = connected.FirstOrDefault(d =>
+                    string.Equals(d.Id, preferredId, StringComparison.OrdinalIgnoreCase));
+                if (match != null)
+                {
+                    return match;
+                }
+            }
+
+            return connected.FirstOrDefault(d => d.IsPrimary) ?? connected[0];
+        }
+
+        private static bool ProbeDisplayHdrSupported(DisplayManagerSettings settings, DisplayInfo display)
+        {
+            if (display == null || settings?.Plugin?.Hdr == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                var probe = settings.Plugin.Hdr.ProbeActiveTargets(new[] { display }).FirstOrDefault();
+                return probe != null && probe.HdrSupported;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private void SyncHdrCapabilityUi()
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            var connected = settings?.AvailableDisplays?.Where(d => d.IsConnected).ToList()
+                ?? new System.Collections.Generic.List<DisplayInfo>();
+            var playDisplay = ResolvePreferredPlayDisplay(settings, connected);
+            var supported = ProbeDisplayHdrSupported(settings, playDisplay);
+
+            if (HdrPrimaryNoSupportCallout != null)
+            {
+                HdrPrimaryNoSupportCallout.Visibility = supported ? Visibility.Collapsed : Visibility.Visible;
+            }
+
+            if (HdrOptionsPanel != null)
+            {
+                HdrOptionsPanel.IsEnabled = supported;
+                HdrOptionsPanel.Opacity = supported ? 1.0 : 0.55;
+            }
         }
 
         private string GetHdrPolicyBadgeValue(DisplayManagerSettings settings)
@@ -972,32 +1151,22 @@ namespace PlayniteDisplayManager
             settings.Plugin?.Theme?.Refresh();
         }
 
-        private void SyncAudioSwitcherControls()
+        private void ExpanderChevronButton_OnClick(object sender, RoutedEventArgs e)
         {
-            var settings = DataContext as DisplayManagerSettings;
-            var plugin = settings?.Plugin;
-            if (EnableAudioSwitcherHookCheck != null && settings != null)
+            for (var parent = VisualTreeHelper.GetParent(sender as DependencyObject);
+                 parent != null;
+                 parent = VisualTreeHelper.GetParent(parent))
             {
-                EnableAudioSwitcherHookCheck.IsChecked = settings.EnableAudioSwitcherHook;
-            }
+                var expander = parent as Expander;
+                if (expander == null)
+                {
+                    continue;
+                }
 
-            if (AudioSwitcherStatusText != null && plugin != null)
-            {
-                AudioSwitcherStatusText.Text = plugin.AudioSwitcher?.GetStatusLabel(plugin.Loc)
-                    ?? (TryFindResource("LOCDisplayManager_AudioSwitcherMissing") as string
-                        ?? "Audio Switcher is not installed.");
-            }
-        }
-
-        private void EnableAudioSwitcherHookCheck_OnChanged(object sender, RoutedEventArgs e)
-        {
-            var settings = DataContext as DisplayManagerSettings;
-            if (settings == null || EnableAudioSwitcherHookCheck == null)
-            {
+                expander.IsExpanded = !expander.IsExpanded;
+                e.Handled = true;
                 return;
             }
-
-            settings.EnableAudioSwitcherHook = EnableAudioSwitcherHookCheck.IsChecked == true;
         }
 
         private void SyncRefreshRateRadios()
@@ -1008,31 +1177,12 @@ namespace PlayniteDisplayManager
                 return;
             }
 
-            var primary = settings.AvailableDisplays?.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
-                ?? settings.AvailableDisplays?.FirstOrDefault(d => d.IsConnected);
+            var connected = settings.AvailableDisplays?
+                .Where(d => d.IsConnected)
+                .ToList() ?? new System.Collections.Generic.List<DisplayInfo>();
+            var primary = ResolvePreferredPlayDisplay(settings, connected);
 
-            if (RefreshRateDetectedText != null)
-            {
-                if (primary == null)
-                {
-                    RefreshRateDetectedText.Text = TryFindResource("LOCDisplayManager_RefreshRateDetectedNone") as string
-                        ?? "No primary display detected.";
-                }
-                else
-                {
-                    var rates = settings.Plugin?.RefreshRates?.GetAvailableRates(primary) ?? Array.Empty<double>();
-                    var list = rates.Count == 0
-                        ? "—"
-                        : string.Join(", ", rates.Select(r => r.ToString("0.###") + " Hz"));
-                    var format = TryFindResource("LOCDisplayManager_RefreshRateDetectedFormat") as string
-                        ?? "{0}: current {1:0.###} Hz · available at this resolution: {2}";
-                    RefreshRateDetectedText.Text = string.Format(
-                        format,
-                        primary.EffectiveName,
-                        primary.RefreshRateHz,
-                        list);
-                }
-            }
+            BuildRefreshRatePrimaryPanel(settings, primary);
 
             syncingRefreshRadios = true;
             try
@@ -1088,6 +1238,107 @@ namespace PlayniteDisplayManager
             {
                 syncingRefreshRadios = false;
             }
+        }
+
+        private void BuildRefreshRatePrimaryPanel(DisplayManagerSettings settings, DisplayInfo primary)
+        {
+            if (RefreshRatePrimaryPanel == null)
+            {
+                return;
+            }
+
+            RefreshRatePrimaryPanel.Children.Clear();
+            if (primary == null)
+            {
+                RefreshRatePrimaryPanel.Children.Add(new TextBlock
+                {
+                    Text = TryFindResource("LOCDisplayManager_RefreshRateDetectedNone") as string
+                        ?? "No primary display detected.",
+                    Style = TryFindResource("HintText") as Style
+                });
+                return;
+            }
+
+            RefreshRatePrimaryPanel.Children.Add(new TextBlock
+            {
+                Text = TryFindResource("LOCDisplayManager_RefreshRatePrimaryLabel") as string
+                    ?? "Primary display for games",
+                Style = TryFindResource("FieldLabel") as Style
+            });
+            RefreshRatePrimaryPanel.Children.Add(new TextBlock
+            {
+                Text = primary.EffectiveName,
+                Style = TryFindResource("SummaryCardTitle") as Style,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 0, 0, 12)
+            });
+
+            var pills = new WrapPanel { Margin = new Thickness(0, 0, 0, 8) };
+            if (primary.Width > 0 && primary.Height > 0)
+            {
+                pills.Children.Add(CreateStatusBadge(
+                    TryFindResource("LOCDisplayManager_RefreshRateResolutionLabel") as string ?? "Resolution",
+                    $"{primary.Width}×{primary.Height}",
+                    "GlyphBrush",
+                    0.95));
+            }
+
+            if (primary.RefreshRateHz > 0)
+            {
+                pills.Children.Add(CreateStatusBadge(
+                    TryFindResource("LOCDisplayManager_RefreshRateCurrentLabel") as string ?? "Current refresh rate",
+                    primary.RefreshRateHz.ToString("0.###") + " Hz",
+                    "PositiveRatingBrush"));
+            }
+
+            RefreshRatePrimaryPanel.Children.Add(pills);
+
+            var rates = settings?.Plugin?.RefreshRates?.GetAvailableRates(primary) ?? Array.Empty<double>();
+            RefreshRatePrimaryPanel.Children.Add(new TextBlock
+            {
+                Text = TryFindResource("LOCDisplayManager_RefreshRateAvailableLabel") as string
+                    ?? "Available at this resolution",
+                Style = TryFindResource("FieldLabel") as Style,
+                Margin = new Thickness(0, 4, 0, 4)
+            });
+
+            if (rates.Count == 0)
+            {
+                RefreshRatePrimaryPanel.Children.Add(new TextBlock
+                {
+                    Text = "—",
+                    Style = TryFindResource("HintText") as Style
+                });
+                return;
+            }
+
+            var ratePills = new WrapPanel();
+            foreach (var rate in rates)
+            {
+                ratePills.Children.Add(CreateStatusBadge(
+                    null,
+                    rate.ToString("0.###") + " Hz",
+                    "GlyphBrush",
+                    0.95));
+            }
+
+            RefreshRatePrimaryPanel.Children.Add(ratePills);
+        }
+
+        private static bool IsConfiguredPlayPrimary(DisplayInfo display, DisplayManagerSettings settings)
+        {
+            if (display == null || settings == null)
+            {
+                return false;
+            }
+
+            var preferredId = settings.PreferredPlayDisplayId;
+            if (!string.IsNullOrWhiteSpace(preferredId))
+            {
+                return string.Equals(display.Id, preferredId, StringComparison.OrdinalIgnoreCase);
+            }
+
+            return display.IsPrimary;
         }
 
         private void RefreshRateRadio_OnChecked(object sender, RoutedEventArgs e)
@@ -1251,13 +1502,11 @@ namespace PlayniteDisplayManager
 
         private Border CreateStatusBadge(string label, string value, string brushKey, double opacity = 1.0)
         {
-            var text = new TextBlock
-            {
-                Text = string.Format(
-                    "{0}: {1}",
-                    label ?? string.Empty,
-                    string.IsNullOrWhiteSpace(value) ? "\u2014" : value)
-            };
+            var safeValue = string.IsNullOrWhiteSpace(value) ? "-" : value;
+            var displayText = string.IsNullOrWhiteSpace(label)
+                ? safeValue
+                : string.Format("{0}: {1}", label, safeValue);
+            var text = new TextBlock { Text = displayText };
             var badge = new Border
             {
                 Style = TryFindResource("DeviceStatusPill") as Style
@@ -1380,30 +1629,42 @@ namespace PlayniteDisplayManager
                 Child = title
             });
 
-            var statusLabel = TryFindResource("LOCDisplayManager_Status") as string ?? "Status";
             var pills = new WrapPanel { Margin = new Thickness(0, 0, 0, 12) };
             if (display.IsConnected)
             {
                 pills.Children.Add(CreateStatusBadge(
-                    statusLabel,
+                    null,
                     TryFindResource("LOCDisplayManager_StatusConnected") as string ?? "Connected",
                     "PositiveRatingBrush"));
             }
             else
             {
                 pills.Children.Add(CreateStatusBadge(
-                    statusLabel,
+                    null,
                     TryFindResource("LOCDisplayManager_StatusDisconnected") as string ?? "Disconnected",
                     "GlyphBrush",
-                    0.65));
+                    0.9));
             }
 
-            if (display.IsPrimary)
+            if (IsConfiguredPlayPrimary(display, DataContext as DisplayManagerSettings))
             {
                 pills.Children.Add(CreateStatusBadge(
-                    statusLabel,
+                    null,
                     TryFindResource("LOCDisplayManager_StatusPrimary") as string ?? "Primary",
                     "PositiveRatingBrush"));
+            }
+
+            if (display.IsConnected)
+            {
+                var settings = DataContext as DisplayManagerSettings;
+                var hdrSupported = ProbeDisplayHdrSupported(settings, display);
+                pills.Children.Add(CreateStatusBadge(
+                    null,
+                    hdrSupported
+                        ? (TryFindResource("LOCDisplayManager_StatusHdrSupported") as string ?? "HDR supported")
+                        : (TryFindResource("LOCDisplayManager_StatusHdrNotSupported") as string ?? "No HDR"),
+                    hdrSupported ? "PositiveRatingBrush" : "GlyphBrush",
+                    hdrSupported ? 1.0 : 0.9));
             }
 
             pills.Children.Add(CreatePill(display.IdentityKind == "edid"
@@ -1423,14 +1684,29 @@ namespace PlayniteDisplayManager
 
             root.Children.Add(pills);
 
-            var idHint = new TextBlock
+            if (display.IsConnected)
             {
-                Text = display.Id,
-                Style = TryFindResource("HintText") as Style,
-                Margin = new Thickness(0, 0, 0, 12),
-                FontFamily = new FontFamily("Consolas")
-            };
-            root.Children.Add(idHint);
+                var identifyButton = new Button
+                {
+                    Content = TryFindResource("LOCDisplayManager_IdentifyDisplay") as string ?? "Identify",
+                    MinWidth = 120,
+                    MinHeight = 36,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    Margin = new Thickness(0, 0, 0, 4),
+                    Cursor = Cursors.Hand,
+                    Style = TryFindResource("NarianPrimaryButton") as Style
+                };
+                var displayCapture = display;
+                identifyButton.Click += (_, __) => IdentifyDisplay(displayCapture);
+                root.Children.Add(identifyButton);
+                root.Children.Add(new TextBlock
+                {
+                    Text = TryFindResource("LOCDisplayManager_IdentifyDisplayHint") as string
+                        ?? "Shows a large label on that monitor for a few seconds.",
+                    Style = TryFindResource("HintText") as Style,
+                    Margin = new Thickness(0, 0, 0, 12)
+                });
+            }
 
             var aliasLabel = new TextBlock
             {
@@ -1459,6 +1735,7 @@ namespace PlayniteDisplayManager
                 }
 
                 UpdateOverview();
+                RefreshTopologyTargetBox();
             };
             root.Children.Add(aliasBox);
 
@@ -1483,6 +1760,87 @@ namespace PlayniteDisplayManager
 
             card.Child = root;
             return card;
+        }
+
+        private void IdentifyDisplay(DisplayInfo display)
+        {
+            if (display == null || !display.IsConnected)
+            {
+                return;
+            }
+
+            try
+            {
+                System.Windows.Forms.Screen screen = null;
+                if (!string.IsNullOrWhiteSpace(display.GdiDeviceName))
+                {
+                    screen = System.Windows.Forms.Screen.AllScreens
+                        .FirstOrDefault(s => string.Equals(s.DeviceName, display.GdiDeviceName, StringComparison.OrdinalIgnoreCase));
+                }
+
+                if (screen == null && display.IsPrimary)
+                {
+                    screen = System.Windows.Forms.Screen.PrimaryScreen;
+                }
+
+                if (screen == null)
+                {
+                    screen = System.Windows.Forms.Screen.AllScreens
+                        .FirstOrDefault(s => s.Bounds.Width == display.Width && s.Bounds.Height == display.Height)
+                        ?? System.Windows.Forms.Screen.PrimaryScreen;
+                }
+
+                if (screen == null)
+                {
+                    return;
+                }
+
+                var label = display.EffectiveName;
+                if (display.IsPrimary)
+                {
+                    var primary = TryFindResource("LOCDisplayManager_StatusPrimary") as string ?? "Primary";
+                    label = label + " (" + primary + ")";
+                }
+
+                var overlay = new Window
+                {
+                    WindowStyle = WindowStyle.None,
+                    AllowsTransparency = true,
+                    Background = new SolidColorBrush(Color.FromArgb(210, 10, 14, 20)),
+                    Topmost = true,
+                    ShowInTaskbar = false,
+                    ResizeMode = ResizeMode.NoResize,
+                    Left = screen.Bounds.Left,
+                    Top = screen.Bounds.Top,
+                    Width = screen.Bounds.Width,
+                    Height = screen.Bounds.Height,
+                    Content = new TextBlock
+                    {
+                        Text = label,
+                        FontSize = Math.Max(36, Math.Min(screen.Bounds.Width, screen.Bounds.Height) / 12.0),
+                        FontWeight = FontWeights.SemiBold,
+                        Foreground = Brushes.White,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        TextAlignment = TextAlignment.Center,
+                        TextWrapping = TextWrapping.Wrap,
+                        Margin = new Thickness(48)
+                    }
+                };
+
+                overlay.Show();
+                var closeTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
+                closeTimer.Tick += (_, __) =>
+                {
+                    closeTimer.Stop();
+                    try { overlay.Close(); } catch { }
+                };
+                closeTimer.Start();
+            }
+            catch
+            {
+                // Identify must never break settings UI.
+            }
         }
 
         private void RebuildGameProfileRows()
@@ -1563,11 +1921,11 @@ namespace PlayniteDisplayManager
                 TryFindResource("LOCDisplayManager_GameMenuHdrSection") as string ?? "HDR",
                 FormatHdrOverrideSummary(profile.HdrOverride)));
             content.Children.Add(CreateProfileSummaryLine(
-                TryFindResource("LOCDisplayManager_GameMenuHzSection") as string ?? "Refresh rate",
-                FormatRefreshOverrideSummary(profile.RefreshRateOverride)));
+                TryFindResource("LOCDisplayManager_GameMenuDisplaySection") as string ?? "Display",
+                FormatPlayDisplayOverrideSummary(profile, settings)));
             content.Children.Add(CreateProfileSummaryLine(
-                TryFindResource("LOCDisplayManager_GameMenuAudioSection") as string ?? "Audio",
-                FormatAudioAssociationSummary(profile, settings)));
+                TryFindResource("LOCDisplayManager_GameMenuHzSection") as string ?? "Refresh rate",
+                FormatRefreshOverrideSummary(profile.RefreshRateOverride, profile.PreferredRefreshRateHz)));
 
             container.Child = content;
             return container;
@@ -1596,16 +1954,46 @@ namespace PlayniteDisplayManager
                 case GameHdrOverride.DoNotTouch:
                     return TryFindResource("LOCDisplayManager_GameHdrDoNotTouch") as string ?? "Do not touch HDR";
                 default:
-                    return TryFindResource("LOCDisplayManager_GameHdrInherit") as string ?? "Inherit global policy";
+                    return TryFindResource("LOCDisplayManager_GameHdrInherit") as string ?? "Keep global settings";
             }
         }
 
-        private string FormatRefreshOverrideSummary(GameRefreshRateOverride value)
+        private string FormatPlayDisplayOverrideSummary(
+            GameDisplayProfileEntry profile,
+            DisplayManagerSettings settings)
+        {
+            if (profile?.PreferredPlayDisplayId == null)
+            {
+                return TryFindResource("LOCDisplayManager_GameDisplayInherit") as string
+                    ?? "Keep global settings";
+            }
+
+            if (string.IsNullOrEmpty(profile.PreferredPlayDisplayId))
+            {
+                return TryFindResource("LOCDisplayManager_PlayDisplayWindowsDefault") as string
+                    ?? "Keep Windows default";
+            }
+
+            var match = settings?.AvailableDisplays?.FirstOrDefault(d =>
+                string.Equals(d.Id, profile.PreferredPlayDisplayId, StringComparison.OrdinalIgnoreCase));
+            return match?.EffectiveName ?? profile.PreferredPlayDisplayId;
+        }
+
+        private string FormatRefreshOverrideSummary(GameRefreshRateOverride value, double? preferredHz = null)
         {
             switch (value)
             {
                 case GameRefreshRateOverride.Native:
                     return TryFindResource("LOCDisplayManager_GameHzNative") as string ?? "Force native";
+                case GameRefreshRateOverride.ExactHz:
+                    if (preferredHz.HasValue)
+                    {
+                        var format = TryFindResource("LOCDisplayManager_RefreshPolicyExactFormat") as string
+                            ?? "{0:0.###} Hz";
+                        return string.Format(format, preferredHz.Value);
+                    }
+
+                    return TryFindResource("LOCDisplayManager_RefreshPolicyExact") as string ?? "Exact Hz";
                 case GameRefreshRateOverride.Prefer60:
                     return TryFindResource("LOCDisplayManager_GameHz60") as string ?? "Prefer ~60 Hz";
                 case GameRefreshRateOverride.Prefer120:
@@ -1613,33 +2001,8 @@ namespace PlayniteDisplayManager
                 case GameRefreshRateOverride.HighestDetected:
                     return TryFindResource("LOCDisplayManager_GameHzHighest") as string ?? "Highest detected";
                 default:
-                    return TryFindResource("LOCDisplayManager_GameHzInherit") as string ?? "Inherit global refresh policy";
+                    return TryFindResource("LOCDisplayManager_GameHzInherit") as string ?? "Keep global settings";
             }
-        }
-
-        private string FormatAudioAssociationSummary(GameDisplayProfileEntry profile, DisplayManagerSettings settings)
-        {
-            if (string.IsNullOrWhiteSpace(profile.AssociatedAudioDeviceId))
-            {
-                return TryFindResource("LOCDisplayManager_GameAudioNone") as string ?? "No associated playback device";
-            }
-
-            try
-            {
-                var devices = settings?.Plugin?.AudioSwitcher?.GetPlaybackDevices();
-                var match = devices?.FirstOrDefault(d =>
-                    string.Equals(d.Id, profile.AssociatedAudioDeviceId, StringComparison.OrdinalIgnoreCase));
-                if (match != null && !string.IsNullOrWhiteSpace(match.Name))
-                {
-                    return match.Name;
-                }
-            }
-            catch
-            {
-                // Soft bridge may throw if Audio Switcher is unavailable mid-call.
-            }
-
-            return profile.AssociatedAudioDeviceId;
         }
 
         private void Hyperlink_OnRequestNavigate(object sender, RequestNavigateEventArgs e)

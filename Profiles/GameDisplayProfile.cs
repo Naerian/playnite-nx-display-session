@@ -30,16 +30,24 @@ namespace PlayniteDisplayManager.Profiles
         [DataMember(Name = "refreshRateOverride")]
         public GameRefreshRateOverride RefreshRateOverride { get; set; } = GameRefreshRateOverride.Inherit;
 
+        /// <summary>Target Hz when RefreshRateOverride is ExactHz (or legacy Prefer60/Prefer120).</summary>
+        [DataMember(Name = "preferredRefreshRateHz")]
+        public double? PreferredRefreshRateHz { get; set; }
+
         /// <summary>
-        /// Optional WASAPI device id for Audio Switcher. Display Manager never switches audio itself.
+        /// Per-game play display. null = inherit global PreferredPlayDisplayId;
+        /// empty string = keep Windows primary; otherwise a stable display id.
         /// </summary>
-        [DataMember(Name = "associatedAudioDeviceId")]
-        public string AssociatedAudioDeviceId { get; set; }
+        [DataMember(Name = "preferredPlayDisplayId")]
+        public string PreferredPlayDisplayId { get; set; }
+
+        /// <summary>True when PreferredPlayDisplayId is set (including empty = Windows primary).</summary>
+        public bool HasPlayDisplayOverride => PreferredPlayDisplayId != null;
 
         public bool IsEmpty =>
             HdrOverride == GameHdrOverride.Inherit &&
             RefreshRateOverride == GameRefreshRateOverride.Inherit &&
-            string.IsNullOrWhiteSpace(AssociatedAudioDeviceId);
+            PreferredPlayDisplayId == null;
 
         public GameDisplayProfile Clone()
         {
@@ -47,7 +55,8 @@ namespace PlayniteDisplayManager.Profiles
             {
                 HdrOverride = HdrOverride,
                 RefreshRateOverride = RefreshRateOverride,
-                AssociatedAudioDeviceId = AssociatedAudioDeviceId
+                PreferredRefreshRateHz = PreferredRefreshRateHz,
+                PreferredPlayDisplayId = PreferredPlayDisplayId
             };
         }
     }

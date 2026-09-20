@@ -50,16 +50,21 @@ namespace PlayniteDisplayManager.Hdr
         public uint AdapterIdLow { get; set; }
         public int AdapterIdHigh { get; set; }
         public uint TargetId { get; set; }
-        public bool AdvancedColorSupported { get; set; }
+
+        /// <summary>True hardware HDR capability (not ACM/WCG “advanced color”).</summary>
+        public bool HdrSupported { get; set; }
+
         /// <summary>Untrusted under ACM — for diagnostics only.</summary>
-        public bool AdvancedColorEnabledUntrusted { get; set; }
-        public bool WideColorEnforcedUntrusted { get; set; }
+        public bool HdrEnabledUntrusted { get; set; }
+
         public bool IsPrimary { get; set; }
     }
 
     /// <summary>
     /// HDR ownership via CCD write APIs. Restore always WRITES the desired state;
-    /// GET_ADVANCED_COLOR_INFO is treated as untrusted under Automatic Color Management.
+    /// enabled-state GET readback is treated as untrusted under Automatic Color Management.
+    /// Capability uses INFO_2 highDynamicRangeSupported when available, else the ACM-aware
+    /// advancedColorSupported && !wideColorEnforced heuristic (SDR+ACM reports both bits set).
     /// </summary>
     public sealed class HdrService
     {
@@ -72,8 +77,8 @@ namespace PlayniteDisplayManager.Hdr
 
             foreach (var display in list)
             {
-                var info = TryGetAdvancedColorInfo(display.AdapterIdLow, display.AdapterIdHigh, display.TargetId);
-                if (info == null)
+                var probe = TryProbeHdrCapability(display.AdapterIdLow, display.AdapterIdHigh, display.TargetId);
+                if (probe == null)
                 {
                     continue;
                 }
@@ -85,9 +90,8 @@ namespace PlayniteDisplayManager.Hdr
                     AdapterIdLow = display.AdapterIdLow,
                     AdapterIdHigh = display.AdapterIdHigh,
                     TargetId = display.TargetId,
-                    AdvancedColorSupported = info.Value.AdvancedColorSupported,
-                    AdvancedColorEnabledUntrusted = info.Value.AdvancedColorEnabled,
-                    WideColorEnforcedUntrusted = info.Value.WideColorEnforced,
+                    HdrSupported = probe.Value.HdrSupported,
+                    HdrEnabledUntrusted = probe.Value.HdrEnabledUntrusted,
                     IsPrimary = display.IsPrimary
                 });
             }
@@ -187,14 +191,14 @@ namespace PlayniteDisplayManager.Hdr
 
         /// <summary>
         /// Build restore writes that force HDR off on capable targets (policy 2 exit / lease).
-        /// Does not trust current GET state.
+        /// Does not trust current GET enabled state.
         /// </summary>
         public List<HdrWriteTarget> BuildForceOffWrites(IEnumerable<Displays.DisplayInfo> displays)
         {
             var writes = new List<HdrWriteTarget>();
             foreach (var probe in ProbeActiveTargets(displays))
             {
-                if (!probe.AdvancedColorSupported)
+                if (!probe.HdrSupported)
                 {
                     continue;
                 }
@@ -216,7 +220,7 @@ namespace PlayniteDisplayManager.Hdr
         public List<HdrWriteTarget> BuildEnableWritesForPrimary(IEnumerable<Displays.DisplayInfo> displays)
         {
             var writes = new List<HdrWriteTarget>();
-            foreach (var probe in ProbeActiveTargets(displays).Where(p => p.IsPrimary && p.AdvancedColorSupported))
+            foreach (var probe in ProbeActiveTargets(displays).Where(p => p.IsPrimary && p.HdrSupported))
             {
                 writes.Add(new HdrWriteTarget
                 {
@@ -232,9 +236,39 @@ namespace PlayniteDisplayManager.Hdr
             return writes;
         }
 
-        private static DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO? TryGetAdvancedColorInfo(
+        private struct HdrCapabilityProbe
+        {
+            public bool HdrSupported;
+            public bool HdrEnabledUntrusted;
+        }
+
+        private static HdrCapabilityProbe? TryProbeHdrCapability(
             uint adapterLow, int adapterHigh, uint targetId)
         {
+            // Prefer INFO_2: highDynamicRangeSupported is true HDR, not ACM/WCG.
+            var info2 = new DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO_2
+            {
+                header = new DISPLAYCONFIG_DEVICE_INFO_HEADER
+                {
+                    type = DISPLAYCONFIG_DEVICE_INFO_TYPE.DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO_2,
+                    size = (uint)Marshal.SizeOf(typeof(DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO_2)),
+                    adapterId = new LUID { LowPart = adapterLow, HighPart = adapterHigh },
+                    id = targetId
+                }
+            };
+
+            if (DisplayConfigGetDeviceInfo(ref info2) == ERROR_SUCCESS)
+            {
+                return new HdrCapabilityProbe
+                {
+                    HdrSupported = info2.HighDynamicRangeSupported,
+                    HdrEnabledUntrusted = info2.activeColorMode ==
+                        (uint)DISPLAYCONFIG_ADVANCED_COLOR_MODE.DISPLAYCONFIG_ADVANCED_COLOR_MODE_HDR
+                };
+            }
+
+            // Legacy INFO (Win10 / Win11 < 24H2). Under ACM, SDR panels often report
+            // advancedColorSupported=1 with wideColorEnforced=1; true HDR has enforced=0.
             var info = new DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO
             {
                 header = new DISPLAYCONFIG_DEVICE_INFO_HEADER
@@ -246,13 +280,17 @@ namespace PlayniteDisplayManager.Hdr
                 }
             };
 
-            var result = DisplayConfigGetDeviceInfo(ref info);
-            if (result != ERROR_SUCCESS)
+            if (DisplayConfigGetDeviceInfo(ref info) != ERROR_SUCCESS)
             {
                 return null;
             }
 
-            return info;
+            var hdrSupported = info.AdvancedColorSupported && !info.WideColorEnforced;
+            return new HdrCapabilityProbe
+            {
+                HdrSupported = hdrSupported,
+                HdrEnabledUntrusted = hdrSupported && info.AdvancedColorEnabled
+            };
         }
     }
 }

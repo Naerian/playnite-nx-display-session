@@ -10,7 +10,6 @@ using Playnite.SDK;
 using Playnite.SDK.Events;
 using Playnite.SDK.Models;
 using Playnite.SDK.Plugins;
-using PlayniteDisplayManager.Audio;
 using PlayniteDisplayManager.Displays;
 using PlayniteDisplayManager.Hdr;
 using PlayniteDisplayManager.Profiles;
@@ -25,7 +24,6 @@ namespace PlayniteDisplayManager
         private readonly ILogger logger;
         private readonly HdrService hdr = new HdrService();
         private readonly RefreshRateService refreshRates = new RefreshRateService();
-        private AudioSwitcherBridge audioSwitcher;
         private DisplayManagerSettings settings;
         private GameDisplayProfileStore gameProfiles;
         private NativeHdrFlagMigration nativeHdrMigration;
@@ -35,8 +33,6 @@ namespace PlayniteDisplayManager
         private DisplaySnapshot gameSessionSnapshot;
         private Guid? activeGameId;
         private string activeGameName;
-        private string sessionPreviousAudioDeviceId;
-        private bool sessionAppliedAudioDevice;
         private TopPanelItem desktopTopPanelItem;
         private bool openingStandaloneSettings;
 
@@ -50,8 +46,6 @@ namespace PlayniteDisplayManager
 
         public RefreshRateService RefreshRates => refreshRates;
 
-        public AudioSwitcherBridge AudioSwitcher => audioSwitcher;
-
         public GameDisplayProfileStore GameProfiles => gameProfiles;
 
         public DisplayManagerThemeApi Theme { get; }
@@ -63,7 +57,6 @@ namespace PlayniteDisplayManager
             Topology = new DisplayTopologyService();
             gameProfiles = new GameDisplayProfileStore(GetPluginUserDataPath());
             nativeHdrMigration = new NativeHdrFlagMigration(PlayniteApi, logger, GetPluginUserDataPath());
-            audioSwitcher = new AudioSwitcherBridge(PlayniteApi, logger);
             Theme = new DisplayManagerThemeApi(this);
             Properties = new GenericPluginProperties
             {
@@ -353,15 +346,11 @@ namespace PlayniteDisplayManager
                 args,
                 GameHdrOverride.ForceOff);
 
-            yield return CreateHdrOverrideMenuItem(
-                hdrSection,
-                CheckedMenuLabel(hdrCurrent.All(o => o == GameHdrOverride.DoNotTouch),
-                    Loc("LOCDisplayManager_GameHdrDoNotTouch")),
-                args,
-                GameHdrOverride.DoNotTouch);
-
             var hzSection = "Display Manager|" + Loc("LOCDisplayManager_GameMenuHzSection");
-            var hzCurrent = games.Select(g => gameProfiles.GetRefreshRateOverride(g)).ToList();
+            var hzProfiles = games.Select(g => gameProfiles.GetProfile(g)).ToList();
+            var hzCurrent = hzProfiles
+                .Select(p => p?.RefreshRateOverride ?? GameRefreshRateOverride.Inherit)
+                .ToList();
 
             yield return CreateRefreshOverrideMenuItem(
                 hzSection,
@@ -377,19 +366,27 @@ namespace PlayniteDisplayManager
                 args,
                 GameRefreshRateOverride.Native);
 
-            yield return CreateRefreshOverrideMenuItem(
-                hzSection,
-                CheckedMenuLabel(hzCurrent.All(o => o == GameRefreshRateOverride.Prefer60),
-                    Loc("LOCDisplayManager_GameHz60")),
-                args,
-                GameRefreshRateOverride.Prefer60);
-
-            yield return CreateRefreshOverrideMenuItem(
-                hzSection,
-                CheckedMenuLabel(hzCurrent.All(o => o == GameRefreshRateOverride.Prefer120),
-                    Loc("LOCDisplayManager_GameHz120")),
-                args,
-                GameRefreshRateOverride.Prefer120);
+            var primary = Displays.GetDisplays()
+                .FirstOrDefault(d => d.IsPrimary && d.IsConnected)
+                ?? Displays.GetDisplays().FirstOrDefault(d => d.IsConnected);
+            var availableRates = RefreshRates?.GetAvailableRates(primary) ?? Array.Empty<double>();
+            foreach (var rate in availableRates)
+            {
+                var selected = hzProfiles.Count > 0 && hzProfiles.All(p =>
+                    p != null
+                    && (p.RefreshRateOverride == GameRefreshRateOverride.ExactHz
+                        || p.RefreshRateOverride == GameRefreshRateOverride.Prefer60
+                        || p.RefreshRateOverride == GameRefreshRateOverride.Prefer120)
+                    && p.PreferredRefreshRateHz.HasValue
+                    && Math.Abs(p.PreferredRefreshRateHz.Value - rate) < 0.05);
+                var format = Loc("LOCDisplayManager_RefreshPolicyExactFormat");
+                yield return CreateRefreshOverrideMenuItem(
+                    hzSection,
+                    CheckedMenuLabel(selected, string.Format(format, rate)),
+                    args,
+                    GameRefreshRateOverride.ExactHz,
+                    rate);
+            }
 
             yield return CreateRefreshOverrideMenuItem(
                 hzSection,
@@ -398,41 +395,54 @@ namespace PlayniteDisplayManager
                 args,
                 GameRefreshRateOverride.HighestDetected);
 
-            var audioSection = "Display Manager|" + Loc("LOCDisplayManager_GameMenuAudioSection");
-            var associated = games.Count == 1
-                ? gameProfiles.GetAssociatedAudioDeviceId(games[0])
-                : null;
-
-            yield return CreateAudioDeviceMenuItem(
-                audioSection,
-                CheckedMenuLabel(string.IsNullOrWhiteSpace(associated),
-                    Loc("LOCDisplayManager_GameAudioNone")),
+            var displaySection = "Display Manager|" + Loc("LOCDisplayManager_GameMenuDisplaySection");
+            var displayProfiles = games.Select(g => gameProfiles.GetProfile(g)).ToList();
+            var inheritDisplay = displayProfiles.Count > 0
+                && displayProfiles.All(p => p == null || !p.HasPlayDisplayOverride);
+            yield return CreatePlayDisplayMenuItem(
+                displaySection,
+                CheckedMenuLabel(inheritDisplay, Loc("LOCDisplayManager_GameDisplayInherit")),
                 args,
                 null);
 
-            if (audioSwitcher != null && audioSwitcher.IsAvailable)
+            var windowsDisplay = displayProfiles.Count > 0
+                && displayProfiles.All(p => p != null
+                    && p.HasPlayDisplayOverride
+                    && string.IsNullOrEmpty(p.PreferredPlayDisplayId));
+            yield return CreatePlayDisplayMenuItem(
+                displaySection,
+                CheckedMenuLabel(windowsDisplay, Loc("LOCDisplayManager_PlayDisplayWindowsDefault")),
+                args,
+                string.Empty);
+
+            foreach (var display in Displays.GetDisplays().Where(d => d.IsConnected))
             {
-                foreach (var device in audioSwitcher.GetPlaybackDevices())
-                {
-                    var deviceId = device.Id;
-                    yield return CreateAudioDeviceMenuItem(
-                        audioSection,
-                        CheckedMenuLabel(
-                            string.Equals(associated, deviceId, StringComparison.OrdinalIgnoreCase),
-                            device.Name),
-                        args,
-                        deviceId);
-                }
+                var displayId = display.Id;
+                var selected = displayProfiles.Count > 0 && displayProfiles.All(p =>
+                    p != null
+                    && p.HasPlayDisplayOverride
+                    && string.Equals(p.PreferredPlayDisplayId, displayId, StringComparison.OrdinalIgnoreCase));
+                yield return CreatePlayDisplayMenuItem(
+                    displaySection,
+                    CheckedMenuLabel(selected, display.EffectiveName),
+                    args,
+                    displayId);
             }
-            else
+        }
+
+        /// <summary>
+        /// Resolves the play display for a game: per-game override wins, then global setting.
+        /// null/empty means keep the current Windows primary.
+        /// </summary>
+        private string ResolvePreferredPlayDisplayId(Game game)
+        {
+            var profile = gameProfiles?.GetProfile(game);
+            if (profile != null && profile.HasPlayDisplayOverride)
             {
-                yield return new GameMenuItem
-                {
-                    MenuSection = audioSection,
-                    Description = Loc("LOCDisplayManager_AudioSwitcherMissing"),
-                    Action = _ => { }
-                };
+                return profile.PreferredPlayDisplayId;
             }
+
+            return settings?.PreferredPlayDisplayId;
         }
 
         public override void OnGameStarting(OnGameStartingEventArgs args)
@@ -474,17 +484,28 @@ namespace PlayniteDisplayManager
 
             var hdrPlan = PlanHdrSession(game);
             var hzPlan = PlanRefreshRateSession(game);
-            var audioDeviceId = settings.EnableAudioSwitcherHook
-                ? gameProfiles?.GetAssociatedAudioDeviceId(game)
-                : null;
-            var wantsAudio = !string.IsNullOrWhiteSpace(audioDeviceId) &&
-                             audioSwitcher != null &&
-                             audioSwitcher.IsAvailable;
 
-            if (hdrPlan.Action == HdrSessionAction.None && !hzPlan.ShouldApply && !wantsAudio)
+            var livePreview = Displays.GetDisplays().ToList();
+            var currentPrimary = livePreview.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
+                ?? livePreview.FirstOrDefault(d => d.IsConnected);
+            var preferredId = ResolvePreferredPlayDisplayId(game);
+            var preferredExists = !string.IsNullOrWhiteSpace(preferredId)
+                && livePreview.Any(d => d.IsConnected
+                    && string.Equals(d.Id, preferredId, StringComparison.OrdinalIgnoreCase));
+            var wantsMakePrimary = preferredExists
+                && (currentPrimary == null
+                    || !string.Equals(currentPrimary.Id, preferredId, StringComparison.OrdinalIgnoreCase));
+            var topologyTargetId = preferredExists
+                ? preferredId
+                : currentPrimary?.Id;
+            var wantsTurnOffOthers = settings.TurnOffOtherDisplaysOnLaunch
+                && !string.IsNullOrWhiteSpace(topologyTargetId);
+            var wantsTopology = wantsMakePrimary || wantsTurnOffOthers;
+
+            if (hdrPlan.Action == HdrSessionAction.None && !hzPlan.ShouldApply && !wantsTopology)
             {
                 logger.Info("Display session skipped for " + game.Name +
-                            " (HDR: " + hdrPlan.Reason + "; Hz: " + hzPlan.Reason + "; audio: none).");
+                            " (HDR: " + hdrPlan.Reason + "; Hz: " + hzPlan.Reason + "; topology: none).");
                 return;
             }
 
@@ -519,24 +540,35 @@ namespace PlayniteDisplayManager
                 gameSessionSnapshot = snapshot;
                 activeGameId = game.Id;
                 activeGameName = game.Name;
-                sessionPreviousAudioDeviceId = null;
-                sessionAppliedAudioDevice = false;
 
                 EnsureRestoreClient();
                 restoreClient.Arm(snapshot);
                 StartRestoreHeartbeat();
 
-                if (wantsAudio)
+                if (wantsTopology)
                 {
-                    sessionPreviousAudioDeviceId = audioSwitcher.TryGetCurrentPlaybackDeviceId();
-                    if (audioSwitcher.TrySetPlaybackDevice(audioDeviceId, out var audioError))
+                    var topologyApply = Topology.TryApplyRequest(new DisplayTopologyRequest
                     {
-                        sessionAppliedAudioDevice = true;
-                        logger.Info("Audio Switcher playback set for " + activeGameName + ".");
+                        TargetDisplayId = topologyTargetId,
+                        MakePrimary = wantsMakePrimary,
+                        TurnOffOtherDisplays = wantsTurnOffOthers
+                    });
+                    if (!topologyApply.Success)
+                    {
+                        logger.Warn("Topology apply failed for " + activeGameName + ": " + topologyApply.Error);
                     }
                     else
                     {
-                        logger.Warn("Audio Switcher hook failed: " + audioError);
+                        logger.Info("Topology applied for " + activeGameName + " (" + topologyApply.Message + ").");
+                        live = Displays.GetDisplays().ToList();
+                        primary = live.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
+                            ?? live.FirstOrDefault(d => d.IsConnected);
+                        if (hdrPlan.Action == HdrSessionAction.Enable)
+                        {
+                            applyWrites = hdr.BuildEnableWritesForPrimary(live);
+                            offWrites = applyWrites.Select(ToOffWrite).ToList();
+                            snapshot.HdrRestoreWrites = offWrites;
+                        }
                     }
                 }
 
@@ -561,7 +593,7 @@ namespace PlayniteDisplayManager
                 if (applyWrites.Count == 0)
                 {
                     logger.Info("HDR plan " + hdrPlan.Action + " (" + hdrPlan.Reason +
-                                "): no advanced-color-capable target; lease armed for topology/Hz/audio.");
+                                "): no advanced-color-capable target; lease armed for topology/Hz.");
                     return;
                 }
 
@@ -609,10 +641,6 @@ namespace PlayniteDisplayManager
                 activeGameId = null;
                 var name = activeGameName;
                 activeGameName = null;
-                var restoreAudio = sessionAppliedAudioDevice;
-                var previousAudio = sessionPreviousAudioDeviceId;
-                sessionAppliedAudioDevice = false;
-                sessionPreviousAudioDeviceId = null;
 
                 if (snapshot != null)
                 {
@@ -629,18 +657,6 @@ namespace PlayniteDisplayManager
                     {
                         logger.Info("Session restored (" + reason + ")" +
                                     (string.IsNullOrWhiteSpace(name) ? "." : " for " + name + "."));
-                    }
-                }
-
-                if (restoreAudio && !string.IsNullOrWhiteSpace(previousAudio) && audioSwitcher != null)
-                {
-                    if (audioSwitcher.TrySetPlaybackDevice(previousAudio, out var audioError))
-                    {
-                        logger.Info("Audio Switcher playback restored after session.");
-                    }
-                    else
-                    {
-                        logger.Warn("Audio Switcher restore failed: " + audioError);
                     }
                 }
 
@@ -668,11 +684,21 @@ namespace PlayniteDisplayManager
             var primary = Displays.GetDisplays()
                 .FirstOrDefault(d => d.IsPrimary && d.IsConnected)
                 ?? Displays.GetDisplays().FirstOrDefault(d => d.IsConnected);
+            var profile = gameProfiles?.GetProfile(game);
+            var gameOverride = profile?.RefreshRateOverride ?? GameRefreshRateOverride.Inherit;
+            double? preferredHz = settings?.PreferredRefreshRateHz;
+            if (gameOverride == GameRefreshRateOverride.ExactHz
+                || gameOverride == GameRefreshRateOverride.Prefer60
+                || gameOverride == GameRefreshRateOverride.Prefer120)
+            {
+                preferredHz = profile?.PreferredRefreshRateHz ?? preferredHz;
+            }
+
             return refreshRates.Plan(
                 settings?.GlobalRefreshRatePolicy ?? RefreshRatePolicy.Native,
-                gameProfiles?.GetRefreshRateOverride(game) ?? GameRefreshRateOverride.Inherit,
+                gameOverride,
                 primary,
-                settings?.PreferredRefreshRateHz);
+                preferredHz);
         }
 
         public bool GameHasHdrMetadata(Game game)
@@ -960,7 +986,8 @@ namespace PlayniteDisplayManager
                         GameImagePath = GetGameProfileImagePath(game),
                         HdrOverride = item.Value.HdrOverride,
                         RefreshRateOverride = item.Value.RefreshRateOverride,
-                        AssociatedAudioDeviceId = item.Value.AssociatedAudioDeviceId
+                        PreferredRefreshRateHz = item.Value.PreferredRefreshRateHz,
+                        PreferredPlayDisplayId = item.Value.PreferredPlayDisplayId
                     };
                 })
                 .OrderBy(e => e.GameName, StringComparer.CurrentCultureIgnoreCase)
@@ -1080,7 +1107,8 @@ namespace PlayniteDisplayManager
             string menuSection,
             string description,
             GetGameMenuItemsArgs request,
-            GameRefreshRateOverride refreshOverride)
+            GameRefreshRateOverride refreshOverride,
+            double? preferredHz = null)
         {
             return new GameMenuItem
             {
@@ -1096,25 +1124,25 @@ namespace PlayniteDisplayManager
 
                     foreach (var game in games)
                     {
-                        gameProfiles.SetRefreshRateOverride(game, refreshOverride);
+                        gameProfiles.SetRefreshRateOverride(game, refreshOverride, preferredHz);
                     }
 
                     var first = games.FirstOrDefault();
                     if (first != null)
                     {
                         PlayniteApi.Dialogs.ShowMessage(
-                            first.Name + ": " + DescribeRefreshOverride(refreshOverride),
+                            first.Name + ": " + DescribeRefreshOverride(refreshOverride, preferredHz),
                             Loc("LOCDisplayManager_PluginName"));
                     }
                 }
             };
         }
 
-        private GameMenuItem CreateAudioDeviceMenuItem(
+        private GameMenuItem CreatePlayDisplayMenuItem(
             string menuSection,
             string description,
             GetGameMenuItemsArgs request,
-            string deviceId)
+            string displayId)
         {
             return new GameMenuItem
             {
@@ -1130,21 +1158,35 @@ namespace PlayniteDisplayManager
 
                     foreach (var game in games)
                     {
-                        gameProfiles.SetAssociatedAudioDeviceId(game, deviceId);
+                        gameProfiles.SetPreferredPlayDisplayId(game, displayId);
                     }
 
                     var first = games.FirstOrDefault();
                     if (first != null)
                     {
-                        var label = string.IsNullOrWhiteSpace(deviceId)
-                            ? Loc("LOCDisplayManager_GameAudioNone")
-                            : description.TrimStart('✓', ' ');
                         PlayniteApi.Dialogs.ShowMessage(
-                            first.Name + ": " + label,
+                            first.Name + ": " + DescribePlayDisplayOverride(displayId),
                             Loc("LOCDisplayManager_PluginName"));
                     }
                 }
             };
+        }
+
+        private string DescribePlayDisplayOverride(string displayId)
+        {
+            if (displayId == null)
+            {
+                return Loc("LOCDisplayManager_GameDisplayInherit");
+            }
+
+            if (string.IsNullOrEmpty(displayId))
+            {
+                return Loc("LOCDisplayManager_PlayDisplayWindowsDefault");
+            }
+
+            var match = Displays.GetDisplays()
+                .FirstOrDefault(d => string.Equals(d.Id, displayId, StringComparison.OrdinalIgnoreCase));
+            return match?.EffectiveName ?? displayId;
         }
 
         private string DescribeHdrOverride(GameHdrOverride hdrOverride)
@@ -1162,12 +1204,19 @@ namespace PlayniteDisplayManager
             }
         }
 
-        private string DescribeRefreshOverride(GameRefreshRateOverride refreshOverride)
+        private string DescribeRefreshOverride(GameRefreshRateOverride refreshOverride, double? preferredHz = null)
         {
             switch (refreshOverride)
             {
                 case GameRefreshRateOverride.Native:
                     return Loc("LOCDisplayManager_GameHzNative");
+                case GameRefreshRateOverride.ExactHz:
+                    if (preferredHz.HasValue)
+                    {
+                        return string.Format(Loc("LOCDisplayManager_RefreshPolicyExactFormat"), preferredHz.Value);
+                    }
+
+                    return Loc("LOCDisplayManager_RefreshPolicyExact");
                 case GameRefreshRateOverride.Prefer60:
                     return Loc("LOCDisplayManager_GameHz60");
                 case GameRefreshRateOverride.Prefer120:

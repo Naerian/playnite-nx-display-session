@@ -15,7 +15,10 @@ namespace PlayniteDisplayManager.Profiles
 
         public GameRefreshRateOverride RefreshRateOverride { get; set; } = GameRefreshRateOverride.Inherit;
 
-        public string AssociatedAudioDeviceId { get; set; }
+        public double? PreferredRefreshRateHz { get; set; }
+
+        /// <summary>null = inherit; empty = Windows primary; otherwise display id.</summary>
+        public string PreferredPlayDisplayId { get; set; }
 
         public GameDisplayProfile ToProfile()
         {
@@ -23,7 +26,8 @@ namespace PlayniteDisplayManager.Profiles
             {
                 HdrOverride = HdrOverride,
                 RefreshRateOverride = RefreshRateOverride,
-                AssociatedAudioDeviceId = AssociatedAudioDeviceId
+                PreferredRefreshRateHz = PreferredRefreshRateHz,
+                PreferredPlayDisplayId = PreferredPlayDisplayId
             };
         }
     }

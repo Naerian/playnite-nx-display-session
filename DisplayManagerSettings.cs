@@ -37,12 +37,13 @@ namespace PlayniteDisplayManager
         private double? preferredRefreshRateHz;
         private bool showDesktopTopPanel = true;
         private DesktopTopPanelDisplayMode desktopTopPanelDisplayMode = DesktopTopPanelDisplayMode.IconAndText;
-        private bool enableAudioSwitcherHook = true;
         private bool showNotifications = true;
         private bool notifyNativeHdrConflict = true;
+        private string preferredPlayDisplayId;
+        private bool turnOffOtherDisplaysOnLaunch;
         private List<GameDisplayProfileEntry> availableGameProfiles = new List<GameDisplayProfileEntry>();
 
-        public const int CurrentSettingsSchemaVersion = 2;
+        public const int CurrentSettingsSchemaVersion = 3;
 
         public DisplayManagerSettings()
         {
@@ -68,9 +69,10 @@ namespace PlayniteDisplayManager
                 PreferredRefreshRateHz = savedSettings.PreferredRefreshRateHz;
                 ShowDesktopTopPanel = savedSettings.ShowDesktopTopPanel;
                 DesktopTopPanelDisplayMode = savedSettings.DesktopTopPanelDisplayMode;
-                EnableAudioSwitcherHook = savedSettings.EnableAudioSwitcherHook;
                 ShowNotifications = savedSettings.ShowNotifications;
                 NotifyNativeHdrConflict = savedSettings.NotifyNativeHdrConflict;
+                PreferredPlayDisplayId = savedSettings.PreferredPlayDisplayId;
+                TurnOffOtherDisplaysOnLaunch = savedSettings.TurnOffOtherDisplaysOnLaunch;
             }
 
             AppearancePreset = SettingsAppearance.Normalize(AppearancePreset);
@@ -163,12 +165,6 @@ namespace PlayniteDisplayManager
             set => SetValue(ref desktopTopPanelDisplayMode, value);
         }
 
-        public bool EnableAudioSwitcherHook
-        {
-            get => enableAudioSwitcherHook;
-            set => SetValue(ref enableAudioSwitcherHook, value);
-        }
-
         public bool ShowNotifications
         {
             get => showNotifications;
@@ -179,6 +175,19 @@ namespace PlayniteDisplayManager
         {
             get => notifyNativeHdrConflict;
             set => SetValue(ref notifyNativeHdrConflict, value);
+        }
+
+        /// <summary>Stable display id to make primary when a game launches.</summary>
+        public string PreferredPlayDisplayId
+        {
+            get => preferredPlayDisplayId;
+            set => SetValue(ref preferredPlayDisplayId, value);
+        }
+
+        public bool TurnOffOtherDisplaysOnLaunch
+        {
+            get => turnOffOtherDisplaysOnLaunch;
+            set => SetValue(ref turnOffOtherDisplaysOnLaunch, value);
         }
 
         [DontSerialize]
@@ -317,9 +326,10 @@ namespace PlayniteDisplayManager
             PreferredRefreshRateHz = editingClone.PreferredRefreshRateHz;
             ShowDesktopTopPanel = editingClone.ShowDesktopTopPanel;
             DesktopTopPanelDisplayMode = editingClone.DesktopTopPanelDisplayMode;
-            EnableAudioSwitcherHook = editingClone.EnableAudioSwitcherHook;
             ShowNotifications = editingClone.ShowNotifications;
             NotifyNativeHdrConflict = editingClone.NotifyNativeHdrConflict;
+            PreferredPlayDisplayId = editingClone.PreferredPlayDisplayId;
+            TurnOffOtherDisplaysOnLaunch = editingClone.TurnOffOtherDisplaysOnLaunch;
             editingClone = null;
             AvailableGameProfiles = plugin?.GetGameProfileEntries() ?? new List<GameDisplayProfileEntry>();
             RefreshDisplays();

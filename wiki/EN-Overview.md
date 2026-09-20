@@ -5,12 +5,11 @@ Display Manager is a Playnite GenericPlugin that owns **Windows display topology
 ## What it does
 
 - Lists active displays with EDID-based identity (stable across cable/GPU path changes when Windows exposes enough data).
-- Lets you choose a **target display** for the game session (TV-first HTPC workflows).
+- Lets you choose a **primary display for games** (or keep the Windows default), with optional per-game overrides.
 - Owns **HDR** with three global policies, per-game overrides, and optional Features/Tags metadata matching.
 - Changes **refresh rate** when configured (ChangeDisplaySettingsEx path).
 - Arms **RestoreHost** so topology/HDR restore survives Playnite crashes.
 - Exposes a **Theme API** (`SourceName` `DisplayManager`) and a Desktop top-panel shortcut.
-- Soft-hooks **Audio Switcher** when installed (reflection only; never hard-depends).
 
 ## Design priorities
 
@@ -26,6 +25,5 @@ Resolution-per-game beyond current topology apply, upscalers, VRR, moving Playni
 
 - HDR status under ACM is not trusted for GET; use visual checks (e.g. Win+Alt+B).
 - Display identity depends on EDID / Windows CCD; some docks and adapters rename paths.
-- Audio Switcher integration is best-effort when that extension is present.
 
 Continue with [Installation & Quick Start](EN-Installation-and-Quick-Start).

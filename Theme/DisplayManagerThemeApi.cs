@@ -155,7 +155,7 @@ namespace PlayniteDisplayManager.Theme
                 SelectedGameName = selected?.Name ?? string.Empty;
                 HasHdrMetadata = selected != null && plugin.GameHasHdrMetadata(selected);
 
-                TopPanelTooltip = PrimaryDisplayAlias + " · " + HdrPolicyLabel;
+                TopPanelTooltip = PrimaryDisplayAlias;
                 OnPropertyChanged(nameof(ApiVersion));
                 OnPropertyChanged(nameof(SupportsDisplayList));
                 OnPropertyChanged(nameof(SupportsHdrStatus));

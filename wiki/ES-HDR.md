@@ -18,7 +18,7 @@ Nombres por defecto: `HDR`, `HDR10`, `Dolby Vision`, `Auto HDR`, `HDR10+`.
 
 Menú contextual → Display Manager → HDR:
 
-- **Heredar** — usa la política global.
+- **Mantener configuración global** — usa la política HDR global.
 - **Forzar on** — escribe HDR on.
 - **Forzar off (SDR)** — escribe HDR off.
 - **No tocar** — omite escrituras HDR en este juego.

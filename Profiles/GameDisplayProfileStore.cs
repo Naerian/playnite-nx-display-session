@@ -49,9 +49,16 @@ namespace PlayniteDisplayManager.Profiles
             return GetProfile(game)?.RefreshRateOverride ?? GameRefreshRateOverride.Inherit;
         }
 
-        public string GetAssociatedAudioDeviceId(Game game)
+        /// <summary>
+        /// Returns the per-game play display override.
+        /// null = inherit global; empty string = Windows primary; otherwise display id.
+        /// </summary>
+        public string GetPreferredPlayDisplayId(Game game)
         {
-            return GetProfile(game)?.AssociatedAudioDeviceId;
+            var profile = GetProfile(game);
+            return profile != null && profile.HasPlayDisplayOverride
+                ? profile.PreferredPlayDisplayId
+                : null;
         }
 
         public int CountNonInherit()
@@ -85,7 +92,10 @@ namespace PlayniteDisplayManager.Profiles
             }
         }
 
-        public void SetRefreshRateOverride(Game game, GameRefreshRateOverride refreshOverride)
+        public void SetRefreshRateOverride(
+            Game game,
+            GameRefreshRateOverride refreshOverride,
+            double? preferredHz = null)
         {
             if (game == null)
             {
@@ -96,11 +106,33 @@ namespace PlayniteDisplayManager.Profiles
             {
                 var profile = GetOrCreateUnlocked(game.Id);
                 profile.RefreshRateOverride = refreshOverride;
+                if (refreshOverride == GameRefreshRateOverride.ExactHz)
+                {
+                    profile.PreferredRefreshRateHz = preferredHz;
+                }
+                else if (refreshOverride == GameRefreshRateOverride.Prefer60)
+                {
+                    profile.PreferredRefreshRateHz = preferredHz ?? 60;
+                }
+                else if (refreshOverride == GameRefreshRateOverride.Prefer120)
+                {
+                    profile.PreferredRefreshRateHz = preferredHz ?? 120;
+                }
+                else
+                {
+                    profile.PreferredRefreshRateHz = null;
+                }
+
                 PersistUnlocked(game.Id, profile);
             }
         }
 
-        public void SetAssociatedAudioDeviceId(Game game, string deviceId)
+        /// <summary>
+        /// Sets the per-game play display.
+        /// Pass null to inherit the global setting; empty string to keep Windows primary;
+        /// otherwise a stable display id.
+        /// </summary>
+        public void SetPreferredPlayDisplayId(Game game, string displayId)
         {
             if (game == null)
             {
@@ -110,7 +142,15 @@ namespace PlayniteDisplayManager.Profiles
             lock (syncRoot)
             {
                 var profile = GetOrCreateUnlocked(game.Id);
-                profile.AssociatedAudioDeviceId = string.IsNullOrWhiteSpace(deviceId) ? null : deviceId.Trim();
+                if (displayId == null)
+                {
+                    profile.PreferredPlayDisplayId = null;
+                }
+                else
+                {
+                    profile.PreferredPlayDisplayId = displayId.Trim();
+                }
+
                 PersistUnlocked(game.Id, profile);
             }
         }

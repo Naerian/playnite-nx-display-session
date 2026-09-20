@@ -44,7 +44,13 @@ namespace PlayniteDisplayManager.Displays
             DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO = 9,
             DISPLAYCONFIG_DEVICE_INFO_SET_ADVANCED_COLOR_STATE = 10,
             DISPLAYCONFIG_DEVICE_INFO_GET_SDR_WHITE_LEVEL = 11,
-            DISPLAYCONFIG_DEVICE_INFO_SET_HDR_STATE = 16
+            DISPLAYCONFIG_DEVICE_INFO_GET_MONITOR_SPECIALIZATION = 12,
+            DISPLAYCONFIG_DEVICE_INFO_SET_MONITOR_SPECIALIZATION = 13,
+            DISPLAYCONFIG_DEVICE_INFO_SET_RESERVED1 = 14,
+            /// <summary>Windows 11 24H2+ — distinguishes true HDR from ACM/WCG.</summary>
+            DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO_2 = 15,
+            DISPLAYCONFIG_DEVICE_INFO_SET_HDR_STATE = 16,
+            DISPLAYCONFIG_DEVICE_INFO_SET_WCG_STATE = 17
         }
 
         public enum DISPLAYCONFIG_VIDEO_OUTPUT_TECHNOLOGY : uint
@@ -302,6 +308,33 @@ namespace PlayniteDisplayManager.Displays
             public bool AdvancedColorForceDisabled => (value & 0x8) == 0x8;
         }
 
+        /// <summary>
+        /// Win11 24H2+ color info. Bit layout matches wingdi.h DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO_2.
+        /// Prefer highDynamicRangeSupported over the legacy AdvancedColorSupported flag (ACM/WCG false positives).
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO_2
+        {
+            public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+            public uint value;
+            public uint colorEncoding;
+            public uint bitsPerColorChannel;
+            public uint activeColorMode;
+
+            // Bit 0 advancedColorSupported, 1 advancedColorActive, 2 reserved,
+            // 3 advancedColorLimitedByPolicy, 4 highDynamicRangeSupported, …
+            public bool HighDynamicRangeSupported => (value & 0x10) == 0x10;
+            public bool HighDynamicRangeUserEnabled => (value & 0x20) == 0x20;
+            public bool WideColorSupported => (value & 0x40) == 0x40;
+        }
+
+        public enum DISPLAYCONFIG_ADVANCED_COLOR_MODE : uint
+        {
+            DISPLAYCONFIG_ADVANCED_COLOR_MODE_SDR = 0,
+            DISPLAYCONFIG_ADVANCED_COLOR_MODE_WCG = 1,
+            DISPLAYCONFIG_ADVANCED_COLOR_MODE_HDR = 2
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         public struct DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE
         {
@@ -346,6 +379,9 @@ namespace PlayniteDisplayManager.Displays
 
         [DllImport("user32.dll", EntryPoint = "DisplayConfigGetDeviceInfo")]
         public static extern int DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO colorInfo);
+
+        [DllImport("user32.dll", EntryPoint = "DisplayConfigGetDeviceInfo")]
+        public static extern int DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO_2 colorInfo);
 
         [DllImport("user32.dll")]
         public static extern int DisplayConfigSetDeviceInfo(ref DISPLAYCONFIG_SET_ADVANCED_COLOR_STATE setPacket);
