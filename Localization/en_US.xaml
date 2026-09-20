@@ -1,4 +1,4 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
     <sys:String x:Key="LOCDisplayManager_PluginName">Display Manager</sys:String>
@@ -28,7 +28,7 @@
     <sys:String x:Key="LOCDisplayManager_StatusPrimary">Primary</sys:String>
     <sys:String x:Key="LOCDisplayManager_IdentityEdid">EDID identity</sys:String>
     <sys:String x:Key="LOCDisplayManager_IdentityConnector">Connector fallback</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplaysHelp">Rename displays for Playnite. Identity uses EDID when available — never \\.\DISPLAY#.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplaysHelp">Trial topology changes below, then manage names for each connected display.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialTitle">Topology trial</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialHelp">Temporarily apply primary / other-display changes with an automatic restore. RestoreHost stays armed while the trial runs.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialTarget">Target display</sys:String>
@@ -64,13 +64,13 @@
     <sys:String x:Key="LOCDisplayManager_HdrPolicyMetadata">Enable HDR only when game metadata indicates HDR, write off on exit</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrMetadataTitle">HDR metadata match names</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrMetadataHelp">Comma-separated Feature names (case-insensitive). Works with PCGamingWiki Metadata Provider’s HDR feature. No network on launch.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_HdrIncludeTags">Also match Tags (in addition to Features)</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrIncludeTags">Also match game tags</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrOverrideCountFormat">{0} game(s) with an HDR override (not inherit).</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrGameMenuHint">Set overrides from the game context menu: Display Manager → HDR.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_HdrForceSdrTitle">Force SDR now</sys:String>
-    <sys:String x:Key="LOCDisplayManager_HdrForceSdrHelp">If the TV stays in HDR after a game, press this. Use Win+Alt+B as a quick visual check.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_HdrWriteOffNow">Write HDR off now</sys:String>
-    <sys:String x:Key="LOCDisplayManager_HdrWriteOffOk">HDR off was written to capable displays.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrForceSdrTitle">Turn HDR off now</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrForceSdrHelp">If the picture still looks like HDR after a game (glowing, washed-out desktop), use this button to force a normal SDR picture. Tip: Win+Alt+B also toggles HDR so you can check by eye.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrWriteOffNow">Turn HDR off on my displays</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrWriteOffOk">Done. HDR off was applied on capable displays.</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuHdrSection">HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameHdrInherit">Inherit global policy</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameHdrForceOn">Force HDR on</sys:String>
@@ -86,7 +86,7 @@
     <sys:String x:Key="LOCDisplayManager_OverviewGameHdrFormat">{0} · {1} · {2}</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewGameHdrSimpleFormat">{0} — {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewNativeHdr">Playnite native HDR flag</sys:String>
-    <sys:String x:Key="LOCDisplayManager_OverviewNativeHdrClear">OK — no games have Playnite’s Enable HDR flag on.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewNativeHdrClear">OK: no games have Playnite's Enable HDR flag on.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewNativeHdrConflictFormat">{0} game(s) still have EnableSystemHdr on — NX clears it on launch so restores do not stack.</sys:String>
     <sys:String x:Key="LOCDisplayManager_NativeHdrMigrationTitle">Native EnableSystemHdr migration</sys:String>
     <sys:String x:Key="LOCDisplayManager_NativeHdrMigrationHelp">Playnite’s “Enable HDR Support” checkbox stays visible — there is no public SDK API to hide it. Display Manager clears the flag so native and NX restores do not stack. Reversible from this page.</sys:String>
@@ -140,7 +140,7 @@
     <sys:String x:Key="LOCDisplayManager_GameAudioNone">No associated playback device</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshRateTitle">Refresh rate (Hz)</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshRateHelp">Optional. Only rates reported for the primary display at its current resolution are listed. Restored with the topology snapshot when the game stops.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_RefreshPolicyNative">Native — do not change refresh rate</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RefreshPolicyNative">Native: do not change refresh rate</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshPolicy60">Prefer ~60 Hz</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshPolicy120">Prefer ~120 Hz</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshPolicyHighest">Highest available at current resolution</sys:String>
@@ -184,4 +184,44 @@
     <sys:String x:Key="LOCDisplayManager_VersionAuthorFormat">Display Manager {0} · Narian</sys:String>
     <sys:String x:Key="LOCDisplayManager_TabComingSoon">This section lands in a later step.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutBlurb">Applies a Windows display profile when a game starts and restores the desktop when it stops. Built for HTPC / couch setups.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RemoveProfile">Remove</sys:String>
+    <sys:String x:Key="LOCDisplayManager_GameProfilesTab">Game profiles</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ConfirmRemoveProfilePendingMessage">Remove the Display Manager profile for &quot;{0}&quot; when settings are saved? Canceling settings keeps the profile.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewNativeHdrOkBadge">OK</sys:String>
+    <sys:String x:Key="LOCDisplayManager_NoConfiguredGameProfiles">No game profiles yet. Use the game context menu: Display Manager.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_StatusLabel">Status</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewNativeHdrWarnBadge">Conflict</sys:String>
+    <sys:String x:Key="LOCDisplayManager_UnknownGame">Unknown game</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewSessionActiveBadge">Active</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrIncludeTagsHelp">When enabled, Display Manager looks at Playnite Tags as well as Features for names like HDR or HDR10 (useful if your metadata provider stores HDR as a tag).</sys:String>
+    <sys:String x:Key="LOCDisplayManager_GameProfilesTitle">Configured game profiles</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplaysListTitle">Connected displays</sys:String>
+    <sys:String x:Key="LOCDisplayManager_GameProfilesHelp">Games with a Display Manager override (HDR, refresh rate, or associated audio device). Add or change them from each game's context menu. Removing here applies when you save settings.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplaysListHelp">Rename displays for Playnite. Identity uses EDID when available, never \\.\DISPLAY#.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ConfirmRemoveProfileTitle">Remove game profile</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewSessionIdleBadge">Idle</sys:String>
 </ResourceDictionary>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

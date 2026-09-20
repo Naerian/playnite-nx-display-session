@@ -129,6 +129,17 @@ namespace PlayniteDisplayManager.Profiles
             }
         }
 
+        public void ReplaceProfiles(IEnumerable<KeyValuePair<Guid, GameDisplayProfile>> entries)
+        {
+            lock (syncRoot)
+            {
+                profiles = (entries ?? Enumerable.Empty<KeyValuePair<Guid, GameDisplayProfile>>())
+                    .Where(e => e.Value != null && !e.Value.IsEmpty)
+                    .ToDictionary(e => e.Key, e => e.Value.Clone());
+                Save();
+            }
+        }
+
         private GameDisplayProfile GetOrCreateUnlocked(Guid gameId)
         {
             if (profiles.TryGetValue(gameId, out var existing) && existing != null)

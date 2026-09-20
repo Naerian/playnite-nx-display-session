@@ -5,13 +5,10 @@
                             Focusable="False"
                             ToolTip="{Binding TopPanelTooltip}">
     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="2,0">
-        <TextBlock FontFamily="Segoe MDL2 Assets"
-                   Text="&#xE7F4;"
-                   FontSize="16"
-                   VerticalAlignment="Center"
-                   Margin="0,0,6,0">
-            <TextBlock.Style>
-                <Style TargetType="TextBlock">
+        <Viewbox Width="16" Height="16" Margin="0,0,6,0" Stretch="Uniform"
+                 VerticalAlignment="Center">
+            <Viewbox.Style>
+                <Style TargetType="Viewbox">
                     <Setter Property="Visibility" Value="Visible" />
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding ShowTopPanelIcon}" Value="False">
@@ -19,8 +16,11 @@
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
-            </TextBlock.Style>
-        </TextBlock>
+            </Viewbox.Style>
+            <Path x:Name="IconPath"
+                  Fill="{DynamicResource TextBrush}"
+                  Stretch="Uniform" />
+        </Viewbox>
         <TextBlock Text="{Binding PrimaryDisplayAlias}"
                    VerticalAlignment="Center"
                    FontWeight="SemiBold"

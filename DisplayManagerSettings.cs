@@ -6,6 +6,7 @@ using Playnite.SDK.Data;
 using PlayniteDisplayManager.Displays;
 using PlayniteDisplayManager.Hdr;
 using PlayniteDisplayManager.NightLight;
+using PlayniteDisplayManager.Profiles;
 using PlayniteDisplayManager.Refresh;
 
 namespace PlayniteDisplayManager
@@ -39,6 +40,7 @@ namespace PlayniteDisplayManager
         private bool enableAudioSwitcherHook = true;
         private bool showNotifications = true;
         private bool notifyNativeHdrConflict = true;
+        private List<GameDisplayProfileEntry> availableGameProfiles = new List<GameDisplayProfileEntry>();
 
         public const int CurrentSettingsSchemaVersion = 2;
 
@@ -179,6 +181,13 @@ namespace PlayniteDisplayManager
             set => SetValue(ref notifyNativeHdrConflict, value);
         }
 
+        [DontSerialize]
+        public List<GameDisplayProfileEntry> AvailableGameProfiles
+        {
+            get => availableGameProfiles;
+            set => SetValue(ref availableGameProfiles, value ?? new List<GameDisplayProfileEntry>());
+        }
+
         public List<DisplayDeviceAlias> DisplayAliases
         {
             get => displayAliases;
@@ -281,7 +290,10 @@ namespace PlayniteDisplayManager
         public void BeginEdit()
         {
             RefreshDisplays();
+            AvailableGameProfiles = plugin?.GetGameProfileEntries() ?? new List<GameDisplayProfileEntry>();
             editingClone = Serialization.GetClone(this);
+            // Restore non-serialized editing lists after clone round-trip.
+            AvailableGameProfiles = plugin?.GetGameProfileEntries() ?? new List<GameDisplayProfileEntry>();
         }
 
         public void CancelEdit()
@@ -309,6 +321,7 @@ namespace PlayniteDisplayManager
             ShowNotifications = editingClone.ShowNotifications;
             NotifyNativeHdrConflict = editingClone.NotifyNativeHdrConflict;
             editingClone = null;
+            AvailableGameProfiles = plugin?.GetGameProfileEntries() ?? new List<GameDisplayProfileEntry>();
             RefreshDisplays();
             OnPropertyChanged(nameof(HdrMetadataMatchNamesText));
             OnPropertyChanged(nameof(DesktopTopPanelDisplayModeValue));
@@ -320,6 +333,7 @@ namespace PlayniteDisplayManager
             HdrMetadataMatchNames = HdrMetadataMatcher.NormalizeMatchNames(HdrMetadataMatchNames).ToList();
             MigrateRefreshRateLegacy();
             DisplayAliases = PersistAliases(AvailableDisplays, DisplayAliases);
+            plugin.ReplaceGameProfiles(AvailableGameProfiles);
             plugin.SavePluginSettings(this);
             plugin.ReloadSettings();
             editingClone = null;

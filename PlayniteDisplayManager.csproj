@@ -25,6 +25,7 @@
     <None Include="README.md" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Localization\*.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="media\icon.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Icons\*.svg" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Examples\*.xaml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

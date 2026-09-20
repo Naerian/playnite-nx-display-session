@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -10,6 +11,7 @@ using System.Windows.Navigation;
 using System.Windows.Threading;
 using PlayniteDisplayManager.Displays;
 using PlayniteDisplayManager.Hdr;
+using PlayniteDisplayManager.Profiles;
 using PlayniteDisplayManager.Refresh;
 
 namespace PlayniteDisplayManager
@@ -43,6 +45,7 @@ namespace PlayniteDisplayManager
                 ApplyAppearancePreset();
                 BuildAppearancePresetChips();
                 RebuildDisplayCards();
+                RebuildGameProfileRows();
                 RefreshTopologyTargetBox();
                 SyncHdrPolicyRadios();
                 SyncHdrMetadataControls();
@@ -66,6 +69,7 @@ namespace PlayniteDisplayManager
             Dispatcher.BeginInvoke(new Action(FillSelectedContentHosts), DispatcherPriority.Loaded);
             Dispatcher.BeginInvoke(new Action(FillSelectedContentHosts), DispatcherPriority.ApplicationIdle);
             RebuildDisplayCards();
+            RebuildGameProfileRows();
             RefreshTopologyTargetBox();
             SyncHdrPolicyRadios();
             SyncHdrMetadataControls();
@@ -137,7 +141,20 @@ namespace PlayniteDisplayManager
 
         private void RootTabsSelectionChanged(object sender, SelectionChangedEventArgs args)
         {
-            Dispatcher.BeginInvoke(new Action(FillSelectedContentHosts), DispatcherPriority.Loaded);
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                FillSelectedContentHosts();
+                if (IsGameProfilesTabSelected())
+                {
+                    RebuildGameProfileRows();
+                }
+            }), DispatcherPriority.Loaded);
+        }
+
+        private bool IsGameProfilesTabSelected()
+        {
+            // Overview, Displays, HDR, Game profiles, …
+            return RootTabs != null && RootTabs.SelectedIndex == 3;
         }
 
         private void AttachToHost()
@@ -843,17 +860,44 @@ namespace PlayniteDisplayManager
                     ?? (TryFindResource("LOCDisplayManager_OverviewPolicyUnset") as string ?? "Not configured yet.");
             }
 
+            if (OverviewPolicyPills != null)
+            {
+                OverviewPolicyPills.Children.Clear();
+                var hdrLabel = TryFindResource("LOCDisplayManager_OverviewPolicy") as string ?? "HDR";
+                var hdrValue = GetHdrPolicyBadgeValue(settings);
+                var hdrBrush = settings?.GlobalHdrPolicy == GlobalHdrPolicy.DoNotManage
+                    ? "GlyphBrush"
+                    : "PositiveRatingBrush";
+                var hdrOpacity = settings?.GlobalHdrPolicy == GlobalHdrPolicy.DoNotManage ? 0.65 : 1.0;
+                OverviewPolicyPills.Children.Add(CreateStatusBadge(hdrLabel, hdrValue, hdrBrush, hdrOpacity));
+
+                var refreshLabel = TryFindResource("LOCDisplayManager_OverviewRefreshRate") as string ?? "Refresh rate";
+                var refreshValue = settings?.Plugin?.GetRefreshRateOverviewText()
+                    ?? (TryFindResource("LOCDisplayManager_RefreshPolicyNative") as string
+                        ?? "Native");
+                OverviewPolicyPills.Children.Add(CreateStatusBadge(refreshLabel, refreshValue, "GlyphBrush", 0.85));
+            }
+
             if (OverviewSessionText != null)
             {
                 OverviewSessionText.Text = settings?.Plugin?.GetActiveSessionOverviewText()
                     ?? (TryFindResource("LOCDisplayManager_OverviewSessionIdle") as string ?? "No game session.");
             }
 
-            if (OverviewGameHdrText != null)
+            var statusLabel = TryFindResource("LOCDisplayManager_Status") as string ?? "Status";
+            var sessionIdleText = TryFindResource("LOCDisplayManager_OverviewSessionIdle") as string ?? "No game session.";
+            var sessionOverview = settings?.Plugin?.GetActiveSessionOverviewText() ?? sessionIdleText;
+            var sessionIsIdle = string.Equals(sessionOverview, sessionIdleText, StringComparison.Ordinal);
+            if (OverviewSessionStatusText != null)
             {
-                OverviewGameHdrText.Text = settings?.Plugin?.GetSelectedGameHdrOverviewText()
-                    ?? (TryFindResource("LOCDisplayManager_OverviewGameHdrNone") as string
-                        ?? "Select a game in the library to preview HDR metadata.");
+                var sessionValue = sessionIsIdle
+                    ? (TryFindResource("LOCDisplayManager_StatusIdle") as string ?? "Idle")
+                    : (TryFindResource("LOCDisplayManager_StatusActive") as string ?? "Active");
+                OverviewSessionStatusText.Text = string.Format("{0}: {1}", statusLabel, sessionValue);
+                ApplyStatusBadgeAppearance(
+                    OverviewSessionStatusText,
+                    sessionIsIdle ? "GlyphBrush" : "PositiveRatingBrush",
+                    sessionIsIdle ? 0.65 : 1.0);
             }
 
             if (OverviewNativeHdrText != null)
@@ -861,6 +905,18 @@ namespace PlayniteDisplayManager
                 OverviewNativeHdrText.Text = settings?.Plugin?.GetNativeHdrOverviewText()
                     ?? (TryFindResource("LOCDisplayManager_OverviewNativeHdrClear") as string
                         ?? "No games have Playnite’s native Enable HDR flag set.");
+            }
+
+            var nativeEnabled = settings?.Plugin?.CountNativeHdrEnabledGames() ?? 0;
+            if (OverviewNativeHdrStatusText != null)
+            {
+                var nativeValue = nativeEnabled <= 0
+                    ? (TryFindResource("LOCDisplayManager_StatusOk") as string ?? "OK")
+                    : (TryFindResource("LOCDisplayManager_StatusConflict") as string ?? "Conflict");
+                OverviewNativeHdrStatusText.Text = string.Format("{0}: {1}", statusLabel, nativeValue);
+                ApplyStatusBadgeAppearance(
+                    OverviewNativeHdrStatusText,
+                    nativeEnabled <= 0 ? "PositiveRatingBrush" : "WarningBrush");
             }
 
             if (OverviewRefreshRateText != null)
@@ -873,6 +929,22 @@ namespace PlayniteDisplayManager
             SyncHdrMetadataControls();
             SyncNativeHdrMigrationStatus();
             SyncRefreshRateRadios();
+        }
+
+        private string GetHdrPolicyBadgeValue(DisplayManagerSettings settings)
+        {
+            switch (settings?.GlobalHdrPolicy ?? GlobalHdrPolicy.DoNotManage)
+            {
+                case GlobalHdrPolicy.OnForAllGames:
+                    return TryFindResource("LOCDisplayManager_OverviewActionAlwaysOnShort") as string
+                        ?? "Always on";
+                case GlobalHdrPolicy.OnWhenMetadataIndicates:
+                    return TryFindResource("LOCDisplayManager_OverviewActionMetadataShort") as string
+                        ?? "Metadata";
+                default:
+                    return TryFindResource("LOCDisplayManager_OverviewActionDoNotManageShort") as string
+                        ?? "Do not manage";
+            }
         }
 
         private void SyncDesktopAccessControls()
@@ -1164,7 +1236,8 @@ namespace PlayniteDisplayManager
         {
             var border = new Border
             {
-                Style = TryFindResource("SummaryPill") as Style,
+                Style = TryFindResource("CapabilityPill") as Style
+                    ?? TryFindResource("SummaryPill") as Style,
                 Margin = new Thickness(0, 0, 8, 8),
                 Child = new TextBlock
                 {
@@ -1174,6 +1247,78 @@ namespace PlayniteDisplayManager
                 }
             };
             return border;
+        }
+
+        private Border CreateStatusBadge(string label, string value, string brushKey, double opacity = 1.0)
+        {
+            var text = new TextBlock
+            {
+                Text = string.Format(
+                    "{0}: {1}",
+                    label ?? string.Empty,
+                    string.IsNullOrWhiteSpace(value) ? "\u2014" : value)
+            };
+            var badge = new Border
+            {
+                Style = TryFindResource("DeviceStatusPill") as Style
+                    ?? TryFindResource("StatusPill") as Style
+                    ?? TryFindResource("SummaryPill") as Style,
+                Child = text
+            };
+            ApplyStatusBadgeAppearance(text, brushKey, opacity);
+            return badge;
+        }
+
+        private static void ApplyStatusBadgeAppearance(TextBlock textBlock, string brushKey, double opacity = 1.0)
+        {
+            if (textBlock == null || string.IsNullOrWhiteSpace(brushKey))
+            {
+                return;
+            }
+
+            textBlock.SetResourceReference(TextBlock.ForegroundProperty, brushKey);
+            textBlock.Opacity = 1.0;
+
+            var badge = textBlock.Parent as Border;
+            if (badge == null)
+            {
+                for (var parent = VisualTreeHelper.GetParent(textBlock);
+                     parent != null;
+                     parent = VisualTreeHelper.GetParent(parent))
+                {
+                    badge = parent as Border;
+                    if (badge != null)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            if (badge == null)
+            {
+                return;
+            }
+
+            badge.BorderThickness = new Thickness(0);
+            badge.BorderBrush = Brushes.Transparent;
+            badge.Effect = null;
+            badge.Opacity = opacity;
+
+            string backgroundKey;
+            if (string.Equals(brushKey, "PositiveRatingBrush", StringComparison.Ordinal))
+            {
+                backgroundKey = "Narian.BadgeSuccessBg";
+            }
+            else if (string.Equals(brushKey, "WarningBrush", StringComparison.Ordinal))
+            {
+                backgroundKey = "Narian.BadgeWarningBg";
+            }
+            else
+            {
+                backgroundKey = "Narian.BadgeMutedBg";
+            }
+
+            badge.SetResourceReference(Border.BackgroundProperty, backgroundKey);
         }
 
         private void RebuildDisplayCards()
@@ -1194,40 +1339,71 @@ namespace PlayniteDisplayManager
                         ?? "No displays detected.",
                     Style = TryFindResource("HintText") as Style
                 });
+                RebuildGameProfileRows();
                 return;
             }
 
-            foreach (var display in displays)
+            var grid = new UniformGrid
             {
-                DisplayCardsPanel.Children.Add(CreateDisplayCard(display));
+                Columns = 2,
+                HorizontalAlignment = HorizontalAlignment.Stretch
+            };
+            for (var index = 0; index < displays.Count; index++)
+            {
+                grid.Children.Add(CreateDisplayCard(displays[index], index));
             }
+
+            DisplayCardsPanel.Children.Add(grid);
+            RebuildGameProfileRows();
         }
 
-        private UIElement CreateDisplayCard(DisplayInfo display)
+        private UIElement CreateDisplayCard(DisplayInfo display, int index)
         {
             var card = new Border
             {
-                Style = TryFindResource("SummaryCard") as Style,
-                Margin = new Thickness(0, 0, 0, 16)
+                Style = TryFindResource("DeviceCard") as Style
+                    ?? TryFindResource("SummaryCard") as Style,
+                Margin = new Thickness(index % 2 == 0 ? 0 : 8, 0, index % 2 == 0 ? 8 : 0, 16),
+                Cursor = Cursors.Arrow
             };
 
             var root = new StackPanel();
             var title = new TextBlock
             {
-                Text = display.Name,
-                FontWeight = FontWeights.SemiBold,
-                FontSize = 14,
-                Margin = new Thickness(0, 0, 0, 8)
+                Style = TryFindResource("SummaryCardTitle") as Style,
+                TextWrapping = TextWrapping.Wrap,
+                Text = display.Name
             };
-            root.Children.Add(title);
+            root.Children.Add(new Border
+            {
+                Style = TryFindResource("SummaryTitleSeparator") as Style,
+                Child = title
+            });
 
+            var statusLabel = TryFindResource("LOCDisplayManager_Status") as string ?? "Status";
             var pills = new WrapPanel { Margin = new Thickness(0, 0, 0, 12) };
-            pills.Children.Add(CreatePill(display.IsConnected
-                ? (TryFindResource("LOCDisplayManager_StatusConnected") as string ?? "Connected")
-                : (TryFindResource("LOCDisplayManager_StatusDisconnected") as string ?? "Disconnected")));
+            if (display.IsConnected)
+            {
+                pills.Children.Add(CreateStatusBadge(
+                    statusLabel,
+                    TryFindResource("LOCDisplayManager_StatusConnected") as string ?? "Connected",
+                    "PositiveRatingBrush"));
+            }
+            else
+            {
+                pills.Children.Add(CreateStatusBadge(
+                    statusLabel,
+                    TryFindResource("LOCDisplayManager_StatusDisconnected") as string ?? "Disconnected",
+                    "GlyphBrush",
+                    0.65));
+            }
+
             if (display.IsPrimary)
             {
-                pills.Children.Add(CreatePill(TryFindResource("LOCDisplayManager_StatusPrimary") as string ?? "Primary"));
+                pills.Children.Add(CreateStatusBadge(
+                    statusLabel,
+                    TryFindResource("LOCDisplayManager_StatusPrimary") as string ?? "Primary",
+                    "PositiveRatingBrush"));
             }
 
             pills.Children.Add(CreatePill(display.IdentityKind == "edid"
@@ -1265,13 +1441,23 @@ namespace PlayniteDisplayManager
 
             var aliasBox = new TextBox
             {
-                Text = display.CustomName ?? string.Empty,
+                Text = string.IsNullOrWhiteSpace(display.CustomName) ? (display.Name ?? string.Empty) : display.CustomName,
                 MinHeight = 36,
                 Margin = new Thickness(0, 0, 0, 4)
             };
             aliasBox.TextChanged += (_, __) =>
             {
-                display.CustomName = aliasBox.Text;
+                var text = aliasBox.Text ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(text)
+                    || string.Equals(text.Trim(), display.Name?.Trim(), StringComparison.Ordinal))
+                {
+                    display.CustomName = null;
+                }
+                else
+                {
+                    display.CustomName = text;
+                }
+
                 UpdateOverview();
             };
             root.Children.Add(aliasBox);
@@ -1297,6 +1483,163 @@ namespace PlayniteDisplayManager
 
             card.Child = root;
             return card;
+        }
+
+        private void RebuildGameProfileRows()
+        {
+            if (GameProfileRowsPanel == null || NoGameProfilesText == null)
+            {
+                return;
+            }
+
+            var settings = DataContext as DisplayManagerSettings;
+            GameProfileRowsPanel.Children.Clear();
+            var profiles = settings?.AvailableGameProfiles?
+                .OrderBy(profile => profile.GameName, StringComparer.CurrentCultureIgnoreCase)
+                .ToList()
+                ?? new System.Collections.Generic.List<GameDisplayProfileEntry>();
+
+            NoGameProfilesText.Visibility = profiles.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            foreach (var profile in profiles)
+            {
+                GameProfileRowsPanel.Children.Add(CreateGameProfileRow(profile, settings));
+            }
+        }
+
+        private UIElement CreateGameProfileRow(GameDisplayProfileEntry profile, DisplayManagerSettings settings)
+        {
+            var container = new Border
+            {
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0, 0, 0, 1),
+                Padding = new Thickness(0, 0, 8, 16),
+                Margin = new Thickness(0, 0, 0, 24),
+                Cursor = Cursors.Arrow
+            };
+            container.SetResourceReference(Border.BorderBrushProperty, "GlyphBrush");
+
+            var content = new StackPanel();
+            var titleRow = new Grid { Margin = new Thickness(0, 0, 0, 12) };
+            titleRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            titleRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            titleRow.Children.Add(new TextBlock
+            {
+                Text = string.IsNullOrWhiteSpace(profile.GameName)
+                    ? (TryFindResource("LOCDisplayManager_UnknownGame") as string ?? "Unknown game")
+                    : profile.GameName,
+                FontSize = 14,
+                FontWeight = FontWeights.SemiBold,
+                TextWrapping = TextWrapping.Wrap,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+
+            var removeButton = new Button
+            {
+                Content = TryFindResource("LOCDisplayManager_RemoveProfile") as string ?? "Remove",
+                MinWidth = 90,
+                MinHeight = 36,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(8, 0, 0, 0),
+                Cursor = Cursors.Hand,
+                Style = TryFindResource("NarianPrimaryButton") as Style
+            };
+            removeButton.Click += (_, __) =>
+            {
+                var confirmed = settings?.Plugin != null
+                    && settings.Plugin.ConfirmRemoveGameProfile(profile.GameName);
+                if (!confirmed)
+                {
+                    return;
+                }
+
+                settings.AvailableGameProfiles.Remove(profile);
+                RebuildGameProfileRows();
+            };
+            Grid.SetColumn(removeButton, 1);
+            titleRow.Children.Add(removeButton);
+            content.Children.Add(titleRow);
+
+            content.Children.Add(CreateProfileSummaryLine(
+                TryFindResource("LOCDisplayManager_GameMenuHdrSection") as string ?? "HDR",
+                FormatHdrOverrideSummary(profile.HdrOverride)));
+            content.Children.Add(CreateProfileSummaryLine(
+                TryFindResource("LOCDisplayManager_GameMenuHzSection") as string ?? "Refresh rate",
+                FormatRefreshOverrideSummary(profile.RefreshRateOverride)));
+            content.Children.Add(CreateProfileSummaryLine(
+                TryFindResource("LOCDisplayManager_GameMenuAudioSection") as string ?? "Audio",
+                FormatAudioAssociationSummary(profile, settings)));
+
+            container.Child = content;
+            return container;
+        }
+
+        private static TextBlock CreateProfileSummaryLine(string label, string value)
+        {
+            return new TextBlock
+            {
+                Text = string.Format("{0}: {1}", label, value),
+                FontSize = 13,
+                Margin = new Thickness(0, 0, 0, 4),
+                TextWrapping = TextWrapping.Wrap,
+                Opacity = 0.9
+            };
+        }
+
+        private string FormatHdrOverrideSummary(GameHdrOverride value)
+        {
+            switch (value)
+            {
+                case GameHdrOverride.ForceOn:
+                    return TryFindResource("LOCDisplayManager_GameHdrForceOn") as string ?? "Force HDR on";
+                case GameHdrOverride.ForceOff:
+                    return TryFindResource("LOCDisplayManager_GameHdrForceOff") as string ?? "Force HDR off (SDR)";
+                case GameHdrOverride.DoNotTouch:
+                    return TryFindResource("LOCDisplayManager_GameHdrDoNotTouch") as string ?? "Do not touch HDR";
+                default:
+                    return TryFindResource("LOCDisplayManager_GameHdrInherit") as string ?? "Inherit global policy";
+            }
+        }
+
+        private string FormatRefreshOverrideSummary(GameRefreshRateOverride value)
+        {
+            switch (value)
+            {
+                case GameRefreshRateOverride.Native:
+                    return TryFindResource("LOCDisplayManager_GameHzNative") as string ?? "Force native";
+                case GameRefreshRateOverride.Prefer60:
+                    return TryFindResource("LOCDisplayManager_GameHz60") as string ?? "Prefer ~60 Hz";
+                case GameRefreshRateOverride.Prefer120:
+                    return TryFindResource("LOCDisplayManager_GameHz120") as string ?? "Prefer ~120 Hz";
+                case GameRefreshRateOverride.HighestDetected:
+                    return TryFindResource("LOCDisplayManager_GameHzHighest") as string ?? "Highest detected";
+                default:
+                    return TryFindResource("LOCDisplayManager_GameHzInherit") as string ?? "Inherit global refresh policy";
+            }
+        }
+
+        private string FormatAudioAssociationSummary(GameDisplayProfileEntry profile, DisplayManagerSettings settings)
+        {
+            if (string.IsNullOrWhiteSpace(profile.AssociatedAudioDeviceId))
+            {
+                return TryFindResource("LOCDisplayManager_GameAudioNone") as string ?? "No associated playback device";
+            }
+
+            try
+            {
+                var devices = settings?.Plugin?.AudioSwitcher?.GetPlaybackDevices();
+                var match = devices?.FirstOrDefault(d =>
+                    string.Equals(d.Id, profile.AssociatedAudioDeviceId, StringComparison.OrdinalIgnoreCase));
+                if (match != null && !string.IsNullOrWhiteSpace(match.Name))
+                {
+                    return match.Name;
+                }
+            }
+            catch
+            {
+                // Soft bridge may throw if Audio Switcher is unavailable mid-call.
+            }
+
+            return profile.AssociatedAudioDeviceId;
         }
 
         private void Hyperlink_OnRequestNavigate(object sender, RequestNavigateEventArgs e)

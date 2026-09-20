@@ -939,6 +939,81 @@ namespace PlayniteDisplayManager
             return gameProfiles?.CountNonInherit() ?? 0;
         }
 
+        public List<GameDisplayProfileEntry> GetGameProfileEntries()
+        {
+            var snapshots = gameProfiles?.GetProfilesSnapshot() ?? new Dictionary<Guid, GameDisplayProfile>();
+            var games = PlayniteApi.Database.Games
+                .GroupBy(game => game.Id)
+                .ToDictionary(group => group.Key, group => group.First());
+
+            return snapshots
+                .Where(item => item.Value != null && !item.Value.IsEmpty)
+                .Select(item =>
+                {
+                    games.TryGetValue(item.Key, out var game);
+                    return new GameDisplayProfileEntry
+                    {
+                        GameId = item.Key,
+                        GameName = !string.IsNullOrWhiteSpace(game?.Name)
+                            ? game.Name
+                            : Loc("LOCDisplayManager_UnknownGame") + " (" + item.Key + ")",
+                        GameImagePath = GetGameProfileImagePath(game),
+                        HdrOverride = item.Value.HdrOverride,
+                        RefreshRateOverride = item.Value.RefreshRateOverride,
+                        AssociatedAudioDeviceId = item.Value.AssociatedAudioDeviceId
+                    };
+                })
+                .OrderBy(e => e.GameName, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+        }
+
+        public void ReplaceGameProfiles(IEnumerable<GameDisplayProfileEntry> entries)
+        {
+            var map = (entries ?? Enumerable.Empty<GameDisplayProfileEntry>())
+                .Where(e => e != null && e.GameId != Guid.Empty)
+                .Select(e => new KeyValuePair<Guid, GameDisplayProfile>(e.GameId, e.ToProfile()));
+            gameProfiles?.ReplaceProfiles(map);
+        }
+
+        public bool ConfirmRemoveGameProfile(string gameName)
+        {
+            var message = string.Format(
+                Loc("LOCDisplayManager_ConfirmRemoveProfilePendingMessage"),
+                gameName ?? Loc("LOCDisplayManager_UnknownGame"));
+            return PlayniteApi.Dialogs.ShowMessage(
+                message,
+                Loc("LOCDisplayManager_ConfirmRemoveProfileTitle"),
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning) == MessageBoxResult.Yes;
+        }
+
+        private string GetGameProfileImagePath(Game game)
+        {
+            if (game == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(game.Icon) && File.Exists(game.Icon))
+                {
+                    return game.Icon;
+                }
+
+                if (!string.IsNullOrWhiteSpace(game.CoverImage) && File.Exists(game.CoverImage))
+                {
+                    return game.CoverImage;
+                }
+            }
+            catch
+            {
+                // Cover/icon paths are best-effort for the profiles list.
+            }
+
+            return null;
+        }
+
         private string DescribePlanAction(HdrSessionPlan plan)
         {
             if (plan == null)

@@ -28,7 +28,7 @@
     <sys:String x:Key="LOCDisplayManager_StatusPrimary">Primaria</sys:String>
     <sys:String x:Key="LOCDisplayManager_IdentityEdid">Identidad EDID</sys:String>
     <sys:String x:Key="LOCDisplayManager_IdentityConnector">Fallback de conector</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplaysHelp">Renombra pantallas para Playnite. La identidad usa EDID cuando está disponible — nunca \\.\DISPLAY#.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplaysHelp">Prueba cambios de topología abajo y gestiona el nombre de cada pantalla conectada.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialTitle">Prueba de topología</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialHelp">Aplica temporalmente cambios de primaria / otras pantallas con restauración automática. RestoreHost permanece armado durante la prueba.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialTarget">Pantalla objetivo</sys:String>
@@ -56,7 +56,7 @@
     <sys:String x:Key="LOCDisplayManager_PresetEmber">Ember</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplaysTab">Pantallas</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrTab">HDR</sys:String>
-    <sys:String x:Key="LOCDisplayManager_HdrHelp">Display Manager posee el HDR cuando está instalado. Al salir escribe el estado deseado — no confía en la lectura de HDR de Windows.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrHelp">Display Manager posee el HDR cuando está instalado. Al salir escribe el estado deseado . no confía en la lectura de HDR de Windows.</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPolicyTitle">Política HDR global</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPolicyHelp">Por defecto para todos los juegos. Los overrides del menú contextual siempre ganan.</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPolicyNone">No gestionar HDR de forma global</sys:String>
@@ -64,13 +64,13 @@
     <sys:String x:Key="LOCDisplayManager_HdrPolicyMetadata">Activar HDR solo si los metadatos indican HDR; escribir off al salir</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrMetadataTitle">Nombres de metadatos HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrMetadataHelp">Features separadas por comas (sin distinguir mayúsculas). Compatible con la feature HDR de PCGamingWiki Metadata Provider. Sin red al lanzar.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_HdrIncludeTags">También coincidir Tags (además de Features)</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrIncludeTags">También buscar en etiquetas del juego</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrOverrideCountFormat">{0} juego(s) con override HDR (no heredar).</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrGameMenuHint">Overrides: menú contextual del juego → Display Manager → HDR.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_HdrForceSdrTitle">Forzar SDR ahora</sys:String>
-    <sys:String x:Key="LOCDisplayManager_HdrForceSdrHelp">Si la TV se queda en HDR tras un juego, pulsa esto. Usa Win+Alt+B como comprobación visual rápida.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_HdrWriteOffNow">Escribir HDR off ahora</sys:String>
-    <sys:String x:Key="LOCDisplayManager_HdrWriteOffOk">Se escribió HDR off en las pantallas capaces.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrForceSdrTitle">Apagar el HDR ahora</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrForceSdrHelp">Si tras un juego la imagen sigue en HDR (escritorio raro o demasiado brillante), usa este botón para volver a una imagen normal (SDR). Consejo: Win+Alt+B también cambia el HDR para comprobarlo a ojo.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrWriteOffNow">Apagar el HDR en mis pantallas</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrWriteOffOk">Listo. Se apagó el HDR en las pantallas que lo permiten.</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuHdrSection">HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameHdrInherit">Heredar política global</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameHdrForceOn">Forzar HDR on</sys:String>
@@ -84,12 +84,12 @@
     <sys:String x:Key="LOCDisplayManager_OverviewGameHdrYes">metadatos HDR sí</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewGameHdrNo">metadatos HDR no</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewGameHdrFormat">{0} · {1} · {2}</sys:String>
-    <sys:String x:Key="LOCDisplayManager_OverviewGameHdrSimpleFormat">{0} — {1}</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewGameHdrSimpleFormat">{0}: {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewNativeHdr">Flag HDR nativo de Playnite</sys:String>
-    <sys:String x:Key="LOCDisplayManager_OverviewNativeHdrClear">OK — ningún juego tiene el flag Enable HDR de Playnite activo.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_OverviewNativeHdrConflictFormat">{0} juego(s) aún tienen EnableSystemHdr — NX lo limpia al lanzar para no apilar restores.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewNativeHdrClear">OK: ningún juego tiene el flag Enable HDR de Playnite activo.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewNativeHdrConflictFormat">{0} juego(s) aún tienen EnableSystemHdr. NX lo limpia al lanzar para no apilar restores.</sys:String>
     <sys:String x:Key="LOCDisplayManager_NativeHdrMigrationTitle">Migración EnableSystemHdr nativo</sys:String>
-    <sys:String x:Key="LOCDisplayManager_NativeHdrMigrationHelp">El checkbox «Enable HDR Support» de Playnite sigue visible — no hay API pública del SDK para ocultarlo. Display Manager limpia el flag para que la restauración nativa y la de NX no se apilen. Reversible desde esta página.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_NativeHdrMigrationHelp">El checkbox «Enable HDR Support» de Playnite sigue visible: no hay API pública del SDK para ocultarlo. Display Manager limpia el flag para que la restauración nativa y la de NX no se apilen. Reversible desde esta página.</sys:String>
     <sys:String x:Key="LOCDisplayManager_NativeHdrStatusFormat">{0} juego(s) aún tienen EnableSystemHdr · backup: {1} id(s).</sys:String>
     <sys:String x:Key="LOCDisplayManager_NativeHdrClearNow">Limpiar flags HDR nativos ahora</sys:String>
     <sys:String x:Key="LOCDisplayManager_NativeHdrRestoreBackup">Restaurar desde backup</sys:String>
@@ -105,7 +105,7 @@
     <sys:String x:Key="LOCDisplayManager_SetupWizardFinish">Guardar configuración</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeTitle">Bienvenida</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeHelp">Display Manager posee el HDR de Windows de tu biblioteca cuando está instalado.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeBody">Escribe HDR on/off según política (y overrides por juego) y al salir escribe el estado deseado — no confía en el readback de ACM. El checkbox nativo «Enable HDR Support» puede seguir visible; Display Manager limpia ese flag para que dos restores no peleen.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeBody">Escribe HDR on/off según política (y overrides por juego) y al salir escribe el estado deseado . no confía en el readback de ACM. El checkbox nativo «Enable HDR Support» puede seguir visible; Display Manager limpia ese flag para que dos restores no peleen.</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardMigrationTitle">¿Limpiar flags HDR nativos?</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardMigrationIntro">Migración única en toda la biblioteca. Puedes revertirla después desde Mantenimiento.</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardMigrationCountFormat">{0} juego(s) tienen EnableSystemHdr activo ahora.</sys:String>
@@ -131,7 +131,7 @@
     <sys:String x:Key="LOCDisplayManager_TopPanelModeText">Texto</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopPanelModeIconAndText">Icono y texto</sys:String>
     <sys:String x:Key="LOCDisplayManager_AudioSwitcherTitle">Audio Switcher</sys:String>
-    <sys:String x:Key="LOCDisplayManager_AudioSwitcherHelp">Enlace opcional. Display Manager no cambia el audio por sí mismo — pide a Audio Switcher vía reflexión suave si ese plugin está cargado.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AudioSwitcherHelp">Enlace opcional. Display Manager no cambia el audio por sí mismo . pide a Audio Switcher vía reflexión suave si ese plugin está cargado.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AudioSwitcherInstalled">Audio Switcher está instalado y cargado.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AudioSwitcherMissing">Audio Switcher no está instalado (o no cargado). Asocia un dispositivo cuando esté disponible.</sys:String>
     <sys:String x:Key="LOCDisplayManager_EnableAudioSwitcherHook">Aplicar dispositivo de reproducción asociado al iniciar el juego (vía Audio Switcher)</sys:String>
@@ -140,7 +140,7 @@
     <sys:String x:Key="LOCDisplayManager_GameAudioNone">Sin dispositivo de reproducción asociado</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshRateTitle">Frecuencia de refresco (Hz)</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshRateHelp">Opcional. Solo se listan las tasas que reporta la pantalla primaria a su resolución actual. Se restaura con el snapshot de topología al salir del juego.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_RefreshPolicyNative">Nativo — no cambiar el refresco</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RefreshPolicyNative">Nativo: no cambiar el refresco</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshPolicy60">Preferir ~60 Hz</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshPolicy120">Preferir ~120 Hz</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshPolicyHighest">El más alto disponible a esta resolución</sys:String>
@@ -170,7 +170,7 @@
     <sys:String x:Key="LOCDisplayManager_RestoreLeaseArmedFormat">Lease armado. Snapshot: {0}. Mata Playnite (o para heartbeats) para verificar. Log: %TEMP%\PlayniteDisplayManager-RestoreHost.log</sys:String>
     <sys:String x:Key="LOCDisplayManager_RestoreLeaseDisarmed">Lease desarmado.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutTab">Acerca de</sys:String>
-    <sys:String x:Key="LOCDisplayManager_AboutDescription">Display Manager aplica un perfil de pantalla y HDR de Windows al iniciar un juego y restaura el escritorio al salir — pensado para HTPC / sofá en Playnite Desktop y Fullscreen.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AboutDescription">Display Manager aplica un perfil de pantalla y HDR de Windows al iniciar un juego y restaura el escritorio al salir . pensado para HTPC / sofá en Playnite Desktop y Fullscreen.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutPurposeTitle">Qué hace Display Manager</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutDisplays">Elige qué pantalla usa un juego, renombra monitores con identidad EDID estable y prueba cambios de topología con restauración automática.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutProfiles">Posee el HDR con políticas globales, coincidencia Features/Tags y overrides por juego. El refresco opcional se restaura con el snapshot de topología.</sys:String>
@@ -184,4 +184,47 @@
     <sys:String x:Key="LOCDisplayManager_VersionAuthorFormat">Display Manager {0} · Narian</sys:String>
     <sys:String x:Key="LOCDisplayManager_TabComingSoon">Esta sección llega en un paso posterior.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutBlurb">Aplica un perfil de pantalla de Windows al iniciar un juego y restaura el escritorio al salir. Pensado para HTPC / sofá.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RemoveProfile">Quitar</sys:String>
+    <sys:String x:Key="LOCDisplayManager_GameProfilesTab">Perfiles por juego</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ConfirmRemoveProfilePendingMessage">¿Quitar el perfil de Display Manager de &quot;{0}&quot; al guardar los ajustes? Si cancelas, el perfil se mantiene.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewNativeHdrOkBadge">OK</sys:String>
+    <sys:String x:Key="LOCDisplayManager_NoConfiguredGameProfiles">Todavía no hay perfiles. Usa el menú contextual del juego: Display Manager.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_StatusLabel">Estado</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewNativeHdrWarnBadge">Conflicto</sys:String>
+    <sys:String x:Key="LOCDisplayManager_UnknownGame">Juego desconocido</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewSessionActiveBadge">Activa</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrIncludeTagsHelp">Si está activo, Display Manager mira las etiquetas de Playnite además de las características (Features), por si tu proveedor de metadatos guarda HDR como etiqueta (por ejemplo HDR o HDR10).</sys:String>
+    <sys:String x:Key="LOCDisplayManager_GameProfilesTitle">Perfiles configurados</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplaysListTitle">Pantallas conectadas</sys:String>
+    <sys:String x:Key="LOCDisplayManager_GameProfilesHelp">Juegos con un override de Display Manager (HDR, frecuencia o audio asociado). Se añaden o cambian desde el menú contextual de cada juego. Quitar aquí se aplica al guardar los ajustes.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplaysListHelp">Renombra las pantallas para Playnite. La identidad usa EDID cuando está disponible, nunca \\.\DISPLAY#.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ConfirmRemoveProfileTitle">Quitar perfil del juego</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewSessionIdleBadge">Inactiva</sys:String>
 </ResourceDictionary>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

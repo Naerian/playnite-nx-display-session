@@ -79,8 +79,27 @@
                 <Setter Property="Margin" Value="0,0,0,16" />
                 <Setter Property="CornerRadius" Value="4" />
                 <Setter Property="MinHeight" Value="92" />
+                <Setter Property="Cursor" Value="Arrow" />
                 <Setter Property="SnapsToDevicePixels" Value="True" />
                 <Setter Property="TextElement.Foreground" Value="{DynamicResource TextBrush}" />
+            </Style>
+            <Style x:Key="DeviceCard" TargetType="Border" BasedOn="{StaticResource SummaryCard}">
+                <Setter Property="Margin" Value="0" />
+                <Setter Property="MinHeight" Value="0" />
+            </Style>
+            <Style x:Key="SummaryCardTitle" TargetType="TextBlock" BasedOn="{StaticResource BodyText}">
+                <Setter Property="Foreground" Value="{DynamicResource Narian.Accent}" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+            <Style x:Key="SummaryTitleSeparator" TargetType="Border">
+                <Setter Property="BorderBrush" Value="{DynamicResource Narian.Border}" />
+                <Setter Property="BorderThickness" Value="0,0,0,1" />
+                <Setter Property="Padding" Value="0,0,0,8" />
+                <Setter Property="Margin" Value="0,0,0,8" />
+            </Style>
+            <Style x:Key="SummaryCardValue" TargetType="TextBlock" BasedOn="{StaticResource BodyText}">
+                <Setter Property="Margin" Value="0" />
             </Style>
             <Style x:Key="SummaryPill" TargetType="Border">
                 <Setter Property="Background" Value="{DynamicResource Narian.BadgeBg}" />
@@ -90,8 +109,27 @@
                 <Setter Property="CornerRadius" Value="4" />
                 <Setter Property="MinHeight" Value="22" />
                 <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Cursor" Value="Arrow" />
                 <Setter Property="SnapsToDevicePixels" Value="True" />
+                <Style.Resources>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="FontSize" Value="12" />
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                        <Setter Property="TextAlignment" Value="Center" />
+                        <Setter Property="HorizontalAlignment" Value="Center" />
+                    </Style>
+                </Style.Resources>
             </Style>
+            <Style x:Key="StatusPill" TargetType="Border" BasedOn="{StaticResource SummaryPill}">
+                <Setter Property="Margin" Value="8,0,0,0" />
+            </Style>
+            <Style x:Key="DeviceStatusPill" TargetType="Border" BasedOn="{StaticResource SummaryPill}">
+                <Setter Property="Margin" Value="0,0,8,8" />
+            </Style>
+            <Style x:Key="CapabilityPill" TargetType="Border" BasedOn="{StaticResource SummaryPill}">
+                <Setter Property="Margin" Value="0,0,8,8" />
+            </Style>
+            <Style x:Key="SummaryMetricPill" TargetType="Border" BasedOn="{StaticResource CapabilityPill}" />
             <Style x:Key="NarianPrimaryButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                 <Setter Property="Background" Value="{DynamicResource Narian.Accent}" />
                 <Setter Property="Foreground" Value="{DynamicResource Narian.AccentOn}" />
@@ -249,46 +287,60 @@
                             </StackPanel>
                         </Border>
 
-                        <StackPanel Style="{StaticResource FieldGroup}">
-                            <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewDisplays}" Style="{StaticResource FieldLabel}" />
-                            <TextBlock x:Name="OverviewDisplaysText" Style="{StaticResource BodyText}" />
-                            <WrapPanel x:Name="OverviewDisplayPills" Margin="0,12,0,0" />
-                        </StackPanel>
-
-                        <StackPanel Style="{StaticResource FieldGroup}">
-                            <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewWhenLaunching}" Style="{StaticResource FieldLabel}" />
-                            <TextBlock x:Name="OverviewPolicyText"
-                                       Text="{DynamicResource LOCDisplayManager_OverviewPolicyUnset}"
-                                       Style="{StaticResource BodyText}" />
-                        </StackPanel>
-
-                        <StackPanel Style="{StaticResource FieldGroup}">
-                            <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewGameHdr}" Style="{StaticResource FieldLabel}" />
-                            <TextBlock x:Name="OverviewGameHdrText"
-                                       Style="{StaticResource BodyText}"
-                                       Text="{DynamicResource LOCDisplayManager_OverviewGameHdrNone}" />
-                        </StackPanel>
-
-                        <StackPanel Style="{StaticResource FieldGroup}">
-                            <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewSession}" Style="{StaticResource FieldLabel}" />
-                            <TextBlock x:Name="OverviewSessionText"
-                                       Text="{DynamicResource LOCDisplayManager_OverviewSessionIdle}"
-                                       Style="{StaticResource BodyText}" />
-                        </StackPanel>
-
-                        <StackPanel Style="{StaticResource FieldGroup}">
-                            <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewNativeHdr}" Style="{StaticResource FieldLabel}" />
-                            <TextBlock x:Name="OverviewNativeHdrText"
-                                       Style="{StaticResource BodyText}"
-                                       Text="{DynamicResource LOCDisplayManager_OverviewNativeHdrClear}" />
-                        </StackPanel>
-
-                        <StackPanel Style="{StaticResource FieldGroup}">
-                            <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewRefreshRate}" Style="{StaticResource FieldLabel}" />
-                            <TextBlock x:Name="OverviewRefreshRateText"
-                                       Style="{StaticResource BodyText}"
-                                       Text="{DynamicResource LOCDisplayManager_RefreshPolicyNative}" />
-                        </StackPanel>
+                        <UniformGrid Columns="2">
+                            <Border Style="{StaticResource SummaryCard}" Margin="0,0,8,16">
+                                <StackPanel>
+                                    <Border Style="{StaticResource SummaryTitleSeparator}">
+                                        <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewDisplays}" Style="{StaticResource SummaryCardTitle}" />
+                                    </Border>
+                                    <TextBlock x:Name="OverviewDisplaysText" Style="{StaticResource SummaryCardValue}" />
+                                    <WrapPanel x:Name="OverviewDisplayPills" Margin="0,8,0,0" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SummaryCard}" Margin="8,0,0,16">
+                                <StackPanel>
+                                    <Border Style="{StaticResource SummaryTitleSeparator}">
+                                        <DockPanel LastChildFill="True">
+                                            <Border x:Name="OverviewSessionStatusPill" DockPanel.Dock="Right" Style="{StaticResource StatusPill}">
+                                                <TextBlock x:Name="OverviewSessionStatusText" />
+                                            </Border>
+                                            <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewSession}" Style="{StaticResource SummaryCardTitle}" />
+                                        </DockPanel>
+                                    </Border>
+                                    <TextBlock x:Name="OverviewSessionText" Style="{StaticResource SummaryCardValue}" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SummaryCard}" Margin="0,0,8,16">
+                                <StackPanel>
+                                    <Border Style="{StaticResource SummaryTitleSeparator}">
+                                        <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewWhenLaunching}" Style="{StaticResource SummaryCardTitle}" />
+                                    </Border>
+                                    <TextBlock x:Name="OverviewPolicyText" Style="{StaticResource SummaryCardValue}" />
+                                    <WrapPanel x:Name="OverviewPolicyPills" Margin="0,8,0,0" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SummaryCard}" Margin="8,0,0,16">
+                                <StackPanel>
+                                    <Border Style="{StaticResource SummaryTitleSeparator}">
+                                        <DockPanel LastChildFill="True">
+                                            <Border x:Name="OverviewNativeHdrStatusPill" DockPanel.Dock="Right" Style="{StaticResource StatusPill}">
+                                                <TextBlock x:Name="OverviewNativeHdrStatusText" />
+                                            </Border>
+                                            <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewNativeHdr}" Style="{StaticResource SummaryCardTitle}" />
+                                        </DockPanel>
+                                    </Border>
+                                    <TextBlock x:Name="OverviewNativeHdrText" Style="{StaticResource SummaryCardValue}" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SummaryCard}" Margin="0,0,8,0" HorizontalAlignment="Stretch">
+                                <StackPanel>
+                                    <Border Style="{StaticResource SummaryTitleSeparator}">
+                                        <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewRefreshRate}" Style="{StaticResource SummaryCardTitle}" />
+                                    </Border>
+                                    <TextBlock x:Name="OverviewRefreshRateText" Style="{StaticResource SummaryCardValue}" />
+                                </StackPanel>
+                            </Border>
+                        </UniformGrid>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -321,42 +373,45 @@
                             <TextBlock Text="{DynamicResource LOCDisplayManager_DisplaysHelp}" Style="{StaticResource SectionSubtitleText}" />
                         </StackPanel>
 
-                        <Border Style="{StaticResource SettingsCard}">
-                            <StackPanel>
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTrialTitle}" Style="{StaticResource FieldLabel}" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTrialHelp}" Style="{StaticResource HintText}" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTrialTarget}" Style="{StaticResource FieldLabel}" Margin="0,8,0,4" />
-                                <ComboBox x:Name="TopologyTargetBox"
-                                          MinHeight="36"
-                                          DisplayMemberPath="EffectiveName"
-                                          SelectedValuePath="Id" />
-                                <CheckBox x:Name="TopologyMakePrimaryCheck"
-                                          Content="{DynamicResource LOCDisplayManager_TopologyMakePrimary}"
-                                          IsChecked="True"
-                                          Margin="0,12,0,0" />
-                                <CheckBox x:Name="TopologyTurnOffOthersCheck"
-                                          Content="{DynamicResource LOCDisplayManager_TopologyTurnOffOthers}"
-                                          Margin="0,8,0,0" />
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTurnOffOthersWarning}"
-                                           Style="{StaticResource HintText}"
-                                           Margin="24,4,0,0" />
-                                <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
-                                    <Button Content="{DynamicResource LOCDisplayManager_TopologyTrialApply}"
-                                            Style="{StaticResource NarianPrimaryButton}"
-                                            MinWidth="180"
-                                            Margin="0,0,8,0"
-                                            Click="TopologyTrialApply_OnClick" />
-                                    <Button Content="{DynamicResource LOCDisplayManager_TopologyTrialRestoreNow}"
-                                            MinWidth="140"
-                                            MinHeight="36"
-                                            Click="TopologyTrialRestore_OnClick" />
-                                </StackPanel>
-                                <TextBlock x:Name="TopologyTrialStatusText"
-                                           Style="{StaticResource HintText}"
-                                           Margin="0,12,0,0" />
+                        <StackPanel Style="{StaticResource FieldGroup}">
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTrialTitle}" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTrialHelp}" Style="{StaticResource HintText}" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTrialTarget}" Style="{StaticResource FieldLabel}" Margin="0,8,0,4" />
+                            <ComboBox x:Name="TopologyTargetBox"
+                                      MinHeight="36"
+                                      DisplayMemberPath="EffectiveName"
+                                      SelectedValuePath="Id" />
+                            <CheckBox x:Name="TopologyMakePrimaryCheck"
+                                      Content="{DynamicResource LOCDisplayManager_TopologyMakePrimary}"
+                                      IsChecked="True"
+                                      Margin="0,12,0,0" />
+                            <CheckBox x:Name="TopologyTurnOffOthersCheck"
+                                      Content="{DynamicResource LOCDisplayManager_TopologyTurnOffOthers}"
+                                      Margin="0,8,0,0" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTurnOffOthersWarning}"
+                                       Style="{StaticResource IndentedHintText}" />
+                            <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                                <Button Content="{DynamicResource LOCDisplayManager_TopologyTrialApply}"
+                                        Style="{StaticResource NarianPrimaryButton}"
+                                        MinWidth="180"
+                                        Margin="0,0,8,0"
+                                        Click="TopologyTrialApply_OnClick" />
+                                <Button Content="{DynamicResource LOCDisplayManager_TopologyTrialRestoreNow}"
+                                        MinWidth="140"
+                                        MinHeight="36"
+                                        Click="TopologyTrialRestore_OnClick" />
                             </StackPanel>
-                        </Border>
+                            <TextBlock x:Name="TopologyTrialStatusText"
+                                       Style="{StaticResource HintText}"
+                                       Margin="0,12,0,0" />
+                        </StackPanel>
 
+                        <StackPanel Style="{StaticResource PageSection}" Margin="0,8,0,8">
+                            <Border Style="{StaticResource PageHeader}">
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_DisplaysListTitle}" Style="{StaticResource SectionHeaderText}" />
+                            </Border>
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_DisplaysListHelp}" Style="{StaticResource SectionSubtitleText}" />
+                        </StackPanel>
                         <StackPanel x:Name="DisplayCardsPanel" />
                     </StackPanel>
                 </ScrollViewer>
@@ -409,6 +464,8 @@
                                       Margin="0,12,0,0"
                                       Checked="HdrIncludeTagsCheck_OnChanged"
                                       Unchecked="HdrIncludeTagsCheck_OnChanged" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_HdrIncludeTagsHelp}"
+                                       Style="{StaticResource IndentedHintText}" />
                             <TextBlock x:Name="HdrOverrideCountText"
                                        Style="{StaticResource HintText}"
                                        Margin="0,12,0,0" />
@@ -422,7 +479,7 @@
                             <TextBlock Text="{DynamicResource LOCDisplayManager_HdrForceSdrHelp}" Style="{StaticResource HintText}" />
                             <Button Content="{DynamicResource LOCDisplayManager_HdrWriteOffNow}"
                                     Style="{StaticResource NarianPrimaryButton}"
-                                    MinWidth="180"
+                                    MinWidth="220"
                                     HorizontalAlignment="Left"
                                     Margin="0,8,0,0"
                                     Click="HdrWriteOffNow_OnClick" />
@@ -430,6 +487,29 @@
                                        Style="{StaticResource HintText}"
                                        Margin="0,12,0,0" />
                         </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE8F1;" />
+                        <TextBlock Text="{DynamicResource LOCDisplayManager_GameProfilesTab}" Style="{StaticResource TabHeaderLabel}" />
+                    </StackPanel>
+                </TabItem.Header>
+                <ScrollViewer Style="{StaticResource FillScrollViewer}">
+                    <StackPanel Margin="8,8,8,16">
+                        <StackPanel Style="{StaticResource PageSection}">
+                            <Border Style="{StaticResource PageHeader}">
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_GameProfilesTitle}" Style="{StaticResource SectionHeaderText}" />
+                            </Border>
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_GameProfilesHelp}" Style="{StaticResource SectionSubtitleText}" />
+                        </StackPanel>
+                        <TextBlock x:Name="NoGameProfilesText"
+                                   Text="{DynamicResource LOCDisplayManager_NoConfiguredGameProfiles}"
+                                   Style="{StaticResource HintText}" />
+                        <StackPanel x:Name="GameProfileRowsPanel" />
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

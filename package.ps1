@@ -121,6 +121,9 @@ Copy-Item -LiteralPath (Join-Path $build "extension.yaml") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $build "README.md") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $build "Localization") -Destination $stage -Recurse
 Copy-Item -LiteralPath (Join-Path $build "media") -Destination $stage -Recurse
+if (Test-Path -LiteralPath (Join-Path $build "Icons")) {
+    Copy-Item -LiteralPath (Join-Path $build "Icons") -Destination $stage -Recurse
+}
 Copy-Item -LiteralPath (Join-Path $build "Examples") -Destination $stage -Recurse
 
 & $ToolboxPath pack $stage $distVersion
