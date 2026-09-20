@@ -10,6 +10,34 @@ $project = Join-Path $root "PlayniteDisplayManager.csproj"
 $hostProject = Join-Path $root "RestoreHost\PlayniteDisplayManager.RestoreHost.csproj"
 $extensionYaml = Join-Path $root "extension.yaml"
 
+function Assert-FileHasContent {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [int]$MinNonZeroBytes = 32
+    )
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        throw "Missing required file: $Path"
+    }
+
+    $bytes = [System.IO.File]::ReadAllBytes($Path)
+    if ($bytes.Length -le 0) {
+        throw "File is empty: $Path"
+    }
+
+    $nonZero = 0
+    foreach ($b in $bytes) {
+        if ($b -ne 0) {
+            $nonZero++
+            if ($nonZero -ge $MinNonZeroBytes) {
+                return
+            }
+        }
+    }
+
+    throw "File looks wiped/zero-filled (power loss or copy glitch): $Path"
+}
+
 if (-not (Test-Path -LiteralPath $project)) {
     throw "Project file was not found at $project"
 }
@@ -39,10 +67,13 @@ elseif (-not [string]::Equals($Version, $manifestVersion, [StringComparison]::Or
 
 Write-Host "Building Display Manager $Version ($Configuration)..."
 
-# Wipe intermediates before restore/build to avoid duplicate AssemblyInfo embeds.
+# Wipe intermediates and previous outputs. PreserveNewest can keep zero-filled
+# Localization copies after a power loss because size/timestamps still match.
 foreach ($dir in @(
     (Join-Path $root "obj"),
-    (Join-Path $root "RestoreHost\obj")
+    (Join-Path $root "RestoreHost\obj"),
+    (Join-Path $root "bin\$Configuration"),
+    (Join-Path $root "RestoreHost\bin\$Configuration")
 )) {
     if (Test-Path -LiteralPath $dir) {
         Remove-Item -LiteralPath $dir -Recurse -Force
@@ -77,12 +108,13 @@ if ($LASTEXITCODE -ne 0) {
     throw "RestoreHost --self-test failed with exit code $LASTEXITCODE"
 }
 
+$sourceLocalization = Join-Path $root "Localization"
 $required = @(
     (Join-Path $build "PlayniteDisplayManager.dll"),
     $hostExe,
     (Join-Path $build "extension.yaml"),
     (Join-Path $build "README.md"),
-    (Join-Path $build "Localization"),
+    $sourceLocalization,
     (Join-Path $build "media"),
     (Join-Path $build "Examples")
 )
@@ -90,6 +122,10 @@ foreach ($path in $required) {
     if (-not (Test-Path -LiteralPath $path)) {
         throw "Missing build output: $path"
     }
+}
+
+Get-ChildItem -LiteralPath $sourceLocalization -Filter *.xaml | ForEach-Object {
+    Assert-FileHasContent -Path $_.FullName
 }
 
 $stage = Join-Path $env:TEMP "playnite-display-manager-pext-stage"
@@ -108,6 +144,7 @@ if (Test-Path -LiteralPath $distVersion) {
 New-Item -ItemType Directory -Path $distVersion | Out-Null
 
 Copy-Item -LiteralPath (Join-Path $build "PlayniteDisplayManager.dll") -Destination $stage
+Assert-FileHasContent -Path (Join-Path $stage "PlayniteDisplayManager.dll") -MinNonZeroBytes 256
 $pdb = Join-Path $build "PlayniteDisplayManager.pdb"
 if (Test-Path -LiteralPath $pdb) {
     Copy-Item -LiteralPath $pdb -Destination $stage
@@ -119,12 +156,17 @@ if (Test-Path -LiteralPath $hostPdb) {
 }
 Copy-Item -LiteralPath (Join-Path $build "extension.yaml") -Destination $stage
 Copy-Item -LiteralPath (Join-Path $build "README.md") -Destination $stage
-Copy-Item -LiteralPath (Join-Path $build "Localization") -Destination $stage -Recurse
+# Always stage Localization from source — never reuse a possibly zero-filled bin copy.
+Copy-Item -LiteralPath $sourceLocalization -Destination $stage -Recurse
 Copy-Item -LiteralPath (Join-Path $build "media") -Destination $stage -Recurse
 if (Test-Path -LiteralPath (Join-Path $build "Icons")) {
     Copy-Item -LiteralPath (Join-Path $build "Icons") -Destination $stage -Recurse
 }
 Copy-Item -LiteralPath (Join-Path $build "Examples") -Destination $stage -Recurse
+
+Get-ChildItem -LiteralPath (Join-Path $stage "Localization") -Filter *.xaml | ForEach-Object {
+    Assert-FileHasContent -Path $_.FullName
+}
 
 & $ToolboxPath pack $stage $distVersion
 $packExit = $LASTEXITCODE
@@ -140,8 +182,8 @@ if (-not $package) {
     throw "Playnite Toolbox did not create a .pext package."
 }
 
-# Toolbox occasionally leaves a truncated zip (EOCD missing). Fail hard so we never
-# hand out an uninstallable .pext.
+# Toolbox occasionally leaves a truncated zip (EOCD missing). Also reject packs that
+# contain zero-filled localization (seen after unclean shutdowns).
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 try {
     $zip = [System.IO.Compression.ZipFile]::OpenRead($package.FullName)
@@ -150,14 +192,43 @@ try {
         if ($entryCount -lt 3) {
             throw "Package looks empty ($entryCount entries)."
         }
-        Write-Host "Package ZIP OK ($entryCount entries)."
+
+        $locEntries = @($zip.Entries | Where-Object {
+            $_.FullName -match '(?i)(^|[/\\])Localization[/\\].+\.xaml$'
+        })
+        if ($locEntries.Count -lt 1) {
+            throw "Package has no Localization/*.xaml entries."
+        }
+
+        foreach ($entry in $locEntries) {
+            $buffer = New-Object byte[] ([Math]::Min(64, [int]$entry.Length))
+            $stream = $entry.Open()
+            try {
+                $read = $stream.Read($buffer, 0, $buffer.Length)
+            }
+            finally {
+                $stream.Dispose()
+            }
+
+            $nonZero = 0
+            for ($i = 0; $i -lt $read; $i++) {
+                if ($buffer[$i] -ne 0) {
+                    $nonZero++
+                }
+            }
+            if ($nonZero -lt 8) {
+                throw "Localization entry is zero-filled: $($entry.FullName)"
+            }
+        }
+
+        Write-Host "Package ZIP OK ($entryCount entries, $($locEntries.Count) localization files)."
     }
     finally {
         $zip.Dispose()
     }
 }
 catch {
-    throw "Generated .pext is not a valid zip (Playnite will refuse install): $($_.Exception.Message)"
+    throw "Generated .pext failed validation (Playnite will show broken/missing text): $($_.Exception.Message)"
 }
 
 Write-Host "Package created: $($package.FullName)"
