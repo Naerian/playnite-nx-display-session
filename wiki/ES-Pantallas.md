@@ -1,52 +1,36 @@
 # Pantallas
 
-Display Manager enumera las pantallas activas de Windows y aplica una topología de sesión para que el juego use la pantalla que te importa (típicamente la TV en un HTPC de sofá).
+Display Manager separa el **inventario de pantallas conectadas** de los **perfiles de pantalla**.
 
-## Identidad
+Ajustes -> Pantallas es solo para pantallas conectadas: identidad resuelta, nombres personalizados, visibilidad en Display Manager e Identificar. El comportamiento de perfiles vive en Ajustes -> General.
 
-Las pantallas se identifican sobre todo por **EDID** e info de ruta CCD, no solo por rutas de instancia frágiles. Cuando Windows expone datos suficientes, la identidad aguanta mejor cambios de cable o GPU que el matching solo por nombre.
+## Perfiles de pantalla
 
-Si un dock, splitter o adaptador recorta el EDID, el matching puede caer a claves más débiles — Overview y Ajustes → Pantallas muestran lo resuelto.
+En Ajustes -> General -> Perfiles de pantalla, cada perfil puede definir:
 
-## Pantalla principal para juegos
+- Pantalla principal para juegos, o mantener la predeterminada de Windows.
+- Si se apagan otras pantallas al iniciar un juego.
+- Politica de pantalla ausente y pantalla de respaldo.
+- Valores de HDR, frecuencia y resolucion.
 
-En Ajustes → Pantallas:
+Los valores incluidos son **Solo TV** para una sesion solo en TV y **PC / Desktop** para el escritorio normal. Un perfil es el **predeterminado al lanzar** salvo que un perfil por juego o plataforma lo sobrescriba.
 
-- Gestiona **perfiles de topología** (paquetes con nombre). Uno es el **predeterminado al lanzar**.
-- Cada perfil define la **pantalla principal para juegos** (o Mantener la de Windows), si se **apagan otras pantallas**, y qué hacer si la preferida **falta** (primaria de Windows, pantalla de respaldo, o avisar y continuar).
-- Renombra pantallas, usa **Identificar** y previsualiza con la prueba corta.
+## Pantallas ausentes
 
-## Perfiles por juego y por plataforma
+Ajustes -> General -> Pantalla ausente decide que ocurre si la pantalla preferida del perfil seleccionado no esta conectada: usar primaria de Windows, usar pantalla de respaldo, o avisar y continuar.
 
-Prioridad fija:
+## Resolucion y frecuencia
 
-1. **Perfil por juego** (menú contextual)
-2. **Perfil por plataforma** (Ajustes → General → Perfiles de juego → Perfiles por plataforma)
-3. **Perfil de topología predeterminado** / HDR y refresco globales
+Resolucion para juegos se aplica tras el perfil de pantalla y antes de frecuencia/HDR. Las frecuencias son las que Windows reporta para la pantalla principal de juegos a la resolucion actual.
 
-Menú contextual → Display Manager → Pantalla / HDR / Frecuencia: **Mantener configuración global** quita el override del juego para que apliquen plataforma y luego el predeterminado.
+El **retardo de asentamiento** en General -> Opciones espera tras cambios de distribucion, resolucion, frecuencia o HDR antes de continuar con el juego. Usalo para pantallas o AVRs que necesiten mas tiempo.
 
-## Frecuencia de refresco
+## Prioridad
 
-Cuando está configurado en Ajustes → General → Frecuencia de refresco, Display Manager puede cambiar el refresh en la ruta de la pantalla principal para juegos (`ChangeDisplaySettingsEx`). Solo se listan las tasas que reporta esa pantalla a su resolución actual. La restauración vuelve al modo anterior con el snapshot / lease de RestoreHost.
+1. Perfil por juego desde el menu contextual.
+2. Perfil por plataforma desde Ajustes -> General -> Perfiles por plataforma.
+3. Perfil de pantalla predeterminado y ajustes globales.
 
-Override por juego: menú contextual → Display Manager → Frecuencia → **Mantener configuración global** o una política/tasa concreta.
+## Restauracion
 
-## Qué cubre la restauración
-
-- Topología activa (rutas habilitadas / primaria según el snapshot).
-- Escritura HDR off en objetivos de sesión (ver [HDR](ES-HDR)).
-- Refresh rate si se cambió en la sesión.
-
-## Qué no cubre (v1)
-
-- Mover la propia ventana Fullscreen de Playnite entre monitores.
-- Resoluciones personalizadas por juego más allá de la topología aplicada.
-- Upscalers, VRR, CEC.
-- Cambio de dispositivo de audio (usa [Audio Switcher](https://github.com/Naerian/playnite-nx-audio-switcher) si lo necesitas).
-
-## Diagnóstico
-
-- Overview lista pantallas resueltas y políticas de sesión.
-- Log de RestoreHost: `%TEMP%\PlayniteDisplayManager-RestoreHost.log`
-- Si la restauración parece colgada, comprueba que RestoreHost no esté retenido por un lease roto (log + Administrador de tareas).
+La restauracion devuelve la distribucion previa, cambios de resolucion/frecuencia hechos para la sesion y escritura HDR off en los objetivos. RestoreHost mantiene esta proteccion si Playnite se cierra de forma inesperada.

@@ -1,0 +1,10 @@
+<playnite:PluginUserControl x:Class="PlayniteDisplayManager.Theme.DisplayManagerActiveProfileControl"
+                            xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:playnite="clr-namespace:Playnite.SDK.Controls;assembly=Playnite.SDK"
+                            Focusable="False">
+    <StackPanel>
+        <TextBlock Text="{Binding ActiveDisplayProfileName}" FontWeight="SemiBold" TextWrapping="Wrap" />
+        <TextBlock Text="{Binding ActiveProfileSourceLabel}" Opacity="0.8" TextWrapping="Wrap" Margin="0,2,0,0" />
+    </StackPanel>
+</playnite:PluginUserControl>

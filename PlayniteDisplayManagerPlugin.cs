@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
@@ -15,6 +16,7 @@ using PlayniteDisplayManager.Hdr;
 using PlayniteDisplayManager.Profiles;
 using PlayniteDisplayManager.Refresh;
 using PlayniteDisplayManager.Restore;
+using PlayniteDisplayManager.Resolution;
 using PlayniteDisplayManager.Theme;
 
 namespace PlayniteDisplayManager
@@ -24,6 +26,7 @@ namespace PlayniteDisplayManager
         private readonly ILogger logger;
         private readonly HdrService hdr = new HdrService();
         private readonly RefreshRateService refreshRates = new RefreshRateService();
+        private readonly ResolutionService resolutions = new ResolutionService();
         private DisplayManagerSettings settings;
         private GameDisplayProfileStore gameProfiles;
         private PlatformProfileStore platformProfiles;
@@ -47,11 +50,17 @@ namespace PlayniteDisplayManager
 
         public RefreshRateService RefreshRates => refreshRates;
 
+        public ResolutionService Resolutions => resolutions;
+
         public GameDisplayProfileStore GameProfiles => gameProfiles;
 
         public PlatformProfileStore PlatformProfiles => platformProfiles;
 
         public DisplayManagerThemeApi Theme { get; }
+
+        public bool IsSessionActive => activeGameId.HasValue;
+
+        public string ActiveGameName => activeGameName;
 
         public PlayniteDisplayManagerPlugin(IPlayniteAPI playniteApi) : base(playniteApi)
         {
@@ -73,7 +82,11 @@ namespace PlayniteDisplayManager
                 ElementList = new List<string>
                 {
                     "DisplayList",
-                    "HdrStatus"
+                    "HdrStatus",
+                    "ActiveProfile",
+                    "SessionStatus",
+                    "DisplaysSummary",
+                    "OpenSettingsButton"
                 }
             });
 
@@ -140,6 +153,11 @@ namespace PlayniteDisplayManager
             }
         }
 
+        public bool OpenStandaloneSettingsForTheme()
+        {
+            return OpenStandaloneSettingsView();
+        }
+
         public override Control GetGameViewControl(GetGameViewControlArgs args)
         {
             if (args == null)
@@ -157,6 +175,30 @@ namespace PlayniteDisplayManager
                 string.Equals(args.Name, "DisplayManager_HdrStatus", StringComparison.OrdinalIgnoreCase))
             {
                 return new DisplayManagerHdrStatusControl(this);
+            }
+
+            if (string.Equals(args.Name, "ActiveProfile", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(args.Name, "DisplayManager_ActiveProfile", StringComparison.OrdinalIgnoreCase))
+            {
+                return new DisplayManagerActiveProfileControl(this);
+            }
+
+            if (string.Equals(args.Name, "SessionStatus", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(args.Name, "DisplayManager_SessionStatus", StringComparison.OrdinalIgnoreCase))
+            {
+                return new DisplayManagerSessionStatusControl(this);
+            }
+
+            if (string.Equals(args.Name, "DisplaysSummary", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(args.Name, "DisplayManager_DisplaysSummary", StringComparison.OrdinalIgnoreCase))
+            {
+                return new DisplayManagerDisplaysSummaryControl(this);
+            }
+
+            if (string.Equals(args.Name, "OpenSettingsButton", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(args.Name, "DisplayManager_OpenSettingsButton", StringComparison.OrdinalIgnoreCase))
+            {
+                return new DisplayManagerOpenSettingsButtonControl(this);
             }
 
             return null;
@@ -245,7 +287,7 @@ namespace PlayniteDisplayManager
                 return;
             }
 
-            var defaults = settings.GetDefaultTopologyProfile();
+            var defaults = settings.GetDefaultDisplayProfile();
             var draft = new SetupWizardDraft
             {
                 PreferredPlayDisplayId = defaults?.PreferredPlayDisplayId ?? settings.PreferredPlayDisplayId,
@@ -314,7 +356,7 @@ namespace PlayniteDisplayManager
             settings.GlobalRefreshRatePolicy = draft.GlobalRefreshRatePolicy;
             settings.PreferredRefreshRateHz = draft.PreferredRefreshRateHz;
 
-            var topology = settings.GetDefaultTopologyProfile();
+            var topology = settings.GetDefaultDisplayProfile();
             if (topology != null)
             {
                 topology.PreferredPlayDisplayId = draft.PreferredPlayDisplayId;
@@ -420,6 +462,54 @@ namespace PlayniteDisplayManager
                 args,
                 GameRefreshRateOverride.HighestDetected);
 
+            var resolutionSection = "Display Manager|" + Loc("LOCDisplayManager_GameMenuResolutionSection");
+            var resolutionProfiles = games.Select(g => gameProfiles.GetProfile(g)).ToList();
+            var resolutionCurrent = resolutionProfiles
+                .Select(p => p?.ResolutionOverride ?? GameResolutionOverride.Inherit)
+                .ToList();
+            yield return CreateResolutionOverrideMenuItem(
+                resolutionSection,
+                CheckedMenuLabel(resolutionCurrent.All(o => o == GameResolutionOverride.Inherit),
+                    Loc("LOCDisplayManager_GameResolutionInherit")),
+                args,
+                GameResolutionOverride.Inherit);
+            yield return CreateResolutionOverrideMenuItem(
+                resolutionSection,
+                CheckedMenuLabel(resolutionCurrent.All(o => o == GameResolutionOverride.Native),
+                    Loc("LOCDisplayManager_GameResolutionNative")),
+                args,
+                GameResolutionOverride.Native);
+
+            var availableModes = Resolutions?.GetAvailableModes(primary) ?? new List<ResolutionMode>();
+            foreach (var mode in availableModes)
+            {
+                var selected = resolutionProfiles.Count > 0 && resolutionProfiles.All(p =>
+                    p != null
+                    && p.ResolutionOverride == GameResolutionOverride.Exact
+                    && p.PreferredResolutionWidth == mode.Width
+                    && p.PreferredResolutionHeight == mode.Height);
+                yield return CreateResolutionOverrideMenuItem(
+                    resolutionSection,
+                    CheckedMenuLabel(selected, mode.Label),
+                    args,
+                    GameResolutionOverride.Exact,
+                    mode.Width,
+                    mode.Height);
+            }
+
+            yield return CreateResolutionOverrideMenuItem(
+                resolutionSection,
+                CheckedMenuLabel(resolutionCurrent.All(o => o == GameResolutionOverride.LowestAvailable),
+                    Loc("LOCDisplayManager_GameResolutionLowest")),
+                args,
+                GameResolutionOverride.LowestAvailable);
+            yield return CreateResolutionOverrideMenuItem(
+                resolutionSection,
+                CheckedMenuLabel(resolutionCurrent.All(o => o == GameResolutionOverride.HighestAvailable),
+                    Loc("LOCDisplayManager_GameResolutionHighest")),
+                args,
+                GameResolutionOverride.HighestAvailable);
+
             var displaySection = "Display Manager|" + Loc("LOCDisplayManager_GameMenuDisplaySection");
             var displayProfiles = games.Select(g => gameProfiles.GetProfile(g)).ToList();
             var inheritDisplay = displayProfiles.Count > 0
@@ -456,18 +546,18 @@ namespace PlayniteDisplayManager
         }
 
         /// <summary>
-        /// Resolves Game > Platform > Default topology + globals.
+        /// Resolves Game > Platform > Default display profile + globals.
         /// </summary>
         public ResolvedSessionProfile ResolveSessionProfile(Game game)
         {
             var gameProfile = gameProfiles?.GetProfile(game);
             var platformProfile = GetPlatformProfileForGame(game);
-            var defaultTopology = settings?.GetDefaultTopologyProfile();
+            var defaultTopology = settings?.GetDefaultDisplayProfile();
             return SessionProfileResolver.Resolve(
                 gameProfile,
                 platformProfile,
                 defaultTopology,
-                id => settings?.GetTopologyProfile(id));
+                id => settings?.GetDisplayProfile(id));
         }
 
         private GameDisplayProfile GetPlatformProfileForGame(Game game)
@@ -528,7 +618,6 @@ namespace PlayniteDisplayManager
 
             var resolved = ResolveSessionProfile(game);
             var hdrPlan = PlanHdrSession(game, resolved);
-            var hzPlan = PlanRefreshRateSession(game, resolved);
 
             var livePreview = Displays.GetDisplays().ToList();
             var currentPrimary = livePreview.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
@@ -558,10 +647,19 @@ namespace PlayniteDisplayManager
             var wantsTurnOffOthers = resolved.TurnOffOtherDisplays
                 && !string.IsNullOrWhiteSpace(topologyTargetId);
             var wantsTopology = wantsMakePrimary || wantsTurnOffOthers;
+            var plannedTarget = !string.IsNullOrWhiteSpace(topologyTargetId)
+                ? livePreview.FirstOrDefault(d => string.Equals(d.Id, topologyTargetId, StringComparison.OrdinalIgnoreCase))
+                : currentPrimary;
+            var resolutionPlan = PlanResolutionSession(game, resolved, plannedTarget);
+            var hzPlan = PlanRefreshRateSession(game, resolved, plannedTarget);
 
-            if (hdrPlan.Action == HdrSessionAction.None && !hzPlan.ShouldApply && !wantsTopology)
+            if (hdrPlan.Action == HdrSessionAction.None
+                && !resolutionPlan.ShouldApply
+                && !hzPlan.ShouldApply
+                && !wantsTopology)
             {
                 logger.Info("Display session skipped for " + game.Name +
+                            " (resolution: " + resolutionPlan.Reason +
                             " (HDR: " + hdrPlan.Reason + "; Hz: " + hzPlan.Reason +
                             "; topology: none; source: " + resolved.Source + ").");
                 return;
@@ -598,10 +696,12 @@ namespace PlayniteDisplayManager
                 gameSessionSnapshot = snapshot;
                 activeGameId = game.Id;
                 activeGameName = game.Name;
+                Theme?.Refresh();
 
                 EnsureRestoreClient();
                 restoreClient.Arm(snapshot);
                 StartRestoreHeartbeat();
+                var appliedAny = false;
 
                 if (wantsTopology)
                 {
@@ -617,6 +717,7 @@ namespace PlayniteDisplayManager
                     }
                     else
                     {
+                        appliedAny = true;
                         logger.Info("Topology applied for " + activeGameName + " (" + topologyApply.Message + ").");
                         live = Displays.GetDisplays().ToList();
                         primary = live.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
@@ -630,10 +731,34 @@ namespace PlayniteDisplayManager
                     }
                 }
 
+                resolutionPlan = PlanResolutionSession(game, resolved, primary);
+                if (resolutionPlan.ShouldApply
+                    && resolutionPlan.TargetWidth.HasValue
+                    && resolutionPlan.TargetHeight.HasValue
+                    && primary != null)
+                {
+                    if (resolutions.TryApply(primary, resolutionPlan.TargetWidth.Value, resolutionPlan.TargetHeight.Value, out var resolutionError))
+                    {
+                        appliedAny = true;
+                        logger.Info("Resolution set to " + resolutionPlan.TargetWidth.Value + "x" +
+                                    resolutionPlan.TargetHeight.Value + " for " + activeGameName +
+                                    " (" + resolutionPlan.Reason + ").");
+                        live = Displays.GetDisplays().ToList();
+                        primary = live.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
+                            ?? live.FirstOrDefault(d => d.IsConnected);
+                    }
+                    else
+                    {
+                        logger.Warn("Resolution apply failed (" + resolutionPlan.Reason + "): " + resolutionError);
+                    }
+                }
+
+                hzPlan = PlanRefreshRateSession(game, resolved, primary);
                 if (hzPlan.ShouldApply && hzPlan.TargetHz.HasValue && primary != null)
                 {
                     if (refreshRates.TryApply(primary, hzPlan.TargetHz.Value, out var hzError))
                     {
+                        appliedAny = true;
                         logger.Info("Refresh rate set to " + hzPlan.TargetHz.Value.ToString("0.###") +
                                     " Hz for " + activeGameName + " (" + hzPlan.Reason + ").");
                     }
@@ -645,6 +770,7 @@ namespace PlayniteDisplayManager
 
                 if (hdrPlan.Action == HdrSessionAction.None)
                 {
+                    SettleAfterDisplayChange(appliedAny);
                     return;
                 }
 
@@ -652,6 +778,7 @@ namespace PlayniteDisplayManager
                 {
                     logger.Info("HDR plan " + hdrPlan.Action + " (" + hdrPlan.Reason +
                                 "): no advanced-color-capable target; lease armed for topology/Hz.");
+                    SettleAfterDisplayChange(appliedAny);
                     return;
                 }
 
@@ -662,9 +789,12 @@ namespace PlayniteDisplayManager
                 }
                 else
                 {
+                    appliedAny = true;
                     logger.Info("HDR " + hdrPlan.Action + " wrote " + written +
                                 " target(s) for " + activeGameName + " (" + hdrPlan.Reason + ").");
                 }
+
+                SettleAfterDisplayChange(appliedAny);
             }
             catch (Exception ex)
             {
@@ -699,6 +829,7 @@ namespace PlayniteDisplayManager
                 activeGameId = null;
                 var name = activeGameName;
                 activeGameName = null;
+                Theme?.Refresh();
 
                 if (snapshot != null)
                 {
@@ -820,6 +951,11 @@ namespace PlayniteDisplayManager
             var primary = Displays.GetDisplays()
                 .FirstOrDefault(d => d.IsPrimary && d.IsConnected)
                 ?? Displays.GetDisplays().FirstOrDefault(d => d.IsConnected);
+            return PlanRefreshRateSession(game, resolved, primary);
+        }
+
+        public RefreshRatePlan PlanRefreshRateSession(Game game, ResolvedSessionProfile resolved, DisplayInfo primary)
+        {
             var gameOverride = resolved?.RefreshRateOverride ?? GameRefreshRateOverride.Inherit;
             double? preferredHz = settings?.PreferredRefreshRateHz;
             if (gameOverride == GameRefreshRateOverride.ExactHz
@@ -834,6 +970,49 @@ namespace PlayniteDisplayManager
                 gameOverride,
                 primary,
                 preferredHz);
+        }
+
+        public ResolutionPlan PlanResolutionSession(Game game)
+        {
+            return PlanResolutionSession(game, ResolveSessionProfile(game));
+        }
+
+        public ResolutionPlan PlanResolutionSession(Game game, ResolvedSessionProfile resolved)
+        {
+            var primary = Displays.GetDisplays()
+                .FirstOrDefault(d => d.IsPrimary && d.IsConnected)
+                ?? Displays.GetDisplays().FirstOrDefault(d => d.IsConnected);
+            return PlanResolutionSession(game, resolved, primary);
+        }
+
+        public ResolutionPlan PlanResolutionSession(Game game, ResolvedSessionProfile resolved, DisplayInfo primary)
+        {
+            var gameOverride = resolved?.ResolutionOverride ?? GameResolutionOverride.Inherit;
+            var preferredWidth = settings?.PreferredResolutionWidth;
+            var preferredHeight = settings?.PreferredResolutionHeight;
+            if (gameOverride == GameResolutionOverride.Exact)
+            {
+                preferredWidth = resolved?.PreferredResolutionWidth ?? preferredWidth;
+                preferredHeight = resolved?.PreferredResolutionHeight ?? preferredHeight;
+            }
+
+            return resolutions.Plan(
+                settings?.GlobalResolutionPolicy ?? ResolutionPolicy.Native,
+                gameOverride,
+                primary,
+                preferredWidth,
+                preferredHeight);
+        }
+
+        private void SettleAfterDisplayChange(bool appliedAny)
+        {
+            var delay = settings?.PostChangeSettleDelayMs ?? 1000;
+            if (!appliedAny || delay <= 0)
+            {
+                return;
+            }
+
+            Thread.Sleep(delay);
         }
 
         public bool GameHasHdrMetadata(Game game)
@@ -1122,8 +1301,11 @@ namespace PlayniteDisplayManager
                         HdrOverride = item.Value.HdrOverride,
                         RefreshRateOverride = item.Value.RefreshRateOverride,
                         PreferredRefreshRateHz = item.Value.PreferredRefreshRateHz,
+                        ResolutionOverride = item.Value.ResolutionOverride,
+                        PreferredResolutionWidth = item.Value.PreferredResolutionWidth,
+                        PreferredResolutionHeight = item.Value.PreferredResolutionHeight,
                         PreferredPlayDisplayId = item.Value.PreferredPlayDisplayId,
-                        TopologyProfileId = item.Value.TopologyProfileId
+                        DisplayProfileId = item.Value.DisplayProfileId
                     };
                 })
                 .OrderBy(e => e.GameName, StringComparer.CurrentCultureIgnoreCase)
@@ -1160,8 +1342,11 @@ namespace PlayniteDisplayManager
                         HdrOverride = item.Value.HdrOverride,
                         RefreshRateOverride = item.Value.RefreshRateOverride,
                         PreferredRefreshRateHz = item.Value.PreferredRefreshRateHz,
+                        ResolutionOverride = item.Value.ResolutionOverride,
+                        PreferredResolutionWidth = item.Value.PreferredResolutionWidth,
+                        PreferredResolutionHeight = item.Value.PreferredResolutionHeight,
                         PreferredPlayDisplayId = item.Value.PreferredPlayDisplayId,
-                        TopologyProfileId = item.Value.TopologyProfileId
+                        DisplayProfileId = item.Value.DisplayProfileId
                     };
                 })
                 .OrderBy(e => e.PlatformName, StringComparer.CurrentCultureIgnoreCase)
@@ -1324,6 +1509,42 @@ namespace PlayniteDisplayManager
             };
         }
 
+        private GameMenuItem CreateResolutionOverrideMenuItem(
+            string menuSection,
+            string description,
+            GetGameMenuItemsArgs request,
+            GameResolutionOverride resolutionOverride,
+            int? preferredWidth = null,
+            int? preferredHeight = null)
+        {
+            return new GameMenuItem
+            {
+                MenuSection = menuSection,
+                Description = description,
+                Action = actionArgs =>
+                {
+                    var games = actionArgs?.Games ?? request.Games;
+                    if (games == null)
+                    {
+                        return;
+                    }
+
+                    foreach (var game in games)
+                    {
+                        gameProfiles.SetResolutionOverride(game, resolutionOverride, preferredWidth, preferredHeight);
+                    }
+
+                    var first = games.FirstOrDefault();
+                    if (first != null)
+                    {
+                        PlayniteApi.Dialogs.ShowMessage(
+                            first.Name + ": " + DescribeResolutionOverride(resolutionOverride, preferredWidth, preferredHeight),
+                            Loc("LOCDisplayManager_PluginName"));
+                    }
+                }
+            };
+        }
+
         private GameMenuItem CreatePlayDisplayMenuItem(
             string menuSection,
             string description,
@@ -1411,6 +1632,34 @@ namespace PlayniteDisplayManager
                     return Loc("LOCDisplayManager_GameHzHighest");
                 default:
                     return Loc("LOCDisplayManager_GameHzInherit");
+            }
+        }
+
+        private string DescribeResolutionOverride(
+            GameResolutionOverride resolutionOverride,
+            int? preferredWidth = null,
+            int? preferredHeight = null)
+        {
+            switch (resolutionOverride)
+            {
+                case GameResolutionOverride.Native:
+                    return Loc("LOCDisplayManager_GameResolutionNative");
+                case GameResolutionOverride.Exact:
+                    if (preferredWidth > 0 && preferredHeight > 0)
+                    {
+                        return string.Format(
+                            Loc("LOCDisplayManager_ResolutionPolicyExactFormat"),
+                            preferredWidth.Value,
+                            preferredHeight.Value);
+                    }
+
+                    return Loc("LOCDisplayManager_ResolutionPolicyExact");
+                case GameResolutionOverride.LowestAvailable:
+                    return Loc("LOCDisplayManager_GameResolutionLowest");
+                case GameResolutionOverride.HighestAvailable:
+                    return Loc("LOCDisplayManager_GameResolutionHighest");
+                default:
+                    return Loc("LOCDisplayManager_GameResolutionInherit");
             }
         }
 

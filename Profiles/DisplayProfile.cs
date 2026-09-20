@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.Serialization;
 using PlayniteDisplayManager.Refresh;
+using PlayniteDisplayManager.Resolution;
 
 namespace PlayniteDisplayManager.Profiles
 {
@@ -17,10 +18,10 @@ namespace PlayniteDisplayManager.Profiles
     }
 
     /// <summary>
-    /// Named topology package: play display, turn-off-others, missing fallback, optional HDR/Hz pins.
+    /// Named display profile: play display, turn-off-others, missing fallback, optional HDR/Hz pins.
     /// </summary>
     [DataContract]
-    public sealed class TopologyProfile
+    public sealed class DisplayProfile
     {
         [DataMember(Name = "id")]
         public Guid Id { get; set; } = Guid.NewGuid();
@@ -52,9 +53,19 @@ namespace PlayniteDisplayManager.Profiles
         [DataMember(Name = "preferredRefreshRateHz")]
         public double? PreferredRefreshRateHz { get; set; }
 
-        public TopologyProfile Clone()
+        /// <summary>Inherit = use General global resolution policy.</summary>
+        [DataMember(Name = "resolutionOverride")]
+        public GameResolutionOverride ResolutionOverride { get; set; } = GameResolutionOverride.Inherit;
+
+        [DataMember(Name = "preferredResolutionWidth")]
+        public int? PreferredResolutionWidth { get; set; }
+
+        [DataMember(Name = "preferredResolutionHeight")]
+        public int? PreferredResolutionHeight { get; set; }
+
+        public DisplayProfile Clone()
         {
-            return new TopologyProfile
+            return new DisplayProfile
             {
                 Id = Id,
                 Name = Name,
@@ -64,7 +75,10 @@ namespace PlayniteDisplayManager.Profiles
                 FallbackDisplayId = FallbackDisplayId,
                 HdrOverride = HdrOverride,
                 RefreshRateOverride = RefreshRateOverride,
-                PreferredRefreshRateHz = PreferredRefreshRateHz
+                PreferredRefreshRateHz = PreferredRefreshRateHz,
+                ResolutionOverride = ResolutionOverride,
+                PreferredResolutionWidth = PreferredResolutionWidth,
+                PreferredResolutionHeight = PreferredResolutionHeight
             };
         }
     }

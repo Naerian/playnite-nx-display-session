@@ -1,37 +1,37 @@
 <!--
-  Display Manager — Fullscreen / Desktop theme integration (Theme API v1)
+  Display Manager ? Fullscreen theme integration (Theme API v1.1)
 
   SourceName: DisplayManager
-  ApiVersion: 1.0.0 (PluginSettings Path Theme.ApiVersion)
+  PluginSettings SettingsRoot: Theme
+  ApiVersion: 1.1.0 (PluginSettings Path Theme.ApiVersion)
 
-  Custom elements (x:Name = SourceName_ElementName):
-    DisplayManager_DisplayList  → connected displays (name, mode, primary)
-    DisplayManager_HdrStatus    → global HDR policy, honest ACM status, selected-game metadata
-
-  PluginSettings examples:
-    {PluginSettings Plugin=DisplayManager, Path=Theme.PrimaryDisplayName}
-    {PluginSettings Plugin=DisplayManager, Path=Theme.PrimaryDisplayAlias}
-    {PluginSettings Plugin=DisplayManager, Path=Theme.HdrPolicyLabel}
-    {PluginSettings Plugin=DisplayManager, Path=Theme.HasHdrMetadata}
-    {PluginSettings Plugin=DisplayManager, Path=Theme.SupportsDisplayList}
-
-  Supports* flags (v1): SupportsDisplayList, SupportsHdrStatus, SupportsHdrPolicy,
-  SupportsHdrMetadata, SupportsTopPanel, SupportsRefreshRatePolicy
-
-  Desktop also offers an optional top-panel button (Settings → General).
-  Replace ADDON_GUID with the extension Id if you gate on PluginStatus.
+  Custom elements use x:Name = DisplayManager_<ElementName>.
+  Drop this StackPanel into a Fullscreen theme view, then restyle margins/fonts
+  to match your theme.
 -->
 <StackPanel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
             Margin="16">
 
-    <!-- Custom UI elements injected by Display Manager -->
+    <!-- Rich controls injected by Display Manager -->
+    <ContentControl x:Name="DisplayManager_DisplaysSummary" Margin="0,0,0,12" />
+    <ContentControl x:Name="DisplayManager_ActiveProfile" Margin="0,0,0,12" />
+    <ContentControl x:Name="DisplayManager_SessionStatus" Margin="0,0,0,12" />
     <ContentControl x:Name="DisplayManager_DisplayList" Margin="0,0,0,12" />
-    <ContentControl x:Name="DisplayManager_HdrStatus" />
+    <ContentControl x:Name="DisplayManager_HdrStatus" Margin="0,0,0,12" />
+    <ContentControl x:Name="DisplayManager_OpenSettingsButton" Margin="0,12,0,0" />
 
-    <!-- Optional: bind text without a custom element -->
+    <!-- Lightweight text bindings through PluginSettings -->
+    <StackPanel Margin="0,16,0,0">
+        <TextBlock Text="{PluginSettings Plugin=DisplayManager, Path=Theme.DisplaysSummary}" />
+        <TextBlock Text="{PluginSettings Plugin=DisplayManager, Path=Theme.ActiveDisplayProfileName}" />
+        <TextBlock Text="{PluginSettings Plugin=DisplayManager, Path=Theme.HdrPolicyLabel}" />
+        <TextBlock Text="{PluginSettings Plugin=DisplayManager, Path=Theme.SessionGameName}" />
+    </StackPanel>
+
+    <!-- Gate optional UI on capability flags when supporting multiple versions. -->
     <!--
-    <TextBlock Text="{PluginSettings Plugin=DisplayManager, Path=Theme.PrimaryDisplayAlias}" />
-    <TextBlock Text="{PluginSettings Plugin=DisplayManager, Path=Theme.HdrPolicyLabel}" />
+    <ContentControl x:Name="DisplayManager_OpenSettingsButton"
+                    Visibility="{Binding RelativeSource={RelativeSource Self}, Path=(PluginSettings Plugin=DisplayManager, Path=Theme.SupportsOpenSettings)}" />
     -->
 </StackPanel>

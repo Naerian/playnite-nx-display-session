@@ -1,10 +1,11 @@
 using System;
 using PlayniteDisplayManager.Refresh;
+using PlayniteDisplayManager.Resolution;
 
 namespace PlayniteDisplayManager.Profiles
 {
     /// <summary>
-    /// Effective session plan after Game > Platform > Default topology + globals.
+    /// Effective session plan after Game > Platform > Default display profile + globals.
     /// </summary>
     public sealed class ResolvedSessionProfile
     {
@@ -27,9 +28,16 @@ namespace PlayniteDisplayManager.Profiles
 
         public double? PreferredRefreshRateHz { get; set; }
 
-        public Guid? TopologyProfileId { get; set; }
+        public GameResolutionOverride ResolutionOverride { get; set; } =
+            GameResolutionOverride.Inherit;
 
-        public string TopologyProfileName { get; set; }
+        public int? PreferredResolutionWidth { get; set; }
+
+        public int? PreferredResolutionHeight { get; set; }
+
+        public Guid? DisplayProfileId { get; set; }
+
+        public string DisplayProfileName { get; set; }
     }
 
     public static class SessionProfileResolver
@@ -37,8 +45,8 @@ namespace PlayniteDisplayManager.Profiles
         public static ResolvedSessionProfile Resolve(
             GameDisplayProfile gameProfile,
             GameDisplayProfile platformProfile,
-            TopologyProfile defaultTopology,
-            Func<Guid, TopologyProfile> topologyById)
+            DisplayProfile defaultTopology,
+            Func<Guid, DisplayProfile> topologyById)
         {
             var source = "global";
             GameDisplayProfile layer = null;
@@ -54,10 +62,10 @@ namespace PlayniteDisplayManager.Profiles
                 source = "platform";
             }
 
-            TopologyProfile topology = defaultTopology;
-            if (layer?.TopologyProfileId != null && topologyById != null)
+            DisplayProfile topology = defaultTopology;
+            if (layer?.DisplayProfileId != null && topologyById != null)
             {
-                var linked = topologyById(layer.TopologyProfileId.Value);
+                var linked = topologyById(layer.DisplayProfileId.Value);
                 if (linked != null)
                 {
                     topology = linked;
@@ -76,8 +84,12 @@ namespace PlayniteDisplayManager.Profiles
                 RefreshRateOverride = topology?.RefreshRateOverride
                     ?? GameRefreshRateOverride.Inherit,
                 PreferredRefreshRateHz = topology?.PreferredRefreshRateHz,
-                TopologyProfileId = topology?.Id,
-                TopologyProfileName = topology?.Name
+                ResolutionOverride = topology?.ResolutionOverride
+                    ?? GameResolutionOverride.Inherit,
+                PreferredResolutionWidth = topology?.PreferredResolutionWidth,
+                PreferredResolutionHeight = topology?.PreferredResolutionHeight,
+                DisplayProfileId = topology?.Id,
+                DisplayProfileName = topology?.Name
             };
 
             if (layer == null)
@@ -99,6 +111,13 @@ namespace PlayniteDisplayManager.Profiles
             {
                 resolved.RefreshRateOverride = layer.RefreshRateOverride;
                 resolved.PreferredRefreshRateHz = layer.PreferredRefreshRateHz;
+            }
+
+            if (layer.ResolutionOverride != GameResolutionOverride.Inherit)
+            {
+                resolved.ResolutionOverride = layer.ResolutionOverride;
+                resolved.PreferredResolutionWidth = layer.PreferredResolutionWidth;
+                resolved.PreferredResolutionHeight = layer.PreferredResolutionHeight;
             }
 
             return resolved;

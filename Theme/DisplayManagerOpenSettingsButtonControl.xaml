@@ -1,0 +1,10 @@
+<playnite:PluginUserControl x:Class="PlayniteDisplayManager.Theme.DisplayManagerOpenSettingsButtonControl"
+                            xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:playnite="clr-namespace:Playnite.SDK.Controls;assembly=Playnite.SDK"
+                            Focusable="False">
+    <Button Content="Display Manager"
+            Command="{Binding OpenSettingsCommand}"
+            MinHeight="32"
+            Padding="12,4" />
+</playnite:PluginUserControl>

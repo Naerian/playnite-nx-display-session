@@ -14,6 +14,7 @@ using PlayniteDisplayManager.Displays;
 using PlayniteDisplayManager.Hdr;
 using PlayniteDisplayManager.Profiles;
 using PlayniteDisplayManager.Refresh;
+using PlayniteDisplayManager.Resolution;
 
 namespace PlayniteDisplayManager
 {
@@ -27,9 +28,10 @@ namespace PlayniteDisplayManager
         private DispatcherTimer topologyTrialTimer;
         private int topologyTrialSecondsLeft;
         private bool syncingRefreshRadios;
+        private bool syncingResolutionRadios;
         private bool syncingTopologyTarget;
-        private bool syncingTopologyProfileUi;
-        private Guid? editingTopologyProfileId;
+        private bool syncingDisplayProfileUi;
+        private Guid? editingDisplayProfileId;
         private const string WindowsPlayDisplayChoiceId = "__windows_primary__";
 
         private sealed class PlayDisplayChoice
@@ -64,10 +66,11 @@ namespace PlayniteDisplayManager
                 RebuildDisplayCards();
                 RebuildGameProfileRows();
                 RebuildPlatformProfileRows();
-                RefreshTopologyProfilesUi();
+                RefreshDisplayProfilesUi();
                 SyncHdrPolicyRadios();
                 SyncHdrMetadataControls();
                 SyncRefreshRateRadios();
+                SyncResolutionRadios();
                 SyncDesktopAccessControls();
                 SyncFullscreenRelocateControl();
                 UpdateOverview();
@@ -89,10 +92,11 @@ namespace PlayniteDisplayManager
             RebuildDisplayCards();
             RebuildGameProfileRows();
             RebuildPlatformProfileRows();
-            RefreshTopologyProfilesUi();
+            RefreshDisplayProfilesUi();
             SyncHdrPolicyRadios();
             SyncHdrMetadataControls();
             SyncRefreshRateRadios();
+            SyncResolutionRadios();
             SyncDesktopAccessControls();
             SyncFullscreenRelocateControl();
             UpdateOverview();
@@ -131,14 +135,18 @@ namespace PlayniteDisplayManager
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
                     RebuildDisplayCards();
-                    RefreshTopologyProfilesUi();
+                    RefreshDisplayProfilesUi();
+                    SyncRefreshRateRadios();
+                    SyncResolutionRadios();
                     UpdateOverview();
                 }));
                 return;
             }
 
             RebuildDisplayCards();
-            RefreshTopologyProfilesUi();
+            RefreshDisplayProfilesUi();
+            SyncRefreshRateRadios();
+            SyncResolutionRadios();
             UpdateOverview();
         }
 
@@ -539,31 +547,31 @@ namespace PlayniteDisplayManager
             settings?.RefreshDisplays();
             settings?.Plugin?.NotifyDisplaysChanged();
             RebuildDisplayCards();
-            RefreshTopologyProfilesUi();
+            RefreshDisplayProfilesUi();
             UpdateOverview();
         }
 
-        private TopologyProfile GetEditingTopologyProfile(DisplayManagerSettings settings)
+        private DisplayProfile GetEditingDisplayProfile(DisplayManagerSettings settings)
         {
             if (settings == null)
             {
                 return null;
             }
 
-            settings.MigrateTopologyProfilesPublic();
-            if (editingTopologyProfileId.HasValue)
+            settings.MigrateDisplayProfilesPublic();
+            if (editingDisplayProfileId.HasValue)
             {
-                var match = settings.GetTopologyProfile(editingTopologyProfileId);
+                var match = settings.GetDisplayProfile(editingDisplayProfileId);
                 if (match != null)
                 {
                     return match;
                 }
             }
 
-            return settings.GetDefaultTopologyProfile();
+            return settings.GetDefaultDisplayProfile();
         }
 
-        private void RefreshTopologyProfilesUi()
+        private void RefreshDisplayProfilesUi()
         {
             var settings = DataContext as DisplayManagerSettings;
             if (settings == null)
@@ -571,31 +579,31 @@ namespace PlayniteDisplayManager
                 return;
             }
 
-            settings.MigrateTopologyProfilesPublic();
-            syncingTopologyProfileUi = true;
+            settings.MigrateDisplayProfilesPublic();
+            syncingDisplayProfileUi = true;
             try
             {
-                if (TopologyProfileBox != null)
+                if (DisplayProfileBox != null)
                 {
-                    var profiles = settings.TopologyProfiles?.ToList() ?? new System.Collections.Generic.List<TopologyProfile>();
-                    TopologyProfileBox.ItemsSource = profiles;
-                    var selected = editingTopologyProfileId ?? settings.DefaultTopologyProfileId;
+                    var profiles = settings.DisplayProfiles?.ToList() ?? new System.Collections.Generic.List<DisplayProfile>();
+                    DisplayProfileBox.ItemsSource = profiles;
+                    var selected = editingDisplayProfileId ?? settings.DefaultDisplayProfileId;
                     if (!selected.HasValue || profiles.All(p => p.Id != selected.Value))
                     {
-                        selected = settings.DefaultTopologyProfileId ?? profiles.FirstOrDefault()?.Id;
+                        selected = settings.DefaultDisplayProfileId ?? profiles.FirstOrDefault()?.Id;
                     }
 
-                    editingTopologyProfileId = selected;
-                    TopologyProfileBox.SelectedValue = selected;
+                    editingDisplayProfileId = selected;
+                    DisplayProfileBox.SelectedValue = selected;
                 }
 
-                if (TopologyProfileDefaultHint != null)
+                if (DisplayProfileDefaultHint != null)
                 {
-                    var defaults = settings.GetDefaultTopologyProfile();
-                    TopologyProfileDefaultHint.Text = defaults == null
+                    var defaults = settings.GetDefaultDisplayProfile();
+                    DisplayProfileDefaultHint.Text = defaults == null
                         ? string.Empty
                         : string.Format(
-                            TryFindResource("LOCDisplayManager_TopologyProfileDefaultFormat") as string
+                            TryFindResource("LOCDisplayManager_DisplayProfileDefaultFormat") as string
                             ?? "Default for launch: {0}",
                             defaults.Name);
                 }
@@ -627,10 +635,11 @@ namespace PlayniteDisplayManager
             }
             finally
             {
-                syncingTopologyProfileUi = false;
+                syncingDisplayProfileUi = false;
             }
 
             RefreshTopologyTargetBox();
+            UpdateActiveDisplayProfileCallout();
         }
 
         private void RefreshTopologyTargetBox()
@@ -641,7 +650,7 @@ namespace PlayniteDisplayManager
             }
 
             var settings = DataContext as DisplayManagerSettings;
-            var profile = GetEditingTopologyProfile(settings);
+            var profile = GetEditingDisplayProfile(settings);
             var previous = profile?.PreferredPlayDisplayId;
             var connected = settings?.AvailableDisplays?
                 .Where(d => d.IsConnected)
@@ -712,39 +721,40 @@ namespace PlayniteDisplayManager
             SyncHdrCapabilityUi();
         }
 
-        private void PersistEditingTopologyProfile(Action<TopologyProfile> mutate)
+        private void PersistEditingDisplayProfile(Action<DisplayProfile> mutate)
         {
             var settings = DataContext as DisplayManagerSettings;
-            var profile = GetEditingTopologyProfile(settings);
+            var profile = GetEditingDisplayProfile(settings);
             if (settings == null || profile == null || mutate == null)
             {
                 return;
             }
 
             mutate(profile);
-            if (settings.DefaultTopologyProfileId == profile.Id)
+            if (settings.DefaultDisplayProfileId == profile.Id)
             {
                 settings.SyncLegacyFieldsFromDefaultTopology();
             }
         }
 
-        private void TopologyProfileBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void DisplayProfileBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (syncingTopologyProfileUi)
+            if (syncingDisplayProfileUi)
             {
                 return;
             }
 
-            if (TopologyProfileBox?.SelectedValue is Guid id)
+            if (DisplayProfileBox?.SelectedValue is Guid id)
             {
-                editingTopologyProfileId = id;
+                editingDisplayProfileId = id;
                 RefreshTopologyTargetBox();
+                UpdateActiveDisplayProfileCallout();
                 RebuildDisplayCards();
                 UpdateOverview();
             }
         }
 
-        private void TopologyProfileNew_OnClick(object sender, RoutedEventArgs e)
+        private void DisplayProfileNew_OnClick(object sender, RoutedEventArgs e)
         {
             var settings = DataContext as DisplayManagerSettings;
             if (settings == null)
@@ -752,16 +762,16 @@ namespace PlayniteDisplayManager
                 return;
             }
 
-            var caption = TryFindResource("LOCDisplayManager_TopologyProfilesTitle") as string ?? "Topology profiles";
-            var prompt = TryFindResource("LOCDisplayManager_TopologyProfileNewPrompt") as string ?? "Profile name";
-            var suggested = TryFindResource("LOCDisplayManager_TopologyProfileNewDefault") as string ?? "New profile";
+            var caption = TryFindResource("LOCDisplayManager_DisplayProfilesTitle") as string ?? "display profiles";
+            var prompt = TryFindResource("LOCDisplayManager_DisplayProfileNewPrompt") as string ?? "Profile name";
+            var suggested = TryFindResource("LOCDisplayManager_DisplayProfileNewDefault") as string ?? "New profile";
             var result = settings.Plugin?.PlayniteApi?.Dialogs?.SelectString(prompt, caption, suggested);
             if (result == null || !result.Result || string.IsNullOrWhiteSpace(result.SelectedString))
             {
                 return;
             }
 
-            var created = new TopologyProfile
+            var created = new DisplayProfile
             {
                 Id = Guid.NewGuid(),
                 Name = result.SelectedString.Trim(),
@@ -769,22 +779,38 @@ namespace PlayniteDisplayManager
                 TurnOffOtherDisplays = false,
                 MissingDisplayPolicy = MissingDisplayPolicy.UseWindowsPrimary
             };
-            settings.TopologyProfiles.Add(created);
-            editingTopologyProfileId = created.Id;
-            RefreshTopologyProfilesUi();
+            settings.DisplayProfiles.Add(created);
+            editingDisplayProfileId = created.Id;
+            RefreshDisplayProfilesUi();
         }
 
-        private void TopologyProfileRename_OnClick(object sender, RoutedEventArgs e)
+        private void UpdateActiveDisplayProfileCallout()
         {
             var settings = DataContext as DisplayManagerSettings;
-            var profile = GetEditingTopologyProfile(settings);
+            var profile = GetEditingDisplayProfile(settings);
+            if (ActiveDisplayProfileCalloutTitle == null || ActiveDisplayProfileCalloutBody == null)
+            {
+                return;
+            }
+
+            ActiveDisplayProfileCalloutTitle.Text = profile?.Name ?? string.Empty;
+            var isDefault = settings != null && profile != null && settings.DefaultDisplayProfileId == profile.Id;
+            ActiveDisplayProfileCalloutBody.Text = isDefault
+                ? (TryFindResource("LOCDisplayManager_ActiveProfileDefaultSource") as string ?? "Launch default")
+                : (TryFindResource("LOCDisplayManager_DisplayProfilesTitle") as string ?? "Display profile");
+        }
+
+        private void DisplayProfileRename_OnClick(object sender, RoutedEventArgs e)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            var profile = GetEditingDisplayProfile(settings);
             if (profile == null)
             {
                 return;
             }
 
-            var caption = TryFindResource("LOCDisplayManager_TopologyProfilesTitle") as string ?? "Topology profiles";
-            var prompt = TryFindResource("LOCDisplayManager_TopologyProfileRenamePrompt") as string ?? "New name";
+            var caption = TryFindResource("LOCDisplayManager_DisplayProfilesTitle") as string ?? "display profiles";
+            var prompt = TryFindResource("LOCDisplayManager_DisplayProfileRenamePrompt") as string ?? "New name";
             var result = settings.Plugin?.PlayniteApi?.Dialogs?.SelectString(prompt, caption, profile.Name);
             if (result == null || !result.Result || string.IsNullOrWhiteSpace(result.SelectedString))
             {
@@ -792,47 +818,63 @@ namespace PlayniteDisplayManager
             }
 
             profile.Name = result.SelectedString.Trim();
-            RefreshTopologyProfilesUi();
+            RefreshDisplayProfilesUi();
         }
 
-        private void TopologyProfileDelete_OnClick(object sender, RoutedEventArgs e)
+        private void DisplayProfileDelete_OnClick(object sender, RoutedEventArgs e)
         {
             var settings = DataContext as DisplayManagerSettings;
-            var profile = GetEditingTopologyProfile(settings);
-            if (settings == null || profile == null || settings.TopologyProfiles.Count <= 1)
+            var profile = GetEditingDisplayProfile(settings);
+            if (settings == null || profile == null || settings.DisplayProfiles.Count <= 1)
             {
                 MessageBox.Show(
-                    TryFindResource("LOCDisplayManager_TopologyProfileDeleteLast") as string
-                    ?? "Keep at least one topology profile.",
+                    TryFindResource("LOCDisplayManager_DisplayProfileDeleteLast") as string
+                    ?? "Keep at least one display profile.",
                     "Display Manager");
                 return;
             }
 
-            settings.TopologyProfiles.RemoveAll(p => p.Id == profile.Id);
-            if (settings.DefaultTopologyProfileId == profile.Id)
+            settings.DisplayProfiles.RemoveAll(p => p.Id == profile.Id);
+            if (settings.DefaultDisplayProfileId == profile.Id)
             {
-                settings.DefaultTopologyProfileId = settings.TopologyProfiles[0].Id;
+                settings.DefaultDisplayProfileId = settings.DisplayProfiles[0].Id;
                 settings.SyncLegacyFieldsFromDefaultTopology();
             }
 
-            editingTopologyProfileId = settings.DefaultTopologyProfileId;
-            RefreshTopologyProfilesUi();
+            editingDisplayProfileId = settings.DefaultDisplayProfileId;
+            RefreshDisplayProfilesUi();
             RebuildDisplayCards();
             UpdateOverview();
         }
 
-        private void TopologyProfileSetDefault_OnClick(object sender, RoutedEventArgs e)
+        private void DisplayProfileView_OnClick(object sender, RoutedEventArgs e)
         {
             var settings = DataContext as DisplayManagerSettings;
-            var profile = GetEditingTopologyProfile(settings);
+            var profile = GetEditingDisplayProfile(settings);
             if (settings == null || profile == null)
             {
                 return;
             }
 
-            settings.DefaultTopologyProfileId = profile.Id;
+            var window = new DisplayProfileViewWindow(settings, profile)
+            {
+                Owner = Window.GetWindow(this)
+            };
+            window.ShowDialog();
+        }
+
+        private void DisplayProfileSetDefault_OnClick(object sender, RoutedEventArgs e)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            var profile = GetEditingDisplayProfile(settings);
+            if (settings == null || profile == null)
+            {
+                return;
+            }
+
+            settings.DefaultDisplayProfileId = profile.Id;
             settings.SyncLegacyFieldsFromDefaultTopology();
-            RefreshTopologyProfilesUi();
+            RefreshDisplayProfilesUi();
             RebuildDisplayCards();
             UpdateOverview();
         }
@@ -845,7 +887,7 @@ namespace PlayniteDisplayManager
             }
 
             var selectedId = TopologyTargetBox?.SelectedValue as string;
-            PersistEditingTopologyProfile(profile =>
+            PersistEditingDisplayProfile(profile =>
             {
                 if (string.IsNullOrWhiteSpace(selectedId)
                     || string.Equals(selectedId, WindowsPlayDisplayChoiceId, StringComparison.Ordinal))
@@ -870,7 +912,7 @@ namespace PlayniteDisplayManager
                 return;
             }
 
-            PersistEditingTopologyProfile(profile =>
+            PersistEditingDisplayProfile(profile =>
                 profile.TurnOffOtherDisplays = TopologyTurnOffOthersCheck.IsChecked == true);
         }
 
@@ -883,7 +925,7 @@ namespace PlayniteDisplayManager
 
             if (Enum.TryParse(MissingDisplayPolicyBox.SelectedValue as string, out MissingDisplayPolicy policy))
             {
-                PersistEditingTopologyProfile(profile => profile.MissingDisplayPolicy = policy);
+                PersistEditingDisplayProfile(profile => profile.MissingDisplayPolicy = policy);
             }
         }
 
@@ -895,7 +937,7 @@ namespace PlayniteDisplayManager
             }
 
             var selectedId = MissingDisplayFallbackBox?.SelectedValue as string;
-            PersistEditingTopologyProfile(profile =>
+            PersistEditingDisplayProfile(profile =>
             {
                 if (string.IsNullOrWhiteSpace(selectedId)
                     || string.Equals(selectedId, WindowsPlayDisplayChoiceId, StringComparison.Ordinal))
@@ -1329,6 +1371,7 @@ namespace PlayniteDisplayManager
             SyncHdrMetadataControls();
             SyncNativeHdrMigrationStatus();
             SyncRefreshRateRadios();
+            SyncResolutionRadios();
             SyncHdrCapabilityUi();
         }
 
@@ -1615,7 +1658,7 @@ namespace PlayniteDisplayManager
                 return false;
             }
 
-            var defaults = settings.GetDefaultTopologyProfile();
+            var defaults = settings.GetDefaultDisplayProfile();
             var preferredId = defaults?.PreferredPlayDisplayId ?? settings.PreferredPlayDisplayId;
             if (!string.IsNullOrWhiteSpace(preferredId))
             {
@@ -1666,6 +1709,216 @@ namespace PlayniteDisplayManager
                 OverviewRefreshRateText.Text = settings.Plugin?.GetRefreshRateOverviewText()
                     ?? (TryFindResource("LOCDisplayManager_RefreshPolicyNative") as string
                         ?? "Native (do not change refresh rate)");
+            }
+        }
+
+        private void SyncResolutionRadios()
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null || ResolutionPolicyNativeRadio == null)
+            {
+                return;
+            }
+
+            var connected = settings.AvailableDisplays?
+                .Where(d => d.IsConnected)
+                .ToList() ?? new List<DisplayInfo>();
+            var primary = ResolvePreferredPlayDisplay(settings, connected);
+
+            BuildResolutionPrimaryPanel(settings, primary);
+
+            syncingResolutionRadios = true;
+            try
+            {
+                if (ResolutionExactPanel != null)
+                {
+                    ResolutionExactPanel.Children.Clear();
+                    var modes = settings.Plugin?.Resolutions?.GetAvailableModes(primary)
+                        ?? (IReadOnlyList<ResolutionMode>)Array.Empty<ResolutionMode>();
+                    var preferredW = settings.PreferredResolutionWidth;
+                    var preferredH = settings.PreferredResolutionHeight;
+                    var exactSelected = settings.GlobalResolutionPolicy == ResolutionPolicy.Exact;
+
+                    foreach (var mode in modes)
+                    {
+                        var format = TryFindResource("LOCDisplayManager_ResolutionPolicyExactFormat") as string
+                            ?? "{0} × {1}";
+                        var radio = new RadioButton
+                        {
+                            GroupName = "ResolutionPolicy",
+                            Content = string.Format(format, mode.Width, mode.Height),
+                            Tag = mode,
+                            Margin = new Thickness(0, 8, 0, 0),
+                            IsChecked = exactSelected
+                                && preferredW == mode.Width
+                                && preferredH == mode.Height
+                        };
+                        radio.Checked += ResolutionRadio_OnChecked;
+                        ResolutionExactPanel.Children.Add(radio);
+                    }
+                }
+
+                switch (settings.GlobalResolutionPolicy)
+                {
+                    case ResolutionPolicy.LowestAvailable:
+                        if (ResolutionPolicyLowestRadio != null)
+                        {
+                            ResolutionPolicyLowestRadio.IsChecked = true;
+                        }
+                        break;
+                    case ResolutionPolicy.HighestAvailable:
+                        if (ResolutionPolicyHighestRadio != null)
+                        {
+                            ResolutionPolicyHighestRadio.IsChecked = true;
+                        }
+                        break;
+                    case ResolutionPolicy.Exact:
+                        if (ResolutionExactPanel == null
+                            || !ResolutionExactPanel.Children.OfType<RadioButton>().Any(r => r.IsChecked == true))
+                        {
+                            ResolutionPolicyNativeRadio.IsChecked = true;
+                        }
+                        break;
+                    default:
+                        ResolutionPolicyNativeRadio.IsChecked = true;
+                        break;
+                }
+            }
+            finally
+            {
+                syncingResolutionRadios = false;
+            }
+        }
+
+        private void BuildResolutionPrimaryPanel(DisplayManagerSettings settings, DisplayInfo primary)
+        {
+            if (ResolutionPrimaryPanel == null)
+            {
+                return;
+            }
+
+            ResolutionPrimaryPanel.Children.Clear();
+            if (primary == null)
+            {
+                ResolutionPrimaryPanel.Children.Add(new TextBlock
+                {
+                    Text = TryFindResource("LOCDisplayManager_RefreshRateDetectedNone") as string
+                        ?? "No primary display detected.",
+                    Style = TryFindResource("HintText") as Style
+                });
+                return;
+            }
+
+            ResolutionPrimaryPanel.Children.Add(new TextBlock
+            {
+                Text = TryFindResource("LOCDisplayManager_RefreshRatePrimaryLabel") as string
+                    ?? "Primary display for games",
+                Style = TryFindResource("FieldLabel") as Style
+            });
+            ResolutionPrimaryPanel.Children.Add(new TextBlock
+            {
+                Text = primary.EffectiveName,
+                Style = TryFindResource("SummaryCardTitle") as Style,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 0, 0, 12)
+            });
+
+            if (primary.Width > 0 && primary.Height > 0)
+            {
+                var pills = new WrapPanel { Margin = new Thickness(0, 0, 0, 8) };
+                pills.Children.Add(CreateStatusBadge(
+                    TryFindResource("LOCDisplayManager_ResolutionCurrentLabel") as string ?? "Current resolution",
+                    $"{primary.Width}×{primary.Height}",
+                    "PositiveRatingBrush"));
+                ResolutionPrimaryPanel.Children.Add(pills);
+            }
+
+            var modes = settings?.Plugin?.Resolutions?.GetAvailableModes(primary)
+                ?? (IReadOnlyList<ResolutionMode>)Array.Empty<ResolutionMode>();
+            ResolutionPrimaryPanel.Children.Add(new TextBlock
+            {
+                Text = TryFindResource("LOCDisplayManager_ResolutionAvailableLabel") as string
+                    ?? "Available modes",
+                Style = TryFindResource("FieldLabel") as Style,
+                Margin = new Thickness(0, 4, 0, 4)
+            });
+
+            if (modes.Count == 0)
+            {
+                ResolutionPrimaryPanel.Children.Add(new TextBlock
+                {
+                    Text = "—",
+                    Style = TryFindResource("HintText") as Style
+                });
+                return;
+            }
+
+            var modePills = new WrapPanel();
+            foreach (var mode in modes.Take(12))
+            {
+                modePills.Children.Add(CreateStatusBadge(
+                    null,
+                    mode.Label,
+                    "GlyphBrush",
+                    0.95));
+            }
+
+            if (modes.Count > 12)
+            {
+                modePills.Children.Add(CreateStatusBadge(
+                    null,
+                    "+" + (modes.Count - 12),
+                    "GlyphBrush",
+                    0.95));
+            }
+
+            ResolutionPrimaryPanel.Children.Add(modePills);
+        }
+
+        private void ResolutionRadio_OnChecked(object sender, RoutedEventArgs e)
+        {
+            if (syncingResolutionRadios)
+            {
+                return;
+            }
+
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null)
+            {
+                return;
+            }
+
+            var radio = sender as RadioButton;
+            if (radio == null || radio.IsChecked != true)
+            {
+                return;
+            }
+
+            if (ReferenceEquals(radio, ResolutionPolicyLowestRadio)
+                || string.Equals(radio.Tag as string, "LowestAvailable", StringComparison.OrdinalIgnoreCase))
+            {
+                settings.GlobalResolutionPolicy = ResolutionPolicy.LowestAvailable;
+                settings.PreferredResolutionWidth = null;
+                settings.PreferredResolutionHeight = null;
+            }
+            else if (ReferenceEquals(radio, ResolutionPolicyHighestRadio)
+                || string.Equals(radio.Tag as string, "HighestAvailable", StringComparison.OrdinalIgnoreCase))
+            {
+                settings.GlobalResolutionPolicy = ResolutionPolicy.HighestAvailable;
+                settings.PreferredResolutionWidth = null;
+                settings.PreferredResolutionHeight = null;
+            }
+            else if (radio.Tag is ResolutionMode mode)
+            {
+                settings.GlobalResolutionPolicy = ResolutionPolicy.Exact;
+                settings.PreferredResolutionWidth = mode.Width;
+                settings.PreferredResolutionHeight = mode.Height;
+            }
+            else
+            {
+                settings.GlobalResolutionPolicy = ResolutionPolicy.Native;
+                settings.PreferredResolutionWidth = null;
+                settings.PreferredResolutionHeight = null;
             }
         }
 
@@ -2133,11 +2386,17 @@ namespace PlayniteDisplayManager
                 TryFindResource("LOCDisplayManager_GameMenuDisplaySection") as string ?? "Display",
                 FormatPlayDisplayOverrideSummary(profile.PreferredPlayDisplayId, settings)));
             content.Children.Add(CreateProfileSummaryLine(
-                TryFindResource("LOCDisplayManager_TopologyProfilesTitle") as string ?? "Topology profile",
-                FormatTopologyProfileSummary(profile.TopologyProfileId, settings)));
+                TryFindResource("LOCDisplayManager_DisplayProfilesTitle") as string ?? "display profile",
+                FormatDisplayProfileSummary(profile.DisplayProfileId, settings)));
             content.Children.Add(CreateProfileSummaryLine(
                 TryFindResource("LOCDisplayManager_GameMenuHzSection") as string ?? "Refresh rate",
                 FormatRefreshOverrideSummary(profile.RefreshRateOverride, profile.PreferredRefreshRateHz)));
+            content.Children.Add(CreateProfileSummaryLine(
+                TryFindResource("LOCDisplayManager_GameMenuResolutionSection") as string ?? "Resolution",
+                FormatResolutionOverrideSummary(
+                    profile.ResolutionOverride,
+                    profile.PreferredResolutionWidth,
+                    profile.PreferredResolutionHeight)));
 
             container.Child = content;
             return container;
@@ -2202,12 +2461,12 @@ namespace PlayniteDisplayManager
 
             var platform = settings.Plugin?.PlayniteApi?.Database?.Platforms?
                 .FirstOrDefault(p => p.Id == platformId);
-            var defaults = settings.GetDefaultTopologyProfile();
+            var defaults = settings.GetDefaultDisplayProfile();
             settings.AvailablePlatformProfiles.Add(new PlatformProfileEntry
             {
                 PlatformId = platformId,
                 PlatformName = platform?.Name ?? platformId.ToString(),
-                TopologyProfileId = defaults?.Id
+                DisplayProfileId = defaults?.Id
             });
             RebuildPlatformProfileRows();
         }
@@ -2267,7 +2526,7 @@ namespace PlayniteDisplayManager
 
             content.Children.Add(new TextBlock
             {
-                Text = TryFindResource("LOCDisplayManager_TopologyProfilesTitle") as string ?? "Topology profile",
+                Text = TryFindResource("LOCDisplayManager_DisplayProfilesTitle") as string ?? "display profile",
                 Style = TryFindResource("FieldLabel") as Style
             });
             var topoBox = new ComboBox
@@ -2276,18 +2535,18 @@ namespace PlayniteDisplayManager
                 Margin = new Thickness(0, 4, 0, 12),
                 DisplayMemberPath = "Name",
                 SelectedValuePath = "Id",
-                ItemsSource = settings?.TopologyProfiles
+                ItemsSource = settings?.DisplayProfiles
             };
-            topoBox.SelectedValue = profile.TopologyProfileId;
+            topoBox.SelectedValue = profile.DisplayProfileId;
             topoBox.SelectionChanged += (_, __) =>
             {
                 if (topoBox.SelectedValue is Guid id)
                 {
-                    profile.TopologyProfileId = id;
+                    profile.DisplayProfileId = id;
                 }
                 else
                 {
-                    profile.TopologyProfileId = null;
+                    profile.DisplayProfileId = null;
                 }
             };
             content.Children.Add(topoBox);
@@ -2301,21 +2560,27 @@ namespace PlayniteDisplayManager
             content.Children.Add(CreateProfileSummaryLine(
                 TryFindResource("LOCDisplayManager_GameMenuHzSection") as string ?? "Refresh rate",
                 FormatRefreshOverrideSummary(profile.RefreshRateOverride, profile.PreferredRefreshRateHz)));
+            content.Children.Add(CreateProfileSummaryLine(
+                TryFindResource("LOCDisplayManager_GameMenuResolutionSection") as string ?? "Resolution",
+                FormatResolutionOverrideSummary(
+                    profile.ResolutionOverride,
+                    profile.PreferredResolutionWidth,
+                    profile.PreferredResolutionHeight)));
 
             container.Child = content;
             return container;
         }
 
-        private string FormatTopologyProfileSummary(Guid? topologyProfileId, DisplayManagerSettings settings)
+        private string FormatDisplayProfileSummary(Guid? DisplayProfileId, DisplayManagerSettings settings)
         {
-            if (!topologyProfileId.HasValue)
+            if (!DisplayProfileId.HasValue)
             {
                 return TryFindResource("LOCDisplayManager_GameDisplayInherit") as string
                     ?? "Keep global settings";
             }
 
-            var match = settings?.GetTopologyProfile(topologyProfileId);
-            return match?.Name ?? topologyProfileId.Value.ToString();
+            var match = settings?.GetDisplayProfile(DisplayProfileId);
+            return match?.Name ?? DisplayProfileId.Value.ToString();
         }
 
         private static TextBlock CreateProfileSummaryLine(string label, string value)
@@ -2389,6 +2654,38 @@ namespace PlayniteDisplayManager
                     return TryFindResource("LOCDisplayManager_GameHzHighest") as string ?? "Highest detected";
                 default:
                     return TryFindResource("LOCDisplayManager_GameHzInherit") as string ?? "Keep global settings";
+            }
+        }
+
+        private string FormatResolutionOverrideSummary(
+            GameResolutionOverride value,
+            int? preferredWidth = null,
+            int? preferredHeight = null)
+        {
+            switch (value)
+            {
+                case GameResolutionOverride.Native:
+                    return TryFindResource("LOCDisplayManager_GameResolutionNative") as string
+                        ?? "Native: do not change resolution";
+                case GameResolutionOverride.Exact:
+                    if (preferredWidth > 0 && preferredHeight > 0)
+                    {
+                        var format = TryFindResource("LOCDisplayManager_ResolutionPolicyExactFormat") as string
+                            ?? "{0} × {1}";
+                        return string.Format(format, preferredWidth.Value, preferredHeight.Value);
+                    }
+
+                    return TryFindResource("LOCDisplayManager_ResolutionPolicyExact") as string
+                        ?? "Exact resolution";
+                case GameResolutionOverride.LowestAvailable:
+                    return TryFindResource("LOCDisplayManager_GameResolutionLowest") as string
+                        ?? "Lowest available";
+                case GameResolutionOverride.HighestAvailable:
+                    return TryFindResource("LOCDisplayManager_GameResolutionHighest") as string
+                        ?? "Highest available";
+                default:
+                    return TryFindResource("LOCDisplayManager_GameResolutionInherit") as string
+                        ?? "Keep global settings";
             }
         }
 

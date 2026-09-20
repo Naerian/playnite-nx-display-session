@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using Playnite.SDK;
 using Playnite.SDK.Data;
 using PlayniteDisplayManager.Displays;
@@ -8,6 +9,7 @@ using PlayniteDisplayManager.Hdr;
 using PlayniteDisplayManager.NightLight;
 using PlayniteDisplayManager.Profiles;
 using PlayniteDisplayManager.Refresh;
+using PlayniteDisplayManager.Resolution;
 
 namespace PlayniteDisplayManager
 {
@@ -35,19 +37,23 @@ namespace PlayniteDisplayManager
         private NightLightPolicy nightLightPolicy = NightLightPolicy.DoNotTouch;
         private RefreshRatePolicy globalRefreshRatePolicy = RefreshRatePolicy.Native;
         private double? preferredRefreshRateHz;
+        private ResolutionPolicy globalResolutionPolicy = ResolutionPolicy.Native;
+        private int? preferredResolutionWidth;
+        private int? preferredResolutionHeight;
+        private int postChangeSettleDelayMs = 1000;
         private bool showDesktopTopPanel = true;
         private DesktopTopPanelDisplayMode desktopTopPanelDisplayMode = DesktopTopPanelDisplayMode.Icon;
         private bool showNotifications = true;
         private bool notifyNativeHdrConflict = true;
         private string preferredPlayDisplayId;
         private bool turnOffOtherDisplaysOnLaunch;
-        private List<TopologyProfile> topologyProfiles = new List<TopologyProfile>();
-        private Guid? defaultTopologyProfileId;
+        private List<DisplayProfile> displayProfiles = new List<DisplayProfile>();
+        private Guid? defaultDisplayProfileId;
         private bool relocatePlayniteFullscreenAfterRestore;
         private List<GameDisplayProfileEntry> availableGameProfiles = new List<GameDisplayProfileEntry>();
         private List<PlatformProfileEntry> availablePlatformProfiles = new List<PlatformProfileEntry>();
 
-        public const int CurrentSettingsSchemaVersion = 4;
+        public const int CurrentSettingsSchemaVersion = 5;
 
         public DisplayManagerSettings()
         {
@@ -71,21 +77,25 @@ namespace PlayniteDisplayManager
                 NightLightPolicy = savedSettings.NightLightPolicy;
                 GlobalRefreshRatePolicy = savedSettings.GlobalRefreshRatePolicy;
                 PreferredRefreshRateHz = savedSettings.PreferredRefreshRateHz;
+                GlobalResolutionPolicy = savedSettings.GlobalResolutionPolicy;
+                PreferredResolutionWidth = savedSettings.PreferredResolutionWidth;
+                PreferredResolutionHeight = savedSettings.PreferredResolutionHeight;
+                PostChangeSettleDelayMs = savedSettings.PostChangeSettleDelayMs;
                 ShowDesktopTopPanel = savedSettings.ShowDesktopTopPanel;
                 DesktopTopPanelDisplayMode = savedSettings.DesktopTopPanelDisplayMode;
                 ShowNotifications = savedSettings.ShowNotifications;
                 NotifyNativeHdrConflict = savedSettings.NotifyNativeHdrConflict;
                 PreferredPlayDisplayId = savedSettings.PreferredPlayDisplayId;
                 TurnOffOtherDisplaysOnLaunch = savedSettings.TurnOffOtherDisplaysOnLaunch;
-                TopologyProfiles = savedSettings.TopologyProfiles ?? new List<TopologyProfile>();
-                DefaultTopologyProfileId = savedSettings.DefaultTopologyProfileId;
+                DisplayProfiles = savedSettings.DisplayProfiles ?? new List<DisplayProfile>();
+                DefaultDisplayProfileId = savedSettings.DefaultDisplayProfileId;
                 RelocatePlayniteFullscreenAfterRestore = savedSettings.RelocatePlayniteFullscreenAfterRestore;
             }
 
             AppearancePreset = SettingsAppearance.Normalize(AppearancePreset);
             HdrMetadataMatchNames = HdrMetadataMatcher.NormalizeMatchNames(HdrMetadataMatchNames).ToList();
             MigrateRefreshRateLegacy();
-            MigrateTopologyProfiles();
+            MigrateDisplayProfiles();
             SettingsSchemaVersion = CurrentSettingsSchemaVersion;
             RefreshDisplays();
         }
@@ -161,6 +171,30 @@ namespace PlayniteDisplayManager
             set => SetValue(ref preferredRefreshRateHz, value);
         }
 
+        public ResolutionPolicy GlobalResolutionPolicy
+        {
+            get => globalResolutionPolicy;
+            set => SetValue(ref globalResolutionPolicy, value);
+        }
+
+        public int? PreferredResolutionWidth
+        {
+            get => preferredResolutionWidth;
+            set => SetValue(ref preferredResolutionWidth, value);
+        }
+
+        public int? PreferredResolutionHeight
+        {
+            get => preferredResolutionHeight;
+            set => SetValue(ref preferredResolutionHeight, value);
+        }
+
+        public int PostChangeSettleDelayMs
+        {
+            get => postChangeSettleDelayMs;
+            set => SetValue(ref postChangeSettleDelayMs, Math.Max(0, value));
+        }
+
         public bool ShowDesktopTopPanel
         {
             get => showDesktopTopPanel;
@@ -198,16 +232,18 @@ namespace PlayniteDisplayManager
             set => SetValue(ref turnOffOtherDisplaysOnLaunch, value);
         }
 
-        public List<TopologyProfile> TopologyProfiles
+        [DataMember(Name = "topologyProfiles")]
+        public List<DisplayProfile> DisplayProfiles
         {
-            get => topologyProfiles;
-            set => SetValue(ref topologyProfiles, value ?? new List<TopologyProfile>());
+            get => displayProfiles;
+            set => SetValue(ref displayProfiles, value ?? new List<DisplayProfile>());
         }
 
-        public Guid? DefaultTopologyProfileId
+        [DataMember(Name = "defaultTopologyProfileId")]
+        public Guid? DefaultDisplayProfileId
         {
-            get => defaultTopologyProfileId;
-            set => SetValue(ref defaultTopologyProfileId, value);
+            get => defaultDisplayProfileId;
+            set => SetValue(ref defaultDisplayProfileId, value);
         }
 
         public bool RelocatePlayniteFullscreenAfterRestore
@@ -299,6 +335,30 @@ namespace PlayniteDisplayManager
             }
         }
 
+        [DontSerialize]
+        public List<AppearancePresetOption> PostChangeSettleDelayOptions => new List<AppearancePresetOption>
+        {
+            new AppearancePresetOption { Value = "0", DisplayName = "0 ms" },
+            new AppearancePresetOption { Value = "500", DisplayName = "500 ms" },
+            new AppearancePresetOption { Value = "1000", DisplayName = "1000 ms" },
+            new AppearancePresetOption { Value = "2000", DisplayName = "2000 ms" },
+            new AppearancePresetOption { Value = "3000", DisplayName = "3000 ms" },
+            new AppearancePresetOption { Value = "5000", DisplayName = "5000 ms" }
+        };
+
+        [DontSerialize]
+        public string PostChangeSettleDelayMsValue
+        {
+            get => PostChangeSettleDelayMs.ToString();
+            set
+            {
+                if (int.TryParse(value, out var ms))
+                {
+                    PostChangeSettleDelayMs = ms;
+                }
+            }
+        }
+
         public void RefreshDisplays()
         {
             if (plugin?.Displays == null)
@@ -337,7 +397,7 @@ namespace PlayniteDisplayManager
             editingClone = Serialization.GetClone(this);
             AvailableGameProfiles = plugin?.GetGameProfileEntries() ?? new List<GameDisplayProfileEntry>();
             AvailablePlatformProfiles = plugin?.GetPlatformProfileEntries() ?? new List<PlatformProfileEntry>();
-            TopologyProfiles = (TopologyProfiles ?? new List<TopologyProfile>())
+            DisplayProfiles = (DisplayProfiles ?? new List<DisplayProfile>())
                 .Select(p => p?.Clone())
                 .Where(p => p != null)
                 .ToList();
@@ -362,14 +422,18 @@ namespace PlayniteDisplayManager
             NightLightPolicy = editingClone.NightLightPolicy;
             GlobalRefreshRatePolicy = editingClone.GlobalRefreshRatePolicy;
             PreferredRefreshRateHz = editingClone.PreferredRefreshRateHz;
+            GlobalResolutionPolicy = editingClone.GlobalResolutionPolicy;
+            PreferredResolutionWidth = editingClone.PreferredResolutionWidth;
+            PreferredResolutionHeight = editingClone.PreferredResolutionHeight;
+            PostChangeSettleDelayMs = editingClone.PostChangeSettleDelayMs;
             ShowDesktopTopPanel = editingClone.ShowDesktopTopPanel;
             DesktopTopPanelDisplayMode = editingClone.DesktopTopPanelDisplayMode;
             ShowNotifications = editingClone.ShowNotifications;
             NotifyNativeHdrConflict = editingClone.NotifyNativeHdrConflict;
             PreferredPlayDisplayId = editingClone.PreferredPlayDisplayId;
             TurnOffOtherDisplaysOnLaunch = editingClone.TurnOffOtherDisplaysOnLaunch;
-            TopologyProfiles = editingClone.TopologyProfiles ?? new List<TopologyProfile>();
-            DefaultTopologyProfileId = editingClone.DefaultTopologyProfileId;
+            DisplayProfiles = editingClone.DisplayProfiles ?? new List<DisplayProfile>();
+            DefaultDisplayProfileId = editingClone.DefaultDisplayProfileId;
             RelocatePlayniteFullscreenAfterRestore = editingClone.RelocatePlayniteFullscreenAfterRestore;
             editingClone = null;
             AvailableGameProfiles = plugin?.GetGameProfileEntries() ?? new List<GameDisplayProfileEntry>();
@@ -377,6 +441,7 @@ namespace PlayniteDisplayManager
             RefreshDisplays();
             OnPropertyChanged(nameof(HdrMetadataMatchNamesText));
             OnPropertyChanged(nameof(DesktopTopPanelDisplayModeValue));
+            OnPropertyChanged(nameof(PostChangeSettleDelayMsValue));
         }
 
         public void EndEdit()
@@ -384,8 +449,8 @@ namespace PlayniteDisplayManager
             AppearancePreset = SettingsAppearance.Normalize(AppearancePreset);
             HdrMetadataMatchNames = HdrMetadataMatcher.NormalizeMatchNames(HdrMetadataMatchNames).ToList();
             MigrateRefreshRateLegacy();
-            MigrateTopologyProfiles();
-            SyncLegacyFieldsFromDefaultTopology();
+            MigrateDisplayProfiles();
+            SyncLegacyFieldsFromDefaultDisplayProfile();
             DisplayAliases = PersistAliases(AvailableDisplays, DisplayAliases);
             plugin.ReplaceGameProfiles(AvailableGameProfiles);
             plugin.ReplacePlatformProfiles(AvailablePlatformProfiles);
@@ -407,19 +472,19 @@ namespace PlayniteDisplayManager
             PreferredRefreshRateHz = hz;
         }
 
-        public void MigrateTopologyProfilesPublic()
+        public void MigrateDisplayProfilesPublic()
         {
-            MigrateTopologyProfiles();
+            MigrateDisplayProfiles();
         }
 
-        private void MigrateTopologyProfiles()
+        private void MigrateDisplayProfiles()
         {
-            if (TopologyProfiles == null)
+            if (DisplayProfiles == null)
             {
-                TopologyProfiles = new List<TopologyProfile>();
+                DisplayProfiles = new List<DisplayProfile>();
             }
 
-            TopologyProfiles = TopologyProfiles
+            DisplayProfiles = DisplayProfiles
                 .Where(p => p != null)
                 .Select(p =>
                 {
@@ -437,52 +502,59 @@ namespace PlayniteDisplayManager
                 })
                 .ToList();
 
-            if (TopologyProfiles.Count == 0)
+            if (DisplayProfiles.Count == 0)
             {
-                var created = new TopologyProfile
+                var defaults = new DisplayProfile
                 {
                     Id = Guid.NewGuid(),
-                    Name = plugin?.Loc("LOCDisplayManager_TopologyProfileDefaultName") ?? "Default",
+                    Name = plugin?.Loc("LOCDisplayManager_DisplayProfileDefaultName") ?? "Default",
                     PreferredPlayDisplayId = PreferredPlayDisplayId,
-                    TurnOffOtherDisplays = TurnOffOtherDisplaysOnLaunch,
+                    TurnOffOtherDisplays = false,
                     MissingDisplayPolicy = MissingDisplayPolicy.UseWindowsPrimary
                 };
-                TopologyProfiles.Add(created);
-                DefaultTopologyProfileId = created.Id;
+                DisplayProfiles.Add(defaults);
+                DisplayProfiles.Add(CreateNamedDisplayProfile("LOCDisplayManager_DisplayProfileSoloTvName", "Solo TV", true));
+                DisplayProfiles.Add(CreateNamedDisplayProfile("LOCDisplayManager_DisplayProfilePcDesktopName", "PC / Desktop", false));
+                DefaultDisplayProfileId = defaults.Id;
             }
-
-            if (!DefaultTopologyProfileId.HasValue
-                || TopologyProfiles.All(p => p.Id != DefaultTopologyProfileId.Value))
+            else
             {
-                DefaultTopologyProfileId = TopologyProfiles[0].Id;
+                EnsureNamedDisplayProfile("LOCDisplayManager_DisplayProfileSoloTvName", "Solo TV", true);
+                EnsureNamedDisplayProfile("LOCDisplayManager_DisplayProfilePcDesktopName", "PC / Desktop", false);
             }
 
-            SyncLegacyFieldsFromDefaultTopology();
+            if (!DefaultDisplayProfileId.HasValue
+                || DisplayProfiles.All(p => p.Id != DefaultDisplayProfileId.Value))
+            {
+                DefaultDisplayProfileId = DisplayProfiles[0].Id;
+            }
+
+            SyncLegacyFieldsFromDefaultDisplayProfile();
         }
 
-        public TopologyProfile GetDefaultTopologyProfile()
+        public DisplayProfile GetDefaultDisplayProfile()
         {
-            MigrateTopologyProfiles();
-            return TopologyProfiles.FirstOrDefault(p => p.Id == DefaultTopologyProfileId)
-                ?? TopologyProfiles.FirstOrDefault();
+            MigrateDisplayProfiles();
+            return DisplayProfiles.FirstOrDefault(p => p.Id == DefaultDisplayProfileId)
+                ?? DisplayProfiles.FirstOrDefault();
         }
 
-        public TopologyProfile GetTopologyProfile(Guid? id)
+        public DisplayProfile GetDisplayProfile(Guid? id)
         {
             if (!id.HasValue || id.Value == Guid.Empty)
             {
                 return null;
             }
 
-            return TopologyProfiles?.FirstOrDefault(p => p.Id == id.Value);
+            return DisplayProfiles?.FirstOrDefault(p => p.Id == id.Value);
         }
 
-        public void SyncLegacyFieldsFromDefaultTopology()
+        public void SyncLegacyFieldsFromDefaultDisplayProfile()
         {
-            // Do not call GetDefaultTopologyProfile() here — it re-enters MigrateTopologyProfiles.
-            var defaults = TopologyProfiles?.FirstOrDefault(p =>
-                               DefaultTopologyProfileId.HasValue && p.Id == DefaultTopologyProfileId.Value)
-                           ?? TopologyProfiles?.FirstOrDefault();
+            // Do not call GetDefaultDisplayProfile() here — it re-enters MigrateDisplayProfiles.
+            var defaults = DisplayProfiles?.FirstOrDefault(p =>
+                               DefaultDisplayProfileId.HasValue && p.Id == DefaultDisplayProfileId.Value)
+                           ?? DisplayProfiles?.FirstOrDefault();
             if (defaults == null)
             {
                 return;
@@ -490,6 +562,34 @@ namespace PlayniteDisplayManager
 
             PreferredPlayDisplayId = defaults.PreferredPlayDisplayId;
             TurnOffOtherDisplaysOnLaunch = defaults.TurnOffOtherDisplays;
+        }
+
+        public void SyncLegacyFieldsFromDefaultTopology()
+        {
+            SyncLegacyFieldsFromDefaultDisplayProfile();
+        }
+
+        private DisplayProfile CreateNamedDisplayProfile(string locKey, string fallbackName, bool turnOffOthers)
+        {
+            return new DisplayProfile
+            {
+                Id = Guid.NewGuid(),
+                Name = plugin?.Loc(locKey) ?? fallbackName,
+                TurnOffOtherDisplays = turnOffOthers,
+                MissingDisplayPolicy = MissingDisplayPolicy.UseWindowsPrimary
+            };
+        }
+
+        private void EnsureNamedDisplayProfile(string locKey, string fallbackName, bool turnOffOthers)
+        {
+            var name = plugin?.Loc(locKey) ?? fallbackName;
+            if (DisplayProfiles.Any(p => string.Equals(p.Name, name, StringComparison.CurrentCultureIgnoreCase)
+                || string.Equals(p.Name, fallbackName, StringComparison.OrdinalIgnoreCase)))
+            {
+                return;
+            }
+
+            DisplayProfiles.Add(CreateNamedDisplayProfile(locKey, fallbackName, turnOffOthers));
         }
 
         private List<DisplayDeviceAlias> PersistAliases(

@@ -1,30 +1,28 @@
-# Descripción general
+# Descripcion general
 
-Display Manager es un GenericPlugin de Playnite que posee la **topología de pantallas y el HDR de Windows** en las sesiones de juego. Al iniciar un juego aplica tu perfil; al parar, cancelar o cerrar Playnite restaura el escritorio anterior mediante un lease durable de RestoreHost.
+Display Manager es un GenericPlugin de Playnite que gestiona **perfiles de pantalla, HDR, resolucion y frecuencia** para sesiones de juego. Al iniciar un juego aplica el perfil resuelto; al parar, cancelar o cerrar Playnite restaura el escritorio anterior mediante un lease durable de RestoreHost.
 
-## Qué hace
+## Que hace
 
-- Enumera pantallas activas con identidad basada en EDID (estable ante cambios de cable/ruta GPU cuando Windows expone datos suficientes).
-- Permite elegir la **pantalla principal para juegos** con perfiles de topología (o mantener la de Windows), con fallback si falta.
-- Posee el **HDR** con tres políticas globales, overrides por juego y por plataforma, y coincidencia opcional por Features/Tags.
-- Opcionalmente reubica Playnite Fullscreen en el monitor primario restaurado tras la sesión.
-- Cambia la **frecuencia de refresco** cuando está configurado (ruta ChangeDisplaySettingsEx).
-- Arma **RestoreHost** para que la restauración sobreviva a un cierre brusco de Playnite.
-- Expone **Theme API** (`SourceName` `DisplayManager`) y un acceso en el panel superior de Desktop.
+- Enumera pantallas activas con identidad basada en EDID cuando Windows expone datos suficientes.
+- Permite elegir la **pantalla principal para juegos** mediante **perfiles de pantalla**. Los valores incluidos son **Solo TV** para jugar en sofa/TV y **PC / Desktop** para mantener el escritorio normal.
+- Gestiona pantallas ausentes con primaria de Windows, pantalla de respaldo, o avisar y continuar.
+- Gestiona **HDR** con politica global, valores por perfil de pantalla y overrides por juego/plataforma.
+- Opcionalmente aplica **resolucion** y **frecuencia** tras el perfil de pantalla, y espera el **retardo de asentamiento** configurado antes de continuar.
+- Expone controles para temas Fullscreen y `PluginSettings` con SourceName `DisplayManager`.
 
-## Prioridades de diseño
+## Prioridad
 
-Estabilidad y honestidad por encima de UI “inteligente”. Bajo Automatic Color Management (ACM), el *readback* de HDR de Windows no es fiable — Display Manager **escribe** el estado pretendido y restaura escribiendo SDR. Overview puede mostrar HDR como **Unknown**; es intencional.
+Display Manager resuelve ajustes en este orden: perfil por juego, perfil por plataforma, perfil de pantalla predeterminado y ajustes globales. `Mantener configuracion global` en un menu de juego elimina ese override para que aplique la capa siguiente.
 
-La **luz nocturna** no se gestiona en v1: no hay API pública soportada Win10+Win11 fiable en ambas líneas de SO.
+## Prioridades de diseno
+
+Estabilidad y honestidad por encima de UI inteligente. Bajo Automatic Color Management (ACM), el readback de HDR de Windows no es fiable, asi que Display Manager escribe el estado pretendido y puede mostrar HDR como **Unknown**.
+
+La luz nocturna no se gestiona en v1: no hay API publica soportada Win10+Win11 fiable en ambas lineas de SO.
 
 ## Fuera de alcance (v1)
 
-Resolución por juego más allá del apply de topología actual, upscalers, VRR, mover la ventana Fullscreen de Playnite, CEC, inyección en procesos, Harmony.
+Upscalers, VRR, CEC, inyeccion en procesos, mandos Harmony y cambio de dispositivo de audio.
 
-## Limitaciones importantes
-
-- Bajo ACM no se confía en el GET de HDR; usa comprobación visual (p. ej. Win+Alt+B).
-- La identidad de pantalla depende de EDID / CCD; algunos docks renombran rutas.
-
-Continúa con [Instalación e inicio rápido](ES-Instalacion-e-Inicio-Rapido).
+Continua con [Instalacion e inicio rapido](ES-Instalacion-e-Inicio-Rapido).

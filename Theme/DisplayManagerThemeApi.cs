@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows.Input;
 using PlayniteDisplayManager.Displays;
 
 namespace PlayniteDisplayManager.Theme
@@ -22,6 +23,10 @@ namespace PlayniteDisplayManager.Theme
         private string selectedGameName;
         private string topPanelTooltip;
         private string displaysSummary;
+        private string activeDisplayProfileName;
+        private string activeProfileSourceLabel;
+        private bool sessionActive;
+        private string sessionGameName;
 
         public DisplayManagerThemeApi(PlayniteDisplayManagerPlugin sourcePlugin)
         {
@@ -29,7 +34,7 @@ namespace PlayniteDisplayManager.Theme
             Displays = new ObservableCollection<ThemeDisplayItem>();
         }
 
-        public string ApiVersion => "1.0.0";
+        public string ApiVersion => "1.1.0";
 
         public bool SupportsDisplayList => true;
 
@@ -42,6 +47,16 @@ namespace PlayniteDisplayManager.Theme
         public bool SupportsTopPanel => true;
 
         public bool SupportsRefreshRatePolicy => true;
+
+        public bool SupportsActiveProfile => true;
+
+        public bool SupportsSessionStatus => true;
+
+        public bool SupportsDisplaysSummary => true;
+
+        public bool SupportsOpenSettings => true;
+
+        public ICommand OpenSettingsCommand => new RelayCommand(_ => plugin.OpenStandaloneSettingsForTheme());
 
         public ObservableCollection<ThemeDisplayItem> Displays { get; }
 
@@ -100,6 +115,30 @@ namespace PlayniteDisplayManager.Theme
             private set => SetValue(ref displaysSummary, value);
         }
 
+        public string ActiveDisplayProfileName
+        {
+            get => activeDisplayProfileName;
+            private set => SetValue(ref activeDisplayProfileName, value);
+        }
+
+        public string ActiveProfileSourceLabel
+        {
+            get => activeProfileSourceLabel;
+            private set => SetValue(ref activeProfileSourceLabel, value);
+        }
+
+        public bool SessionActive
+        {
+            get => sessionActive;
+            private set => SetValue(ref sessionActive, value);
+        }
+
+        public string SessionGameName
+        {
+            get => sessionGameName;
+            private set => SetValue(ref sessionGameName, value);
+        }
+
         public bool ShowTopPanelIcon
         {
             get
@@ -137,6 +176,11 @@ namespace PlayniteDisplayManager.Theme
                     plugin.Loc("LOCDisplayManager_OverviewDisplaysFormat"),
                     ConnectedDisplayCount,
                     PrimaryDisplayAlias);
+                var activeProfile = settings?.GetDefaultDisplayProfile();
+                ActiveDisplayProfileName = activeProfile?.Name ?? plugin.Loc("LOCDisplayManager_StatusUnknown");
+                ActiveProfileSourceLabel = plugin.Loc("LOCDisplayManager_ActiveProfileDefaultSource");
+                SessionActive = plugin.IsSessionActive;
+                SessionGameName = plugin.ActiveGameName ?? string.Empty;
 
                 Displays.Clear();
                 foreach (var display in live)
@@ -163,6 +207,11 @@ namespace PlayniteDisplayManager.Theme
                 OnPropertyChanged(nameof(SupportsHdrMetadata));
                 OnPropertyChanged(nameof(SupportsTopPanel));
                 OnPropertyChanged(nameof(SupportsRefreshRatePolicy));
+                OnPropertyChanged(nameof(SupportsActiveProfile));
+                OnPropertyChanged(nameof(SupportsSessionStatus));
+                OnPropertyChanged(nameof(SupportsDisplaysSummary));
+                OnPropertyChanged(nameof(SupportsOpenSettings));
+                OnPropertyChanged(nameof(OpenSettingsCommand));
                 OnPropertyChanged(nameof(ShowTopPanelIcon));
                 OnPropertyChanged(nameof(ShowTopPanelText));
             }
@@ -201,5 +250,21 @@ namespace PlayniteDisplayManager.Theme
         public bool IsPrimary { get; set; }
         public bool IsConnected { get; set; }
         public string ModeLabel { get; set; }
+    }
+
+    internal sealed class RelayCommand : ICommand
+    {
+        private readonly Action<object> execute;
+
+        public RelayCommand(Action<object> execute)
+        {
+            this.execute = execute;
+        }
+
+        public bool CanExecute(object parameter) => execute != null;
+
+        public void Execute(object parameter) => execute?.Invoke(parameter);
+
+        public event EventHandler CanExecuteChanged { add { } remove { } }
     }
 }

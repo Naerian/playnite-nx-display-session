@@ -1,29 +1,28 @@
-# Theme API v1 (Display Manager)
+# Theme API v1.1 (Display Manager)
 
 **SourceName:** `DisplayManager`  
-**ApiVersion:** `1.0.0` (`Theme.ApiVersion`)
+**PluginSettings SettingsRoot:** `Theme`  
+**ApiVersion:** `1.1.0` (`Theme.ApiVersion`)
 
 ## Custom elements
 
 | x:Name | Control |
-|--------|---------|
-| `DisplayManager_DisplayList` | Connected displays (name, mode, primary) |
-| `DisplayManager_HdrStatus` | Global HDR policy, ACM-honest status, selected-game HDR metadata |
+| --- | --- |
+| `DisplayManager_DisplayList` | Connected displays (name, mode, primary). |
+| `DisplayManager_HdrStatus` | Global HDR policy, ACM-honest status, selected-game HDR metadata. |
+| `DisplayManager_ActiveProfile` | Active/default display profile summary. |
+| `DisplayManager_SessionStatus` | Current Display Manager session status. |
+| `DisplayManager_DisplaysSummary` | Compact connected display summary. |
+| `DisplayManager_OpenSettingsButton` | Opens Display Manager settings. |
 
-## PluginSettings (`SettingsRoot` = `Theme`)
+## PluginSettings
 
-Useful paths: `PrimaryDisplayName`, `PrimaryDisplayAlias`, `ConnectedDisplayCount`, `HdrPolicyLabel`, `HdrStatusLabel`, `HasHdrMetadata`, `SelectedGameName`, `DisplaysSummary`, `TopPanelTooltip`.
+Use `Plugin=DisplayManager` and `Path=Theme.<Property>`.
 
-`Supports*` flags: `SupportsDisplayList`, `SupportsHdrStatus`, `SupportsHdrPolicy`, `SupportsHdrMetadata`, `SupportsTopPanel`, `SupportsRefreshRatePolicy`.
+Useful paths: `PrimaryDisplayName`, `PrimaryDisplayAlias`, `ConnectedDisplayCount`, `HdrPolicyLabel`, `HdrStatusLabel`, `HasHdrMetadata`, `SelectedGameName`, `DisplaysSummary`, `TopPanelTooltip`, `ActiveDisplayProfileName`, `ActiveProfileSourceLabel`, `SessionActive`, `SessionGameName`, and `OpenSettingsCommand`.
 
-## Desktop top panel
-
-Optional button (Settings → General → Show in Desktop top panel). Opens plugin settings. Shows primary display alias + HDR policy tooltip.
+`Supports*` flags: `SupportsDisplayList`, `SupportsHdrStatus`, `SupportsHdrPolicy`, `SupportsHdrMetadata`, `SupportsTopPanel`, `SupportsRefreshRatePolicy`, `SupportsActiveProfile`, `SupportsSessionStatus`, `SupportsDisplaysSummary`, `SupportsOpenSettings`.
 
 ## Example
 
 See [Examples/FullscreenThemeIntegration.xaml](../Examples/FullscreenThemeIntegration.xaml).
-
-## Spanish
-
-Ver [THEME-API.es.md](THEME-API.es.md).

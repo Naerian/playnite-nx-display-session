@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.Serialization;
 using PlayniteDisplayManager.Refresh;
+using PlayniteDisplayManager.Resolution;
 
 namespace PlayniteDisplayManager.Profiles
 {
@@ -35,16 +36,25 @@ namespace PlayniteDisplayManager.Profiles
         [DataMember(Name = "preferredRefreshRateHz")]
         public double? PreferredRefreshRateHz { get; set; }
 
+        [DataMember(Name = "resolutionOverride")]
+        public GameResolutionOverride ResolutionOverride { get; set; } = GameResolutionOverride.Inherit;
+
+        [DataMember(Name = "preferredResolutionWidth")]
+        public int? PreferredResolutionWidth { get; set; }
+
+        [DataMember(Name = "preferredResolutionHeight")]
+        public int? PreferredResolutionHeight { get; set; }
+
         /// <summary>
-        /// Per-game play display. null = inherit topology/global;
+        /// Per-game play display. null = inherit display profile/global;
         /// empty string = keep Windows primary; otherwise a stable display id.
         /// </summary>
         [DataMember(Name = "preferredPlayDisplayId")]
         public string PreferredPlayDisplayId { get; set; }
 
-        /// <summary>Optional named topology profile to apply before field-level overrides.</summary>
+        /// <summary>Optional named display profile to apply before field-level overrides.</summary>
         [DataMember(Name = "topologyProfileId")]
-        public Guid? TopologyProfileId { get; set; }
+        public Guid? DisplayProfileId { get; set; }
 
         /// <summary>True when PreferredPlayDisplayId is set (including empty = Windows primary).</summary>
         public bool HasPlayDisplayOverride => PreferredPlayDisplayId != null;
@@ -52,8 +62,9 @@ namespace PlayniteDisplayManager.Profiles
         public bool IsEmpty =>
             HdrOverride == GameHdrOverride.Inherit &&
             RefreshRateOverride == GameRefreshRateOverride.Inherit &&
+            ResolutionOverride == GameResolutionOverride.Inherit &&
             PreferredPlayDisplayId == null &&
-            TopologyProfileId == null;
+            DisplayProfileId == null;
 
         public GameDisplayProfile Clone()
         {
@@ -62,8 +73,11 @@ namespace PlayniteDisplayManager.Profiles
                 HdrOverride = HdrOverride,
                 RefreshRateOverride = RefreshRateOverride,
                 PreferredRefreshRateHz = PreferredRefreshRateHz,
+                ResolutionOverride = ResolutionOverride,
+                PreferredResolutionWidth = PreferredResolutionWidth,
+                PreferredResolutionHeight = PreferredResolutionHeight,
                 PreferredPlayDisplayId = PreferredPlayDisplayId,
-                TopologyProfileId = TopologyProfileId
+                DisplayProfileId = DisplayProfileId
             };
         }
     }

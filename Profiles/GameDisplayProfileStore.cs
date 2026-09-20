@@ -5,6 +5,7 @@ using System.Linq;
 using Playnite.SDK.Data;
 using Playnite.SDK.Models;
 using PlayniteDisplayManager.Refresh;
+using PlayniteDisplayManager.Resolution;
 
 namespace PlayniteDisplayManager.Profiles
 {
@@ -127,6 +128,36 @@ namespace PlayniteDisplayManager.Profiles
             }
         }
 
+        public void SetResolutionOverride(
+            Game game,
+            GameResolutionOverride resolutionOverride,
+            int? preferredWidth = null,
+            int? preferredHeight = null)
+        {
+            if (game == null)
+            {
+                return;
+            }
+
+            lock (syncRoot)
+            {
+                var profile = GetOrCreateUnlocked(game.Id);
+                profile.ResolutionOverride = resolutionOverride;
+                if (resolutionOverride == GameResolutionOverride.Exact)
+                {
+                    profile.PreferredResolutionWidth = preferredWidth;
+                    profile.PreferredResolutionHeight = preferredHeight;
+                }
+                else
+                {
+                    profile.PreferredResolutionWidth = null;
+                    profile.PreferredResolutionHeight = null;
+                }
+
+                PersistUnlocked(game.Id, profile);
+            }
+        }
+
         /// <summary>
         /// Sets the per-game play display.
         /// Pass null to inherit the global setting; empty string to keep Windows primary;
@@ -155,7 +186,7 @@ namespace PlayniteDisplayManager.Profiles
             }
         }
 
-        public void SetTopologyProfileId(Game game, Guid? topologyProfileId)
+        public void SetDisplayProfileId(Game game, Guid? displayProfileId)
         {
             if (game == null)
             {
@@ -165,9 +196,14 @@ namespace PlayniteDisplayManager.Profiles
             lock (syncRoot)
             {
                 var profile = GetOrCreateUnlocked(game.Id);
-                profile.TopologyProfileId = topologyProfileId;
+                profile.DisplayProfileId = displayProfileId;
                 PersistUnlocked(game.Id, profile);
             }
+        }
+
+        public void SetTopologyProfileId(Game game, Guid? topologyProfileId)
+        {
+            SetDisplayProfileId(game, topologyProfileId);
         }
 
         public void ClearProfile(Game game)
