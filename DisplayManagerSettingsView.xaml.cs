@@ -876,6 +876,7 @@ namespace PlayniteDisplayManager
             topologyTrialSnapshot = apply.BeforeSnapshot;
             RefreshDisplaysInternal();
             StartTopologyTrialCountdown(8);
+            SetTopologyTrialCancelEnabled(true);
             TopologyTrialStatusText.Text = string.Format(
                 TryFindResource("LOCDisplayManager_TopologyTrialAppliedFormat") as string
                 ?? "Applied ({0}). Restoring in {1}s…",
@@ -895,6 +896,7 @@ namespace PlayniteDisplayManager
             topologyTrialTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             topologyTrialTimer.Tick += TopologyTrialTimer_OnTick;
             topologyTrialTimer.Start();
+            SetTopologyTrialCancelEnabled(true);
         }
 
         private void TopologyTrialTimer_OnTick(object sender, EventArgs e)
@@ -927,6 +929,14 @@ namespace PlayniteDisplayManager
             }
         }
 
+        private void SetTopologyTrialCancelEnabled(bool enabled)
+        {
+            if (TopologyTrialCancelButton != null)
+            {
+                TopologyTrialCancelButton.IsEnabled = enabled;
+            }
+        }
+
         private void RestoreTopologyTrial(bool manual)
         {
             if (topologyTrialTimer != null)
@@ -940,6 +950,7 @@ namespace PlayniteDisplayManager
             var plugin = settings?.Plugin;
             var snapshot = topologyTrialSnapshot;
             topologyTrialSnapshot = null;
+            SetTopologyTrialCancelEnabled(false);
             if (plugin == null || snapshot == null)
             {
                 plugin?.DisarmRestoreLease();

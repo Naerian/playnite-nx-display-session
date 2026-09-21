@@ -36,6 +36,8 @@
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayGameMenuHint">Для конкретной игры можно выбрать другой экран в контекстном меню этой игры.</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuOverrideTitle">Контекстное меню игры</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">Этот экран станет основным при запуске игры (если вы не оставляете значение Windows по умолчанию). Кнопки ниже позволяют сделать пробный просмотр на несколько секунд с автоматическим восстановлением.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PreferredDisplayWait">Ждать основной экран</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PreferredDisplayWaitHelp">Если основной экран ещё не подключён (например, ТВ просыпается по HDMI), подождите и повторите попытку до политики отсутствующего экрана.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlayDisplayWindowsDefault">Оставить стандартный Windows</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusPlayPrimary">Основной для игр</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuDisplaySection">Дисплей</sys:String>
@@ -53,13 +55,13 @@
     <sys:String x:Key="LOCDisplayManager_TopologyProfileNewDefault">Новый профиль</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyProfileDeleteLast">Keep at least one display profile.</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayTitle">Отсутствующий дисплей</sys:String>
-    <sys:String x:Key="LOCDisplayManager_MissingDisplayPolicy">Если предпочтительный дисплей отсутствует</sys:String>
+    <sys:String x:Key="LOCDisplayManager_MissingDisplayPolicy">Если основной экран отсутствует</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayFallback">Резервный дисплей</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayHelp">What to do when the preferred play display for the selected display profile is not connected. Notifications appear when Show notifications is enabled.</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayWindows">Использовать основной Windows</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayFallbackChoice">Использовать резервный дисплей</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayNotify">Уведомить и продолжить (основной Windows)</sys:String>
-    <sys:String x:Key="LOCDisplayManager_MissingDisplayNotifyFormat">{0}: предпочтительный дисплей &quot;{1}&quot; не подключен.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_MissingDisplayNotifyFormat">{0}: основной экран "{1}" не подключён.</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateTitle">Playnite Fullscreen</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHelp">После восстановления дисплеев можно перенести Playnite Fullscreen на восстановленный основной монитор.</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">Перенести Playnite Fullscreen после восстановления</sys:String>
@@ -81,8 +83,8 @@
     <sys:String x:Key="LOCDisplayManager_TopologyTurnOffOthers">Отключать другие дисплеи при запуске игры</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTurnOffOthersWarning">Оставляет включенным хотя бы один экран. Подтвердите перед запуском пробы.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTurnOffConfirm">Другие дисплеи отключатся на несколько секунд, затем автоматически восстановятся. Продолжить?</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyTrialApply">Применить пробу на 8 с</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyTrialRestoreNow">Восстановить сейчас</sys:String>
+    <sys:String x:Key="LOCDisplayManager_TopologyTrialApply">Проверить отключение (8с)</sys:String>
+    <sys:String x:Key="LOCDisplayManager_TopologyTrialRestoreNow">Отменить проверку</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialNoTarget">Сначала выберите подключенный дисплей.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialNothing">Сначала выберите основной дисплей для игр.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialAppliedFormat">Применено ({0}). Восстановление через {1} с…</sys:String>
@@ -222,7 +224,7 @@
     <sys:String x:Key="LOCDisplayManager_RestoreLeaseArmedFormat">Аренда активирована. Снимок: {0}. Завершите Playnite принудительно (или остановите сигналы heartbeat), чтобы проверить восстановление хоста. Журнал: %TEMP%\PlayniteDisplayManager-RestoreHost.log</sys:String>
     <sys:String x:Key="LOCDisplayManager_RestoreLeaseDisarmed">Аренда деактивирована.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutTab">О программе</sys:String>
-    <sys:String x:Key="LOCDisplayManager_AboutDescription">Display Manager применяет профиль дисплея и HDR Windows при запуске игры и восстанавливает предыдущее состояние рабочего стола при остановке игры — создано для HTPC / диванных конфигураций в Playnite Desktop и Fullscreen.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AboutDescription">Display Manager применяет настройки дисплея Windows (раскладка, разрешение, частота и HDR) при запуске игры и восстанавливает предыдущее состояние рабочего стола при её завершении. Создано для игр в гостиной в Playnite Desktop и Fullscreen: ПК, подключённый к телевизору, или системы, которые переключаются между ТВ и другим экраном.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutPurposeTitle">Что делает Display Manager</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutDisplays">Choose which display a game uses, rename monitors with EDID-stable identity, and trial display layout changes with automatic restore.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutProfiles">Own HDR with global policies, Features/Tags metadata matching, and per-game overrides. Optional refresh-rate changes restore with the display snapshot.</sys:String>
@@ -235,7 +237,7 @@
     <sys:String x:Key="LOCDisplayManager_KoFiSupport">Поддержать на Ko-fi</sys:String>
     <sys:String x:Key="LOCDisplayManager_VersionAuthorFormat">Display Manager {0} · Narian</sys:String>
     <sys:String x:Key="LOCDisplayManager_TabComingSoon">Этот раздел появится на более позднем шаге.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_AboutBlurb">Применяет профиль дисплея Windows при запуске игры и восстанавливает рабочий стол при ее завершении. Создано для HTPC / диванных конфигураций.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AboutBlurb">Применяет настройки дисплея Windows при запуске игры и восстанавливает рабочий стол при её завершении. Создано для игр в гостиной на телевизоре.</sys:String>
     <sys:String x:Key="LOCDisplayManager_RemoveProfile">Удалить</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameProfilesTab">Профили игр</sys:String>
     <sys:String x:Key="LOCDisplayManager_ConfirmRemoveProfilePendingMessage">Удалить профиль Display Manager для "{0}" при сохранении настроек? Отмена настроек сохранит профиль.</sys:String>

@@ -36,6 +36,8 @@
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayGameMenuHint">특정 게임은 해당 게임의 바로 가기 메뉴에서 다른 디스플레이를 선택할 수 있습니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuOverrideTitle">게임 바로 가기 메뉴</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">게임 실행 시 이 디스플레이가 기본이 됩니다(Windows 기본값을 유지하는 경우 제외). 아래 시험 버튼으로 몇 초 미리 본 뒤 자동으로 복원할 수 있습니다.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PreferredDisplayWait">기본 디스플레이 대기</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PreferredDisplayWaitHelp">기본 디스플레이가 아직 연결되지 않은 경우(예: HDMI로 켜지는 TV), 누락 정책을 적용하기 전에 대기하며 다시 시도합니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlayDisplayWindowsDefault">Windows 기본값 유지</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusPlayPrimary">게임용 기본</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuDisplaySection">디스플레이</sys:String>
@@ -53,13 +55,13 @@
     <sys:String x:Key="LOCDisplayManager_TopologyProfileNewDefault">새 프로필</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyProfileDeleteLast">Keep at least one display profile.</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayTitle">누락된 디스플레이</sys:String>
-    <sys:String x:Key="LOCDisplayManager_MissingDisplayPolicy">선호 디스플레이가 없는 경우</sys:String>
+    <sys:String x:Key="LOCDisplayManager_MissingDisplayPolicy">기본 디스플레이가 없는 경우</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayFallback">대체 디스플레이</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayHelp">What to do when the preferred play display for the selected display profile is not connected. Notifications appear when Show notifications is enabled.</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayWindows">Windows 기본 사용</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayFallbackChoice">대체 디스플레이 사용</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayNotify">알리고 계속(Windows 기본)</sys:String>
-    <sys:String x:Key="LOCDisplayManager_MissingDisplayNotifyFormat">{0}: 선호 디스플레이 "{1}"이(가) 연결되어 있지 않습니다.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_MissingDisplayNotifyFormat">{0}: 기본 디스플레이 "{1}"이(가) 연결되어 있지 않습니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateTitle">Playnite Fullscreen</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHelp">디스플레이를 복원한 후 필요하면 Playnite Fullscreen을 복원된 기본 모니터로 이동합니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">복원 후 Playnite Fullscreen 이동</sys:String>
@@ -81,8 +83,8 @@
     <sys:String x:Key="LOCDisplayManager_TopologyTurnOffOthers">게임 실행 시 다른 디스플레이 끄기</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTurnOffOthersWarning">최소 하나의 화면은 켜진 상태로 유지합니다. 시험을 실행하기 전에 확인하세요.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTurnOffConfirm">다른 디스플레이가 몇 초 동안 꺼진 후 자동으로 복원됩니다. 계속할까요?</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyTrialApply">8초 시험 적용</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyTrialRestoreNow">지금 복원</sys:String>
+    <sys:String x:Key="LOCDisplayManager_TopologyTrialApply">끄기 시험 (8초)</sys:String>
+    <sys:String x:Key="LOCDisplayManager_TopologyTrialRestoreNow">시험 취소</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialNoTarget">먼저 연결된 디스플레이를 선택하세요.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialNothing">먼저 게임용 기본 디스플레이를 선택하세요.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialAppliedFormat">적용됨({0}). {1}초 후 복원…</sys:String>
@@ -222,7 +224,7 @@
     <sys:String x:Key="LOCDisplayManager_RestoreLeaseArmedFormat">리스가 활성화되었습니다. 스냅샷: {0}. 호스트 복원을 확인하려면 Playnite를 종료(또는 하트비트 중지)하세요. 로그: %TEMP%\PlayniteDisplayManager-RestoreHost.log</sys:String>
     <sys:String x:Key="LOCDisplayManager_RestoreLeaseDisarmed">리스가 비활성화되었습니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutTab">정보</sys:String>
-    <sys:String x:Key="LOCDisplayManager_AboutDescription">Display Manager는 게임 시작 시 Windows 디스플레이 및 HDR 프로필을 적용하고 게임이 중지되면 이전 데스크톱 상태를 복원합니다. Playnite Desktop 및 Fullscreen의 HTPC / 소파 환경을 위해 제작되었습니다.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AboutDescription">Display Manager는 게임 시작 시 Windows 디스플레이 설정(레이아웃, 해상도, 새로 고침 빈도, HDR)을 적용하고 게임이 끝나면 이전 데스크톱 상태를 복원합니다. Playnite Desktop 및 Fullscreen의 거실 게임용: TV에 연결된 PC, 또는 TV와 다른 화면을 전환하는 구성.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutPurposeTitle">Display Manager가 하는 일</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutDisplays">Choose which display a game uses, rename monitors with EDID-stable identity, and trial display layout changes with automatic restore.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutProfiles">Own HDR with global policies, Features/Tags metadata matching, and per-game overrides. Optional refresh-rate changes restore with the display snapshot.</sys:String>
@@ -235,7 +237,7 @@
     <sys:String x:Key="LOCDisplayManager_KoFiSupport">Ko-fi에서 지원</sys:String>
     <sys:String x:Key="LOCDisplayManager_VersionAuthorFormat">Display Manager {0} · Narian</sys:String>
     <sys:String x:Key="LOCDisplayManager_TabComingSoon">이 섹션은 이후 단계에서 제공됩니다.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_AboutBlurb">게임 시작 시 Windows 디스플레이 프로필을 적용하고 중지 시 데스크톱을 복원합니다. HTPC / 소파 환경을 위해 제작되었습니다.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AboutBlurb">게임 시작 시 Windows 디스플레이 설정을 적용하고 종료 시 데스크톱을 복원합니다. 거실 TV 게임에 맞춰 만들었습니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_RemoveProfile">제거</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameProfilesTab">게임 프로필</sys:String>
     <sys:String x:Key="LOCDisplayManager_ConfirmRemoveProfilePendingMessage">설정을 저장할 때 "{0}"의 Display Manager 프로필을 제거할까요? 설정을 취소하면 프로필이 유지됩니다.</sys:String>

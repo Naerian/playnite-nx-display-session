@@ -36,6 +36,8 @@
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayGameMenuHint">可为特定游戏在其上下文菜单中选择不同的显示器。</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuOverrideTitle">游戏上下文菜单</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">启动游戏时，此显示器将成为主显示器（除非保留 Windows 默认设置）。可使用下方试用按钮预览几秒并自动还原。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PreferredDisplayWait">等待主显示器</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PreferredDisplayWaitHelp">如果主显示器尚未连接（例如通过 HDMI 唤醒的电视），在应用缺失显示器策略之前会等待并重试。</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlayDisplayWindowsDefault">保留 Windows 默认设置</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusPlayPrimary">游戏用主显示器</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuDisplaySection">显示器</sys:String>
@@ -53,13 +55,13 @@
     <sys:String x:Key="LOCDisplayManager_TopologyProfileNewDefault">新配置文件</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyProfileDeleteLast">Keep at least one display profile.</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayTitle">缺失显示器</sys:String>
-    <sys:String x:Key="LOCDisplayManager_MissingDisplayPolicy">首选显示器缺失时</sys:String>
+    <sys:String x:Key="LOCDisplayManager_MissingDisplayPolicy">主显示器缺失时</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayFallback">回退显示器</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayHelp">What to do when the preferred play display for the selected display profile is not connected. Notifications appear when Show notifications is enabled.</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayWindows">使用 Windows 主显示器</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayFallbackChoice">使用回退显示器</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayNotify">通知并继续（Windows 主显示器）</sys:String>
-    <sys:String x:Key="LOCDisplayManager_MissingDisplayNotifyFormat">{0}: 首选显示器 "{1}" 未连接。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_MissingDisplayNotifyFormat">{0}：主显示器 "{1}" 未连接。</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateTitle">Playnite Fullscreen</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHelp">恢复显示器后，可选择将 Playnite Fullscreen 移动到恢复后的主显示器。</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">恢复后移动 Playnite Fullscreen</sys:String>
@@ -81,8 +83,8 @@
     <sys:String x:Key="LOCDisplayManager_TopologyTurnOffOthers">启动游戏时关闭其他显示器</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTurnOffOthersWarning">至少保留一个屏幕开启。运行试用前请确认。</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTurnOffConfirm">其他显示器将关闭几秒钟，然后自动恢复。继续吗？</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyTrialApply">应用 8 秒试用</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyTrialRestoreNow">立即恢复</sys:String>
+    <sys:String x:Key="LOCDisplayManager_TopologyTrialApply">试用关闭其他 (8秒)</sys:String>
+    <sys:String x:Key="LOCDisplayManager_TopologyTrialRestoreNow">取消试用</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialNoTarget">请先选择一个已连接的显示器。</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialNothing">请先选择游戏用主显示器。</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialAppliedFormat">已应用 ({0})。将在 {1} 秒后恢复…</sys:String>
@@ -222,7 +224,7 @@
     <sys:String x:Key="LOCDisplayManager_RestoreLeaseArmedFormat">租约已启用。快照: {0}。终止 Playnite（或停止心跳）以验证主机恢复。日志: %TEMP%\PlayniteDisplayManager-RestoreHost.log</sys:String>
     <sys:String x:Key="LOCDisplayManager_RestoreLeaseDisarmed">租约已解除。</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutTab">关于</sys:String>
-    <sys:String x:Key="LOCDisplayManager_AboutDescription">Display Manager 会在游戏开始时应用 Windows 显示器和 HDR 配置文件，并在游戏停止时恢复之前的桌面状态。它为 Playnite Desktop 和 Fullscreen 中的 HTPC / 沙发场景而构建。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AboutDescription">Display Manager 会在游戏开始时应用 Windows 显示设置（布局、分辨率、刷新率和 HDR），并在游戏结束时恢复之前的桌面状态。面向 Playnite Desktop 与 Fullscreen 的客厅游戏：连接电视的电脑，或在电视与另一块屏幕之间切换的配置。</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutPurposeTitle">Display Manager 的功能</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutDisplays">Choose which display a game uses, rename monitors with EDID-stable identity, and trial display layout changes with automatic restore.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutProfiles">Own HDR with global policies, Features/Tags metadata matching, and per-game overrides. Optional refresh-rate changes restore with the display snapshot.</sys:String>
@@ -235,7 +237,7 @@
     <sys:String x:Key="LOCDisplayManager_KoFiSupport">在 Ko-fi 上支持</sys:String>
     <sys:String x:Key="LOCDisplayManager_VersionAuthorFormat">Display Manager {0} · Narian</sys:String>
     <sys:String x:Key="LOCDisplayManager_TabComingSoon">此部分将在后续步骤中推出。</sys:String>
-    <sys:String x:Key="LOCDisplayManager_AboutBlurb">游戏开始时应用 Windows 显示器配置文件，并在停止时恢复桌面。为 HTPC / 沙发场景构建。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AboutBlurb">游戏开始时应用 Windows 显示设置，结束时恢复桌面。面向客厅电视游戏。</sys:String>
     <sys:String x:Key="LOCDisplayManager_RemoveProfile">移除</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameProfilesTab">游戏配置文件</sys:String>
     <sys:String x:Key="LOCDisplayManager_ConfirmRemoveProfilePendingMessage">保存设置时要移除 "{0}" 的 Display Manager 配置文件吗？取消设置会保留该配置文件。</sys:String>

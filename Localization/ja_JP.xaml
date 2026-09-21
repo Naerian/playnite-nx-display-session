@@ -36,6 +36,8 @@
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayGameMenuHint">特定のゲームでは、そのゲームのコンテキストメニューから別のディスプレイを選べます。</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuOverrideTitle">ゲームのコンテキストメニュー</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">ゲーム起動時にこのディスプレイをプライマリにします (Windows の既定を維持する場合を除く)。下の試行ボタンで数秒間プレビューし、自動的に復元できます。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PreferredDisplayWait">プライマリディスプレイを待つ</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PreferredDisplayWaitHelp">プライマリディスプレイがまだ接続されていない場合 (HDMI で起動するテレビなど)、欠落時のポリシーを適用する前に待機して再試行します。</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlayDisplayWindowsDefault">Windows の既定を維持</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusPlayPrimary">ゲーム用プライマリ</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuDisplaySection">ディスプレイ</sys:String>
@@ -53,13 +55,13 @@
     <sys:String x:Key="LOCDisplayManager_TopologyProfileNewDefault">新しいプロファイル</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyProfileDeleteLast">Keep at least one display profile.</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayTitle">未接続ディスプレイ</sys:String>
-    <sys:String x:Key="LOCDisplayManager_MissingDisplayPolicy">優先ディスプレイがない場合</sys:String>
+    <sys:String x:Key="LOCDisplayManager_MissingDisplayPolicy">プライマリディスプレイがない場合</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayFallback">フォールバックディスプレイ</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayHelp">What to do when the preferred play display for the selected display profile is not connected. Notifications appear when Show notifications is enabled.</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayWindows">Windows プライマリを使用</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayFallbackChoice">フォールバックディスプレイを使用</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayNotify">通知して続行 (Windows プライマリ)</sys:String>
-    <sys:String x:Key="LOCDisplayManager_MissingDisplayNotifyFormat">{0}: 優先ディスプレイ "{1}" は接続されていません。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_MissingDisplayNotifyFormat">{0}: プライマリディスプレイ "{1}" は接続されていません。</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateTitle">Playnite Fullscreen</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHelp">ディスプレイ復元後、必要に応じて Playnite Fullscreen を復元されたプライマリモニターへ移動します。</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">復元後に Playnite Fullscreen を移動する</sys:String>
@@ -81,8 +83,8 @@
     <sys:String x:Key="LOCDisplayManager_TopologyTurnOffOthers">ゲーム起動時に他のディスプレイをオフにする</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTurnOffOthersWarning">少なくとも 1 台の画面はオンのままにします。試行を実行する前に確認してください。</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTurnOffConfirm">他のディスプレイは数秒間オフになり、その後自動的に復元されます。続行しますか?</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyTrialApply">8 秒の試行を適用</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyTrialRestoreNow">今すぐ復元</sys:String>
+    <sys:String x:Key="LOCDisplayManager_TopologyTrialApply">オフを試す (8秒)</sys:String>
+    <sys:String x:Key="LOCDisplayManager_TopologyTrialRestoreNow">試行をキャンセル</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialNoTarget">先に接続済みディスプレイを選択してください。</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialNothing">先にゲーム用プライマリディスプレイを選択してください。</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialAppliedFormat">適用しました ({0})。{1} 秒後に復元します…</sys:String>
@@ -222,7 +224,7 @@
     <sys:String x:Key="LOCDisplayManager_RestoreLeaseArmedFormat">リースを有効化しました。スナップショット: {0}。ホスト復元を確認するには Playnite を終了 (またはハートビートを停止) してください。ログ: %TEMP%\PlayniteDisplayManager-RestoreHost.log</sys:String>
     <sys:String x:Key="LOCDisplayManager_RestoreLeaseDisarmed">リースを解除しました。</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutTab">情報</sys:String>
-    <sys:String x:Key="LOCDisplayManager_AboutDescription">Display Manager はゲーム開始時に Windows ディスプレイと HDR プロファイルを適用し、ゲーム停止時に以前のデスクトップ状態を復元します。Playnite Desktop と Fullscreen の HTPC / カウチ環境向けに作られています。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AboutDescription">Display Manager はゲーム開始時に Windows のディスプレイ設定 (レイアウト、解像度、リフレッシュレート、HDR) を適用し、終了時に以前のデスクトップ状態を復元します。Playnite Desktop / Fullscreen でのリビングルーム向け: TV に接続した PC、または TV と別画面を切り替える環境向けです。</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutPurposeTitle">Display Manager の機能</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutDisplays">Choose which display a game uses, rename monitors with EDID-stable identity, and trial display layout changes with automatic restore.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutProfiles">Own HDR with global policies, Features/Tags metadata matching, and per-game overrides. Optional refresh-rate changes restore with the display snapshot.</sys:String>
@@ -235,7 +237,7 @@
     <sys:String x:Key="LOCDisplayManager_KoFiSupport">Ko-fi で支援</sys:String>
     <sys:String x:Key="LOCDisplayManager_VersionAuthorFormat">Display Manager {0} · Narian</sys:String>
     <sys:String x:Key="LOCDisplayManager_TabComingSoon">このセクションは後のステップで追加されます。</sys:String>
-    <sys:String x:Key="LOCDisplayManager_AboutBlurb">ゲーム開始時に Windows ディスプレイプロファイルを適用し、停止時にデスクトップを復元します。HTPC / カウチ環境向けに作られています。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AboutBlurb">ゲーム開始時に Windows のディスプレイ設定を適用し、終了時にデスクトップを復元します。リビングの TV でのプレイ向けです。</sys:String>
     <sys:String x:Key="LOCDisplayManager_RemoveProfile">削除</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameProfilesTab">ゲームプロファイル</sys:String>
     <sys:String x:Key="LOCDisplayManager_ConfirmRemoveProfilePendingMessage">設定保存時に "{0}" の Display Manager プロファイルを削除しますか? 設定をキャンセルするとプロファイルは保持されます。</sys:String>

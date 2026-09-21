@@ -654,24 +654,45 @@
                                       DisplayMemberPath="EffectiveName"
                                       SelectedValuePath="Id"
                                       SelectionChanged="TopologyTargetBox_OnSelectionChanged" />
-                            <CheckBox x:Name="TopologyTurnOffOthersCheck"
-                                      Content="{DynamicResource LOCDisplayManager_TopologyTurnOffOthers}"
-                                      Margin="0,12,0,0"
-                                      Checked="TopologyTurnOffOthersCheck_OnChanged"
-                                      Unchecked="TopologyTurnOffOthersCheck_OnChanged" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_PreferredDisplayWait}"
+                                       Style="{StaticResource FieldLabel}"
+                                       Margin="0,12,0,4" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_PreferredDisplayWaitHelp}"
+                                       Style="{StaticResource HintText}"
+                                       Margin="0,0,0,4" />
+                            <ComboBox ItemsSource="{Binding PreferredDisplayWaitOptions}"
+                                      DisplayMemberPath="DisplayName"
+                                      SelectedValuePath="Value"
+                                      SelectedValue="{Binding PreferredDisplayWaitMsValue, Mode=TwoWay}"
+                                      MinHeight="36"
+                                      HorizontalAlignment="Left"
+                                      MinWidth="220" />
+                            <DockPanel Margin="0,12,0,0" LastChildFill="True">
+                                <StackPanel DockPanel.Dock="Right"
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center"
+                                            Margin="12,0,0,0">
+                                    <Button x:Name="TopologyTrialApplyButton"
+                                            Content="{DynamicResource LOCDisplayManager_TopologyTrialApply}"
+                                            Style="{StaticResource NarianPrimaryButton}"
+                                            MinWidth="160"
+                                            Margin="0,0,8,0"
+                                            Click="TopologyTrialApply_OnClick" />
+                                    <Button x:Name="TopologyTrialCancelButton"
+                                            Content="{DynamicResource LOCDisplayManager_TopologyTrialRestoreNow}"
+                                            MinWidth="140"
+                                            MinHeight="36"
+                                            IsEnabled="False"
+                                            Click="TopologyTrialRestore_OnClick" />
+                                </StackPanel>
+                                <CheckBox x:Name="TopologyTurnOffOthersCheck"
+                                          Content="{DynamicResource LOCDisplayManager_TopologyTurnOffOthers}"
+                                          VerticalAlignment="Center"
+                                          Checked="TopologyTurnOffOthersCheck_OnChanged"
+                                          Unchecked="TopologyTurnOffOthersCheck_OnChanged" />
+                            </DockPanel>
                             <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTurnOffOthersWarning}"
                                        Style="{StaticResource IndentedHintText}" />
-                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                <Button Content="{DynamicResource LOCDisplayManager_TopologyTrialApply}"
-                                        Style="{StaticResource NarianPrimaryButton}"
-                                        MinWidth="180"
-                                        Margin="0,0,8,0"
-                                        Click="TopologyTrialApply_OnClick" />
-                                <Button Content="{DynamicResource LOCDisplayManager_TopologyTrialRestoreNow}"
-                                        MinWidth="140"
-                                        MinHeight="36"
-                                        Click="TopologyTrialRestore_OnClick" />
-                            </StackPanel>
                             <TextBlock x:Name="TopologyTrialStatusText"
                                        Style="{StaticResource HintText}"
                                        Margin="0,12,0,0" />

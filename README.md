@@ -1,8 +1,8 @@
 # Playnite NX Display Manager
 
-Display Manager is a Playnite extension that applies a Windows display and HDR profile when a game starts and restores the previous desktop state when the game stops.
+Display Manager is a Playnite extension that applies Windows display settings (layout, resolution, refresh rate, and HDR) when a game starts and restores the previous desktop state when the game stops.
 
-It is designed for HTPC and couch setups that regularly move between a TV and another screen: choose which display a game uses, set a global HDR policy, optionally override per game, then bring the desktop back.
+It is built for living-room gaming — a PC on the sofa connected to a TV, or setups that switch between a TV and another screen. Choose the primary display, set launch defaults for HDR and related options, override them per game when needed, then bring the desktop back.
 
 ## Features
 

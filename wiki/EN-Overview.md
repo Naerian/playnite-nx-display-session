@@ -1,11 +1,13 @@
 # Overview
 
-Display Manager is a Playnite GenericPlugin that owns **Windows display profiles, HDR, resolution, and refresh rate** for game sessions. On game start it applies the resolved profile; on stop, cancel, or Playnite exit it restores the previous desktop state via a durable RestoreHost lease.
+Display Manager is a Playnite GenericPlugin that owns **Windows display layout, resolution, refresh rate, and HDR** for game sessions. On game start it applies the resolved settings; on stop, cancel, or Playnite exit it restores the previous desktop state via a durable RestoreHost lease.
+
+Built for living-room gaming: a PC on the sofa connected to a TV, or setups that switch between a TV and another screen.
 
 ## What it does
 
 - Lists active displays with EDID-based identity when Windows exposes enough data.
-- Lets you choose a **primary display for games** through named **display profiles**. The built-in defaults are **Solo TV** for couch/TV play and **PC / Desktop** for keeping the normal desktop layout.
+- Lets you choose a **primary display for games**. The built-in profile defaults are **Solo TV** for TV play and **PC / Desktop** for keeping the normal desktop layout.
 - Handles missing displays with Windows primary, fallback display, or notify-and-continue behavior.
 - Owns **HDR** with global policy, display-profile defaults, and per-game/per-platform overrides.
 - Optionally applies **resolution** and **refresh rate** after the display profile, then waits the configured **settle delay** before continuing.

@@ -41,6 +41,7 @@ namespace PlayniteDisplayManager
         private int? preferredResolutionWidth;
         private int? preferredResolutionHeight;
         private int postChangeSettleDelayMs = 1000;
+        private int preferredDisplayWaitMs;
         private bool showDesktopTopPanel = true;
         private DesktopTopPanelDisplayMode desktopTopPanelDisplayMode = DesktopTopPanelDisplayMode.Icon;
         private bool showNotifications = true;
@@ -81,6 +82,7 @@ namespace PlayniteDisplayManager
                 PreferredResolutionWidth = savedSettings.PreferredResolutionWidth;
                 PreferredResolutionHeight = savedSettings.PreferredResolutionHeight;
                 PostChangeSettleDelayMs = savedSettings.PostChangeSettleDelayMs;
+                PreferredDisplayWaitMs = savedSettings.PreferredDisplayWaitMs;
                 ShowDesktopTopPanel = savedSettings.ShowDesktopTopPanel;
                 DesktopTopPanelDisplayMode = savedSettings.DesktopTopPanelDisplayMode;
                 ShowNotifications = savedSettings.ShowNotifications;
@@ -193,6 +195,15 @@ namespace PlayniteDisplayManager
         {
             get => postChangeSettleDelayMs;
             set => SetValue(ref postChangeSettleDelayMs, Math.Max(0, value));
+        }
+
+        /// <summary>
+        /// How long to wait/retry for the preferred play display before applying missing-display policy.
+        /// </summary>
+        public int PreferredDisplayWaitMs
+        {
+            get => preferredDisplayWaitMs;
+            set => SetValue(ref preferredDisplayWaitMs, Math.Max(0, value));
         }
 
         public bool ShowDesktopTopPanel
@@ -359,6 +370,30 @@ namespace PlayniteDisplayManager
             }
         }
 
+        [DontSerialize]
+        public List<AppearancePresetOption> PreferredDisplayWaitOptions => new List<AppearancePresetOption>
+        {
+            new AppearancePresetOption { Value = "0", DisplayName = "0 s" },
+            new AppearancePresetOption { Value = "3000", DisplayName = "3 s" },
+            new AppearancePresetOption { Value = "5000", DisplayName = "5 s" },
+            new AppearancePresetOption { Value = "8000", DisplayName = "8 s" },
+            new AppearancePresetOption { Value = "10000", DisplayName = "10 s" },
+            new AppearancePresetOption { Value = "15000", DisplayName = "15 s" }
+        };
+
+        [DontSerialize]
+        public string PreferredDisplayWaitMsValue
+        {
+            get => PreferredDisplayWaitMs.ToString();
+            set
+            {
+                if (int.TryParse(value, out var ms))
+                {
+                    PreferredDisplayWaitMs = ms;
+                }
+            }
+        }
+
         public void RefreshDisplays()
         {
             if (plugin?.Displays == null)
@@ -426,6 +461,7 @@ namespace PlayniteDisplayManager
             PreferredResolutionWidth = editingClone.PreferredResolutionWidth;
             PreferredResolutionHeight = editingClone.PreferredResolutionHeight;
             PostChangeSettleDelayMs = editingClone.PostChangeSettleDelayMs;
+            PreferredDisplayWaitMs = editingClone.PreferredDisplayWaitMs;
             ShowDesktopTopPanel = editingClone.ShowDesktopTopPanel;
             DesktopTopPanelDisplayMode = editingClone.DesktopTopPanelDisplayMode;
             ShowNotifications = editingClone.ShowNotifications;
@@ -442,6 +478,7 @@ namespace PlayniteDisplayManager
             OnPropertyChanged(nameof(HdrMetadataMatchNamesText));
             OnPropertyChanged(nameof(DesktopTopPanelDisplayModeValue));
             OnPropertyChanged(nameof(PostChangeSettleDelayMsValue));
+            OnPropertyChanged(nameof(PreferredDisplayWaitMsValue));
         }
 
         public void EndEdit()

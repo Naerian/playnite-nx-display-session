@@ -36,6 +36,8 @@
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayGameMenuHint">Vous pouvez choisir un écran différent pour un jeu précis depuis le menu contextuel de ce jeu.</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuOverrideTitle">Menu contextuel du jeu</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">Cet écran devient principal au lancement d&apos;un jeu (sauf si vous conservez la valeur par défaut de Windows). Utilisez les boutons d&apos;essai ci-dessous pour prévisualiser quelques secondes et restaurer automatiquement.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PreferredDisplayWait">Attendre l'écran principal</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PreferredDisplayWaitHelp">Si l'écran principal n'est pas encore connecté (par ex. une TV qui se réveille en HDMI), attendre et réessayer avant d'appliquer la politique d'écran absent.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlayDisplayWindowsDefault">Garder le réglage Windows par défaut</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusPlayPrimary">Principal pour les jeux</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuDisplaySection">Écran</sys:String>
@@ -53,13 +55,13 @@
     <sys:String x:Key="LOCDisplayManager_TopologyProfileNewDefault">Nouveau profil</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyProfileDeleteLast">Keep at least one display profile.</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayTitle">Écran absent</sys:String>
-    <sys:String x:Key="LOCDisplayManager_MissingDisplayPolicy">Si l’écran préféré est absent</sys:String>
+    <sys:String x:Key="LOCDisplayManager_MissingDisplayPolicy">Si l'écran principal est absent</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayFallback">Écran de secours</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayHelp">What to do when the preferred play display for the selected display profile is not connected. Notifications appear when Show notifications is enabled.</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayWindows">Utiliser l’écran principal de Windows</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayFallbackChoice">Utiliser l’écran de secours</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayNotify">Notifier et continuer (écran principal Windows)</sys:String>
-    <sys:String x:Key="LOCDisplayManager_MissingDisplayNotifyFormat">{0} : l’écran préféré &quot;{1}&quot; n’est pas connecté.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_MissingDisplayNotifyFormat">{0} : l'écran principal "{1}" n'est pas connecté.</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateTitle">Playnite Fullscreen</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHelp">Après la restauration des écrans, déplace éventuellement Playnite Fullscreen vers le moniteur principal restauré.</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">Déplacer Playnite Fullscreen après restauration</sys:String>
@@ -81,8 +83,8 @@
     <sys:String x:Key="LOCDisplayManager_TopologyTurnOffOthers">Éteindre les autres écrans au lancement d’un jeu</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTurnOffOthersWarning">Garde au moins un écran allumé. Confirmez avant de lancer un essai.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTurnOffConfirm">Les autres écrans s’éteindront quelques secondes, puis seront restaurés automatiquement. Continuer ?</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyTrialApply">Appliquer l’essai 8 s</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyTrialRestoreNow">Restaurer maintenant</sys:String>
+    <sys:String x:Key="LOCDisplayManager_TopologyTrialApply">Tester l'extinction (8s)</sys:String>
+    <sys:String x:Key="LOCDisplayManager_TopologyTrialRestoreNow">Annuler l'essai</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialNoTarget">Sélectionnez d’abord un écran connecté.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialNothing">Sélectionnez d’abord un écran principal pour les jeux.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialAppliedFormat">Appliqué ({0}). Restauration dans {1} s…</sys:String>
@@ -222,7 +224,7 @@
     <sys:String x:Key="LOCDisplayManager_RestoreLeaseArmedFormat">Lease armé. Instantané : {0}. Tuez Playnite (ou arrêtez les pulsations) pour vérifier la restauration hôte. Journal : %TEMP%\PlayniteDisplayManager-RestoreHost.log</sys:String>
     <sys:String x:Key="LOCDisplayManager_RestoreLeaseDisarmed">Lease désarmé.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutTab">À propos</sys:String>
-    <sys:String x:Key="LOCDisplayManager_AboutDescription">Display Manager applique un profil d’affichage Windows et HDR au lancement d’un jeu et restaure l’état précédent du Desktop à l’arrêt du jeu, conçu pour les configurations HTPC / canapé dans Playnite Desktop et Fullscreen.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AboutDescription">Display Manager applique les réglages d'affichage Windows (disposition, résolution, fréquence et HDR) au lancement d'un jeu et restaure l'état précédent du bureau à la fermeture. Conçu pour jouer depuis le salon dans Playnite Desktop et Fullscreen : un PC branché à la TV, ou des configs qui alternent entre la TV et un autre écran.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutPurposeTitle">Ce que fait Display Manager</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutDisplays">Choose which display a game uses, rename monitors with EDID-stable identity, and trial display layout changes with automatic restore.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AboutProfiles">Own HDR with global policies, Features/Tags metadata matching, and per-game overrides. Optional refresh-rate changes restore with the display snapshot.</sys:String>
@@ -235,7 +237,7 @@
     <sys:String x:Key="LOCDisplayManager_KoFiSupport">Soutenir sur Ko-fi</sys:String>
     <sys:String x:Key="LOCDisplayManager_VersionAuthorFormat">Display Manager {0} · Narian</sys:String>
     <sys:String x:Key="LOCDisplayManager_TabComingSoon">Cette section arrivera lors d’une étape ultérieure.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_AboutBlurb">Applique un profil d’affichage Windows au lancement d’un jeu et restaure le Desktop à l’arrêt. Conçu pour les configurations HTPC / canapé.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AboutBlurb">Applique les réglages d'affichage Windows au lancement d'un jeu et restaure le bureau à la fermeture. Conçu pour jouer au salon sur la TV.</sys:String>
     <sys:String x:Key="LOCDisplayManager_RemoveProfile">Supprimer</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameProfilesTab">Profils de jeu</sys:String>
     <sys:String x:Key="LOCDisplayManager_ConfirmRemoveProfilePendingMessage">Supprimer le profil Display Manager pour "{0}" à l'enregistrement des paramètres ? Si vous annulez les paramètres, le profil est conservé.</sys:String>

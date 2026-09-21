@@ -628,6 +628,13 @@ namespace PlayniteDisplayManager
                 && livePreview.Any(d => d.IsConnected
                     && string.Equals(d.Id, preferredId, StringComparison.OrdinalIgnoreCase));
 
+            if (!preferredExists && !string.IsNullOrWhiteSpace(preferredId))
+            {
+                preferredExists = WaitForPreferredDisplay(preferredId, out livePreview);
+                currentPrimary = livePreview.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
+                    ?? livePreview.FirstOrDefault(d => d.IsConnected);
+            }
+
             var missingPreferred = !string.IsNullOrWhiteSpace(preferredId) && !preferredExists;
             if (missingPreferred)
             {
@@ -1013,6 +1020,45 @@ namespace PlayniteDisplayManager
             }
 
             Thread.Sleep(delay);
+        }
+
+        /// <summary>
+        /// Polls connected displays until the preferred id appears or the configured wait elapses.
+        /// </summary>
+        private bool WaitForPreferredDisplay(string preferredId, out List<DisplayInfo> livePreview)
+        {
+            livePreview = Displays.GetDisplays().ToList();
+            var waitMs = settings?.PreferredDisplayWaitMs ?? 0;
+            if (waitMs <= 0 || string.IsNullOrWhiteSpace(preferredId))
+            {
+                return livePreview.Any(d => d.IsConnected
+                    && string.Equals(d.Id, preferredId, StringComparison.OrdinalIgnoreCase));
+            }
+
+            var deadline = DateTime.UtcNow.AddMilliseconds(waitMs);
+            const int pollMs = 500;
+            while (true)
+            {
+                livePreview = Displays.GetDisplays().ToList();
+                if (livePreview.Any(d => d.IsConnected
+                    && string.Equals(d.Id, preferredId, StringComparison.OrdinalIgnoreCase)))
+                {
+                    logger.Info("Preferred display became available after wait: " + preferredId);
+                    return true;
+                }
+
+                var remaining = (int)(deadline - DateTime.UtcNow).TotalMilliseconds;
+                if (remaining <= 0)
+                {
+                    break;
+                }
+
+                Thread.Sleep(Math.Min(pollMs, remaining));
+            }
+
+            livePreview = Displays.GetDisplays().ToList();
+            return livePreview.Any(d => d.IsConnected
+                && string.Equals(d.Id, preferredId, StringComparison.OrdinalIgnoreCase));
         }
 
         public bool GameHasHdrMetadata(Game game)

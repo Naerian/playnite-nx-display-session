@@ -1,12 +1,14 @@
 # Descripcion general
 
-Display Manager es un GenericPlugin de Playnite que gestiona **perfiles de pantalla, HDR, resolucion y frecuencia** para sesiones de juego. Al iniciar un juego aplica el perfil resuelto; al parar, cancelar o cerrar Playnite restaura el escritorio anterior mediante un lease durable de RestoreHost.
+Display Manager es un GenericPlugin de Playnite que gestiona **distribucion de pantallas, resolucion, frecuencia y HDR** de Windows para sesiones de juego. Al iniciar un juego aplica los ajustes resueltos; al parar, cancelar o cerrar Playnite restaura el escritorio anterior mediante un lease durable de RestoreHost.
+
+Pensado para jugar en el salon: un PC conectado a la TV, o equipos que alternan entre la TV y otra pantalla.
 
 ## Que hace
 
 - Enumera pantallas activas con identidad basada en EDID cuando Windows expone datos suficientes.
-- Permite elegir la **pantalla principal para juegos** mediante **perfiles de pantalla**. Los valores incluidos son **Solo TV** para jugar en sofa/TV y **PC / Desktop** para mantener el escritorio normal.
-- Gestiona pantallas ausentes con primaria de Windows, pantalla de respaldo, o avisar y continuar.
+- Permite elegir la **pantalla principal para juegos**. Los valores incluidos son **Solo TV** para jugar en la TV y **PC / Desktop** para mantener el escritorio normal.
+- Gestiona pantallas ausentes con la principal de Windows, pantalla de respaldo, o avisar y continuar.
 - Gestiona **HDR** con politica global, valores por perfil de pantalla y overrides por juego/plataforma.
 - Opcionalmente aplica **resolucion** y **frecuencia** tras el perfil de pantalla, y espera el **retardo de asentamiento** configurado antes de continuar.
 - Expone controles para temas Fullscreen y `PluginSettings` con SourceName `DisplayManager`.
