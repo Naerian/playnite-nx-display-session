@@ -4,12 +4,10 @@
     <sys:String x:Key="LOCDisplayManager_PluginName">Display Manager</sys:String>
     <sys:String x:Key="LOCDisplayManager_OpenSettings">Abrir ajustes</sys:String>
     <sys:String x:Key="LOCDisplayManager_OpenSetupWizard">Abrir asistente de configuración</sys:String>
-    <sys:String x:Key="LOCDisplayManager_SkeletonHint">Compilación esqueleto. Los perfiles de pantalla y HDR por juego llegan a continuación.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewTab">Resumen</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewHelp">Vista rápida de lo que hará Display Manager al lanzar un juego.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewRefresh">Actualizar</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewDisplays">Pantallas</sys:String>
-    <sys:String x:Key="LOCDisplayManager_OverviewDisplaysPlaceholder">La enumeración de pantallas aún no está conectada.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewDisplaysNone">No se detectaron pantallas.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewDisplaysFormat">{0} conectadas · principal: {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewWhenLaunching">Al lanzar un juego</sys:String>
@@ -18,9 +16,6 @@
     <sys:String x:Key="LOCDisplayManager_OverviewActionMetadata">El HDR se activa solo en juegos cuyos metadatos indiquen HDR, y se desactiva al cerrarlos.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewPolicy">HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewPolicyUnset">Aún no configurada.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_OverviewSession">Sesión activa</sys:String>
-    <sys:String x:Key="LOCDisplayManager_OverviewSessionIdle">Sin sesión de juego.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_OverviewSessionActiveFormat">Restaurando tras: {0}</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusPending">Pendiente</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusUnknown">Desconocido</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusConnected">Conectada</sys:String>
@@ -42,18 +37,6 @@
     <sys:String x:Key="LOCDisplayManager_StatusPlayPrimary">Principal para juegos</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuDisplaySection">Pantalla</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameDisplayInherit">Mantener configuración global</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfilesTitle">Perfiles de pantalla</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfilesHelp">Paquetes con nombre para pantalla principal, apagar otras pantallas, pantalla ausente, HDR, frecuencia y resolución. Uno es el predeterminado al lanzar salvo que un juego o plataforma lo sobrescriba.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileDefaultName">Predeterminado</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileDefaultFormat">Predeterminado al lanzar: {0}</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileNew">Nuevo</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileRename">Renombrar</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileDelete">Eliminar</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileSetDefault">Usar por defecto</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileNewPrompt">Nombre del nuevo perfil de pantalla</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileRenamePrompt">Nuevo nombre de este perfil de pantalla</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileNewDefault">Perfil nuevo</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileDeleteLast">Debe quedar al menos un perfil de pantalla.</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayTitle">Pantalla ausente</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayPolicy">Si falta la pantalla principal</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayFallback">Pantalla de respaldo</sys:String>
@@ -69,8 +52,6 @@
     <sys:String x:Key="LOCDisplayManager_FullscreenRestoreTab">Reubicar Playnite</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsTab">Al lanzar un juego</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsHelp">Comportamiento de pantalla por defecto al iniciar un juego, salvo que un perfil de pantalla, plataforma o juego lo anule.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_ProfilesTab">Perfiles</sys:String>
-    <sys:String x:Key="LOCDisplayManager_ProfilesHelp">Prioridad: perfil por juego → perfil por plataforma → perfil de pantalla predeterminado → valores de «Al lanzar un juego».</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTab">Perfiles por plataforma</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTitle">Perfiles por plataforma</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesHelp">Valores por defecto para todos los juegos de una plataforma cuando ese juego no tiene override propio.</sys:String>
@@ -93,7 +74,6 @@
     <sys:String x:Key="LOCDisplayManager_TopologyTrialNothingToRestore">No hay snapshot de prueba que restaurar.</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplayAlias">Nombre personalizado</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplayAliasHelp">Nombre opcional en Playnite. Las pantallas desconectadas con nombre personalizado siguen listadas.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayShowInList">Mostrar en Display Manager</sys:String>
     <sys:String x:Key="LOCDisplayManager_AppearancePreset">Apariencia</sys:String>
     <sys:String x:Key="LOCDisplayManager_AppearancePresetHelp">Los presets solo cambian colores. Layout, tipografía y espaciado se mantienen.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetMidnight">Midnight</sys:String>
@@ -248,7 +228,6 @@
     <sys:String x:Key="LOCDisplayManager_StatusLabel">Estado</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewNativeHdrWarnBadge">Conflicto</sys:String>
     <sys:String x:Key="LOCDisplayManager_UnknownGame">Juego desconocido</sys:String>
-    <sys:String x:Key="LOCDisplayManager_OverviewSessionActiveBadge">Activa</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrIncludeTagsHelp">Si está activo, Display Manager mira las etiquetas de Playnite además de las características (Features), por si tu proveedor de metadatos guarda HDR como etiqueta (por ejemplo HDR o HDR10).</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameProfilesTitle">Perfiles configurados</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplaysListTitle">Pantallas conectadas</sys:String>
@@ -257,7 +236,6 @@
     <sys:String x:Key="LOCDisplayManager_GameProfilesPriorityHint">Añade o cambia la pantalla, el HDR, la frecuencia o la resolución desde el menú contextual de cada juego.</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplaysListHelp">Ponles un nombre claro, identifícalas en el escritorio y elige cuál será la principal al jugar.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ConfirmRemoveProfileTitle">Quitar perfil del juego</sys:String>
-    <sys:String x:Key="LOCDisplayManager_OverviewSessionIdleBadge">Inactiva</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionDoNotManageShort">Dejar el HDR de Windows</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionAlwaysOnShort">HDR en todos los juegos</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionMetadataShort">HDR según metadatos</sys:String>
@@ -282,22 +260,9 @@
     <sys:String x:Key="LOCDisplayManager_HdrPrimaryNoSupport">La pantalla principal seleccionada para juegos no soporta HDR. Las opciones HDR no están disponibles hasta que elijas una pantalla compatible.</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPrimaryNoSupportTitle">Sin soporte HDR</sys:String>
 
-    <sys:String x:Key="LOCDisplayManager_DisplayProfilesTitle">Perfiles de pantalla</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfilesHelp">Paquetes con nombre para pantalla principal y apagar otras. Uno es el predeterminado al lanzar. HDR, frecuencia, resolución y pantalla ausente siguen viniendo de «Al lanzar un juego», salvo override por juego o plataforma.</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplayProfileDefaultName">Predeterminado</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplayProfileSoloTvName">Solo TV</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplayProfilePcDesktopName">PC / escritorio</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileDefaultFormat">Predeterminado al lanzar: {0}</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileNew">Nuevo</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileRename">Renombrar</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileDelete">Eliminar</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileView">Ver</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileViewTitle">Resumen del perfil de pantalla</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileSetDefault">Usar por defecto</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileNewPrompt">Nombre del nuevo perfil de pantalla</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileRenamePrompt">Nuevo nombre de este perfil de pantalla</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileNewDefault">Perfil nuevo</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileDeleteLast">Debe quedar al menos un perfil de pantalla.</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuResolutionSection">Resolución</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionForGamesTitle">Resolución para juegos</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionForGamesHelp">Opcional. El cambio de resolución se aplica primero en Windows para que el juego se adapte correctamente. Al cerrar el juego se restaura la resolución original.</sys:String>

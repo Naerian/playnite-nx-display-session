@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 — 2026-09-20
+## 1.0.0 — 2026-09-20
 - Applied Windows display topology and optional refresh rate when a game starts, with RestoreHost lease restore on stop, cancel, crash, or Playnite exit.
 - Owned HDR for game sessions: global policies (leave alone / always on / Features+Tags metadata), per-game Inherit / Force on / Force off / Do not touch, and write-off restore that does not trust ACM readback.
 - Migrated Playnite native `EnableSystemHdr` via setup wizard and Maintenance so native and NX restores do not stack.

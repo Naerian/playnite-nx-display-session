@@ -4,12 +4,10 @@
     <sys:String x:Key="LOCDisplayManager_PluginName">Display Manager</sys:String>
     <sys:String x:Key="LOCDisplayManager_OpenSettings">Open settings</sys:String>
     <sys:String x:Key="LOCDisplayManager_OpenSetupWizard">Open setup assistant</sys:String>
-    <sys:String x:Key="LOCDisplayManager_SkeletonHint">Skeleton build. Per-game display and HDR profiles come next.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewTab">Overview</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewHelp">A quick look at what Display Manager will do when you launch a game.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewRefresh">Refresh</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewDisplays">Displays</sys:String>
-    <sys:String x:Key="LOCDisplayManager_OverviewDisplaysPlaceholder">Display enumeration is not wired yet.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewDisplaysNone">No displays detected.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewDisplaysFormat">{0} connected · primary: {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewWhenLaunching">When a game launches</sys:String>
@@ -18,9 +16,6 @@
     <sys:String x:Key="LOCDisplayManager_OverviewActionMetadata">HDR turns on only for games whose metadata says HDR, then off when they close.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewPolicy">HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewPolicyUnset">Not configured yet.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_OverviewSession">Active session</sys:String>
-    <sys:String x:Key="LOCDisplayManager_OverviewSessionIdle">No game session.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_OverviewSessionActiveFormat">Restoring after: {0}</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusPending">Pending</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusUnknown">Unknown</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusConnected">Connected</sys:String>
@@ -42,18 +37,6 @@
     <sys:String x:Key="LOCDisplayManager_StatusPlayPrimary">Primary for games</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuDisplaySection">Display</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameDisplayInherit">Keep global settings</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfilesTitle">Display profiles</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfilesHelp">Named packages for primary display, turn-off-others, missing-display fallback, HDR, refresh rate, and resolution overrides. One profile is the default when a game launches unless a game or platform profile overrides it.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileDefaultName">Default</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileDefaultFormat">Default for launch: {0}</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileNew">New</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileRename">Rename</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileDelete">Delete</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileSetDefault">Set as default</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileNewPrompt">Name for the new display profile</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileRenamePrompt">New name for this display profile</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileNewDefault">New profile</sys:String>
-    <sys:String x:Key="LOCDisplayManager_TopologyProfileDeleteLast">Keep at least one display profile.</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayTitle">Missing display</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayPolicy">If the primary display is missing</sys:String>
     <sys:String x:Key="LOCDisplayManager_MissingDisplayFallback">Fallback display</sys:String>
@@ -69,8 +52,6 @@
     <sys:String x:Key="LOCDisplayManager_FullscreenRestoreTab">Relocate Playnite</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsTab">When a game launches</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsHelp">Default display behavior applied when a game starts, unless a display, platform, or game profile overrides it.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_ProfilesTab">Profiles</sys:String>
-    <sys:String x:Key="LOCDisplayManager_ProfilesHelp">Priority: game profile → platform profile → default display profile → launch defaults above.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTab">Platform profiles</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTitle">Platform profiles</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesHelp">Defaults for every game on a platform when that game has no per-game override.</sys:String>
@@ -93,7 +74,6 @@
     <sys:String x:Key="LOCDisplayManager_TopologyTrialNothingToRestore">No trial snapshot to restore.</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplayAlias">Custom name</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplayAliasHelp">Optional Playnite name. Disconnected displays with a custom name stay listed.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayShowInList">Show in Display Manager</sys:String>
     <sys:String x:Key="LOCDisplayManager_AppearancePreset">Appearance</sys:String>
     <sys:String x:Key="LOCDisplayManager_AppearancePresetHelp">Presets change colors only. Layout, type scale, and spacing stay fixed.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetMidnight">Midnight</sys:String>
@@ -248,7 +228,6 @@
     <sys:String x:Key="LOCDisplayManager_StatusLabel">Status</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewNativeHdrWarnBadge">Conflict</sys:String>
     <sys:String x:Key="LOCDisplayManager_UnknownGame">Unknown game</sys:String>
-    <sys:String x:Key="LOCDisplayManager_OverviewSessionActiveBadge">Active</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrIncludeTagsHelp">When enabled, Display Manager looks at Playnite Tags as well as Features for names like HDR or HDR10 (useful if your metadata provider stores HDR as a tag).</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameProfilesTitle">Configured game profiles</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplaysListTitle">Connected displays</sys:String>
@@ -257,7 +236,6 @@
     <sys:String x:Key="LOCDisplayManager_GameProfilesPriorityHint">Add or change display, HDR, refresh rate, or resolution from each game&apos;s context menu.</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplaysListHelp">Give them a clear name, identify them on the desktop, and choose which one is primary when you play.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ConfirmRemoveProfileTitle">Remove game profile</sys:String>
-    <sys:String x:Key="LOCDisplayManager_OverviewSessionIdleBadge">Idle</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionDoNotManageShort">Leave Windows HDR alone</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionAlwaysOnShort">HDR on for every game</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionMetadataShort">HDR when metadata says so</sys:String>
@@ -282,22 +260,9 @@
     <sys:String x:Key="LOCDisplayManager_HdrPrimaryNoSupport">The selected primary display for games does not support HDR. HDR options are unavailable until you choose a capable display.</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPrimaryNoSupportTitle">No HDR support</sys:String>
 
-    <sys:String x:Key="LOCDisplayManager_DisplayProfilesTitle">Display profiles</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfilesHelp">Named packages for primary display and turn-off-others. One profile is the launch default. HDR, refresh rate, resolution, and missing-display still come from “When a game launches” unless a game or platform profile overrides them.</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplayProfileDefaultName">Default</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplayProfileSoloTvName">Solo TV</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplayProfilePcDesktopName">PC / Desktop</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileDefaultFormat">Default for launch: {0}</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileNew">New</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileRename">Rename</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileDelete">Delete</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileView">View</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileViewTitle">Display profile summary</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileSetDefault">Set as default</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileNewPrompt">Name for the new display profile</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileRenamePrompt">New name for this display profile</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileNewDefault">New profile</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplayProfileDeleteLast">Keep at least one display profile.</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuResolutionSection">Resolution</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionForGamesTitle">Resolution for games</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionForGamesHelp">Optional. The resolution is changed in Windows first so the game adapts correctly. When the game closes, the original resolution is restored.</sys:String>

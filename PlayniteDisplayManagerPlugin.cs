@@ -1110,11 +1110,6 @@ namespace PlayniteDisplayManager
             return string.Format(Loc("LOCDisplayManager_OverviewNativeHdrConflictFormat"), enabled);
         }
 
-        public string GetNightLightOverviewText()
-        {
-            return Loc("LOCDisplayManager_OverviewNightLightCut");
-        }
-
         public string GetRefreshRateOverviewText()
         {
             switch (settings?.GlobalRefreshRatePolicy ?? RefreshRatePolicy.Native)
@@ -1147,16 +1142,6 @@ namespace PlayniteDisplayManager
                 default:
                     return Loc("LOCDisplayManager_OverviewActionDoNotManage");
             }
-        }
-
-        public string GetActiveSessionOverviewText()
-        {
-            if (activeGameId.HasValue && !string.IsNullOrWhiteSpace(activeGameName))
-            {
-                return string.Format(Loc("LOCDisplayManager_OverviewSessionActiveFormat"), activeGameName);
-            }
-
-            return Loc("LOCDisplayManager_OverviewSessionIdle");
         }
 
         public Game GetSelectedLibraryGame()

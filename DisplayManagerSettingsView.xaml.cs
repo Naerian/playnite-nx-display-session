@@ -2951,14 +2951,14 @@ namespace PlayniteDisplayManager
                 var version = typeof(DisplayManagerSettingsView).Assembly.GetName().Version;
                 if (version == null)
                 {
-                    return "0.1.0";
+                    return "1.0.0";
                 }
 
                 return $"{version.Major}.{version.Minor}.{version.Build}";
             }
             catch
             {
-                return "0.1.0";
+                return "1.0.0";
             }
         }
     }

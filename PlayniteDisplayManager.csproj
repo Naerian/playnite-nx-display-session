@@ -6,9 +6,9 @@
     <Nullable>disable</Nullable>
     <AssemblyName>PlayniteDisplayManager</AssemblyName>
     <RootNamespace>PlayniteDisplayManager</RootNamespace>
-    <Version>0.1.0</Version>
-    <AssemblyVersion>0.1.0.0</AssemblyVersion>
-    <FileVersion>0.1.0.0</FileVersion>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <DefaultItemExcludes>$(DefaultItemExcludes);RestoreHost\**</DefaultItemExcludes>

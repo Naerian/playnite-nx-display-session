@@ -6,7 +6,6 @@ using Playnite.SDK;
 using Playnite.SDK.Data;
 using PlayniteDisplayManager.Displays;
 using PlayniteDisplayManager.Hdr;
-using PlayniteDisplayManager.NightLight;
 using PlayniteDisplayManager.Profiles;
 using PlayniteDisplayManager.Refresh;
 using PlayniteDisplayManager.Resolution;
@@ -34,7 +33,6 @@ namespace PlayniteDisplayManager
         private bool includeTagsInHdrMetadataMatch;
         private bool nativeHdrMigrationCompleted;
         private bool nativeHdrConflictNotified;
-        private NightLightPolicy nightLightPolicy = NightLightPolicy.DoNotTouch;
         private RefreshRatePolicy globalRefreshRatePolicy = RefreshRatePolicy.Native;
         private double? preferredRefreshRateHz;
         private ResolutionPolicy globalResolutionPolicy = ResolutionPolicy.Native;
@@ -75,7 +73,6 @@ namespace PlayniteDisplayManager
                 IncludeTagsInHdrMetadataMatch = savedSettings.IncludeTagsInHdrMetadataMatch;
                 NativeHdrMigrationCompleted = savedSettings.NativeHdrMigrationCompleted;
                 NativeHdrConflictNotified = savedSettings.NativeHdrConflictNotified;
-                NightLightPolicy = savedSettings.NightLightPolicy;
                 GlobalRefreshRatePolicy = savedSettings.GlobalRefreshRatePolicy;
                 PreferredRefreshRateHz = savedSettings.PreferredRefreshRateHz;
                 GlobalResolutionPolicy = savedSettings.GlobalResolutionPolicy;
@@ -152,12 +149,6 @@ namespace PlayniteDisplayManager
         {
             get => nativeHdrConflictNotified;
             set => SetValue(ref nativeHdrConflictNotified, value);
-        }
-
-        public NightLightPolicy NightLightPolicy
-        {
-            get => nightLightPolicy;
-            set => SetValue(ref nightLightPolicy, NightLightPolicy.DoNotTouch);
         }
 
         public RefreshRatePolicy GlobalRefreshRatePolicy
@@ -454,7 +445,6 @@ namespace PlayniteDisplayManager
             IncludeTagsInHdrMetadataMatch = editingClone.IncludeTagsInHdrMetadataMatch;
             NativeHdrMigrationCompleted = editingClone.NativeHdrMigrationCompleted;
             NativeHdrConflictNotified = editingClone.NativeHdrConflictNotified;
-            NightLightPolicy = editingClone.NightLightPolicy;
             GlobalRefreshRatePolicy = editingClone.GlobalRefreshRatePolicy;
             PreferredRefreshRateHz = editingClone.PreferredRefreshRateHz;
             GlobalResolutionPolicy = editingClone.GlobalResolutionPolicy;
