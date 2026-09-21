@@ -32,6 +32,10 @@
     <sys:String x:Key="LOCDisplayManager_TopologyTrialTitle">Display layout trial</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialHelp">Esta tela se torna a principal quando um jogo inicia (a menos que você mantenha o padrão do Windows). Use os botões de teste abaixo para visualizar por alguns segundos e restaurar automaticamente.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialTarget">Tela principal para jogos</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayTitle">Tela principal</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayGameMenuHint">Você pode escolher uma tela diferente para um jogo específico no menu de contexto desse jogo.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_GameMenuOverrideTitle">Menu de contexto do jogo</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">Esta tela se torna a principal ao iniciar um jogo (exceto se você mantiver o padrão do Windows). Use os botões de teste abaixo para pré-visualizar por alguns segundos e restaurar automaticamente.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlayDisplayWindowsDefault">Manter padrão do Windows</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusPlayPrimary">Principal para jogos</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuDisplaySection">Tela</sys:String>
@@ -59,6 +63,12 @@
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateTitle">Playnite Fullscreen</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHelp">Após restaurar as telas, opcionalmente mova o Playnite Fullscreen para o monitor principal restaurado.</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">Reposicionar Playnite Fullscreen após restaurar</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHint">Helpful if Playnite Fullscreen stays on a secondary or powered-off monitor after a game session ends.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenRestoreTab">Relocate Playnite</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchDefaultsTab">When a game launches</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchDefaultsHelp">Default display behavior applied when a game starts, unless a display, platform, or game profile overrides it.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ProfilesTab">Profiles</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ProfilesHelp">Priority: game profile → platform profile → default display profile → launch defaults above.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTab">Perfis de plataforma</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTitle">Perfis de plataforma</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesHelp">Padrões para todos os jogos em uma plataforma quando esse jogo não tem substituição por jogo.</sys:String>
@@ -93,7 +103,7 @@
     <sys:String x:Key="LOCDisplayManager_HdrTab">HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrHelp">O Display Manager controla o HDR quando instalado. Ao sair, ele grava o estado desejado — ele não confia na leitura de HDR do próprio Windows.</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPolicyTitle">Política global de HDR</sys:String>
-    <sys:String x:Key="LOCDisplayManager_HdrPolicyHelp">Padrão para todos os jogos. Substituições por jogo no menu de contexto do jogo sempre prevalecem.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrPolicyHelp">Padrão para todos os jogos.</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPolicyNone">Permitir que o Windows gerencie o HDR como configurado</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPolicyAllGames">Ligar HDR quando um jogo inicia e desligar quando ele fecha</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPolicyMetadata">Ligar HDR ao iniciar um jogo cujos metadados indicam HDR, e desligar quando ele fecha</sys:String>
@@ -101,7 +111,7 @@
     <sys:String x:Key="LOCDisplayManager_HdrMetadataHelp">Nomes de Feature separados por vírgula (sem diferenciar maiúsculas/minúsculas). Funciona com o recurso HDR do PCGamingWiki Metadata Provider. Sem rede ao iniciar.</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrIncludeTags">Também procurar nas Tags do jogo</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrOverrideCountFormat">{0} jogo(s) com uma substituição de HDR (não herdar).</sys:String>
-    <sys:String x:Key="LOCDisplayManager_HdrGameMenuHint">Defina substituições no menu de contexto do jogo: Display Manager → HDR.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrGameMenuHint">Você pode alterar esta opção para um jogo específico no menu de contexto desse jogo.</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrForceSdrTitle">Forçar HDR desligado</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrForceSdrHelp">Se a imagem ainda parecer HDR após um jogo (área de trabalho brilhante ou desbotada), use isto para forçar uma imagem SDR normal. Dica: Win+Alt+B também alterna HDR, então você pode verificar visualmente.</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrWriteOffNow">Desligar HDR nas minhas telas</sys:String>
@@ -144,7 +154,7 @@
     <sys:String x:Key="LOCDisplayManager_SetupWizardDisplayTitle">Tela principal para jogos</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardDisplayHelp">Escolha qual monitor deve se tornar principal quando você iniciar um jogo, ou mantenha o padrão atual do Windows.</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardHdrTitle">Política de HDR</sys:String>
-    <sys:String x:Key="LOCDisplayManager_SetupWizardHdrHelp">Padrão para todos os jogos. Substituições por jogo no menu de contexto do jogo sempre prevalecem.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_SetupWizardHdrHelp">Padrão para todos os jogos.</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardRefreshTitle">Taxa de atualização</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardRefreshHelp">Opcional. As taxas mostradas são as disponíveis na tela principal escolhida em sua resolução atual.</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardMigrationTitle">Limpar ativações de HDR nativo do Playnite?</sys:String>
@@ -190,7 +200,7 @@
     <sys:String x:Key="LOCDisplayManager_RefreshRateCurrentLabel">Taxa de atualização atual</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshRateAvailableLabel">Disponível nesta resolução</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshRateResolutionLabel">Resolução</sys:String>
-    <sys:String x:Key="LOCDisplayManager_RefreshRateGameMenuHint">Para um jogo específico, você pode substituir isto clicando com o botão direito no jogo → Display Manager → Taxa de atualização, e atribuir uma taxa diferente para esse jogo.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RefreshRateGameMenuHint">Você pode alterar esta opção para um jogo específico no menu de contexto desse jogo.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewRefreshRate">Taxa de atualização</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuHzSection">Taxa de atualização</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameHzInherit">Manter configurações globais</sys:String>
@@ -228,9 +238,11 @@
     <sys:String x:Key="LOCDisplayManager_AboutBlurb">Aplica um perfil de exibição do Windows quando um jogo começa e restaura a área de trabalho quando ele para. Criado para setups HTPC / sofá.</sys:String>
     <sys:String x:Key="LOCDisplayManager_RemoveProfile">Remover</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameProfilesTab">Perfis de jogos</sys:String>
-    <sys:String x:Key="LOCDisplayManager_ConfirmRemoveProfilePendingMessage">Remover o perfil do Display Manager para &quot;{0}&quot; quando as configurações forem salvas? Cancelar as configurações mantém o perfil.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ConfirmRemoveProfilePendingMessage">Remover o perfil do Display Manager para "{0}" quando as configurações forem salvas? Cancelar as configurações mantém o perfil.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewNativeHdrOkBadge">OK</sys:String>
     <sys:String x:Key="LOCDisplayManager_NoConfiguredGameProfiles">Ainda não há perfis de jogos. Use o menu de contexto do jogo: Display Manager.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_NoGameProfilesFilterMatches">Nenhum perfil corresponde a esta busca.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_GameProfilesSearchLabel">Buscar por nome do jogo</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusLabel">Status</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewNativeHdrWarnBadge">Conflito</sys:String>
     <sys:String x:Key="LOCDisplayManager_UnknownGame">Jogo desconhecido</sys:String>
@@ -238,9 +250,9 @@
     <sys:String x:Key="LOCDisplayManager_HdrIncludeTagsHelp">Quando ativado, o Display Manager olha as Tags do Playnite além de Features para nomes como HDR ou HDR10 (útil se o provedor de metadados armazena HDR como tag).</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameProfilesTitle">Perfis de jogos configurados</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplaysListTitle">Telas conectadas</sys:String>
-    <sys:String x:Key="LOCDisplayManager_GameProfilesHelp">Games with a Display Manager override (HDR, refresh rate, display, or display profile). Add or change them from each game context menu. Removing here applies when you save settings.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_GameProfilesHelp">Revise e edite os perfis salvos. Crie novos pelo menu de contexto Display Manager de cada jogo.</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameProfilesPriorityTitle">Prioridade</sys:String>
-    <sys:String x:Key="LOCDisplayManager_GameProfilesPriorityHint">A per-game profile override always wins over a platform profile and over global settings (including the default display profile).</sys:String>
+    <sys:String x:Key="LOCDisplayManager_GameProfilesPriorityHint">Adicione ou altere tela, HDR, taxa de atualização ou resolução no menu de contexto de cada jogo.</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplaysListHelp">Dê a elas um nome claro, identifique-as na área de trabalho e escolha qual será a principal quando você jogar.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ConfirmRemoveProfileTitle">Remover perfil de jogo</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewSessionIdleBadge">Ociosa</sys:String>
@@ -249,7 +261,7 @@
     <sys:String x:Key="LOCDisplayManager_OverviewActionMetadataShort">HDR quando os metadados indicam</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusEnabled">Ativado</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusDisabled">Desativado</sys:String>
-    <sys:String x:Key="LOCDisplayManager_OptionsTab">Opções</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OptionsTab">Desktop</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTurnOffOthersTitle">Outras telas</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTurnOffOthersHelp">Opcional. Durante um teste curto, outras telas desligam enquanto a principal escolhida permanece ligada, depois tudo é restaurado automaticamente.</sys:String>
     <sys:String x:Key="LOCDisplayManager_IdentifyDisplay">Identificar</sys:String>
@@ -285,7 +297,7 @@
     <sys:String x:Key="LOCDisplayManager_DisplayProfileDeleteLast">Keep at least one display profile.</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuResolutionSection">Resolution</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionForGamesTitle">Resolution for games</sys:String>
-    <sys:String x:Key="LOCDisplayManager_ResolutionForGamesHelp">Optional. Apply a game resolution after the display profile is applied and before refresh rate/HDR.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionForGamesHelp">Opcional. A resolução é alterada primeiro no Windows para que o jogo se adapte corretamente. Ao fechar o jogo, a resolução original é restaurada.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyNative">Native: do not change resolution</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyExact">Exact resolution</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyExactFormat">{0} × {1}</sys:String>
@@ -293,7 +305,8 @@
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyHighest">Highest available</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionCurrentLabel">Current resolution</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableLabel">Available modes</sys:String>
-    <sys:String x:Key="LOCDisplayManager_ResolutionGameMenuHint">Per-game overrides are also available from the game context menu.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionAvailableCountFormat">{0} modes available in the list below</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionGameMenuHint">Você pode alterar esta opção para um jogo específico no menu de contexto desse jogo.</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameResolutionInherit">Keep global settings</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameResolutionNative">Native: do not change resolution</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameResolutionLowest">Lowest available</sys:String>

@@ -418,6 +418,37 @@
                     </Setter.Value>
                 </Setter>
             </Style>
+            <Style x:Key="SubTopTabs" TargetType="TabControl">
+                <Setter Property="OverridesDefaultStyle" Value="True" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                <Setter Property="VerticalAlignment" Value="Stretch" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                <Setter Property="ItemContainerStyle" Value="{StaticResource TopTabItem}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TabControl">
+                            <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <Border Background="{DynamicResource ControlBackgroundBrush}" CornerRadius="4"
+                                        Padding="6" ClipToBounds="False"
+                                        BorderThickness="0"
+                                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                    <WrapPanel x:Name="HeaderPanel" IsItemsHost="True" />
+                                </Border>
+                                <Grid Grid.Row="1" Margin="0,16,0,0">
+                                    <ContentPresenter x:Name="PART_SelectedContentHost"
+                                                      ContentSource="SelectedContent"
+                                                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                                </Grid>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
             <Style x:Key="SettingsNavigationTabItem" TargetType="TabItem">
                 <Setter Property="OverridesDefaultStyle" Value="True" />
                 <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
@@ -498,25 +529,6 @@
     </UserControl.Resources>
 
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="16,16">
-        <DockPanel LastChildFill="True">
-            <Border x:Name="ActiveDisplayProfileCallout"
-                    DockPanel.Dock="Top"
-                    Style="{StaticResource InfoCallout}">
-                <DockPanel LastChildFill="True">
-                    <Border DockPanel.Dock="Left" Style="{StaticResource InfoCalloutAccentBar}" />
-                    <DockPanel Margin="12,10,12,10" LastChildFill="True">
-                        <TextBlock DockPanel.Dock="Left"
-                                   Text="&#xE946;"
-                                   Style="{StaticResource InfoCalloutGlyph}" />
-                        <StackPanel>
-                            <TextBlock x:Name="ActiveDisplayProfileCalloutTitle"
-                                       Style="{StaticResource InfoCalloutTitle}" />
-                            <TextBlock x:Name="ActiveDisplayProfileCalloutBody"
-                                       Style="{StaticResource InfoCalloutBody}" />
-                        </StackPanel>
-                    </DockPanel>
-                </DockPanel>
-            </Border>
         <TabControl x:Name="RootTabs" Style="{StaticResource TopTabs}" SelectionChanged="RootTabsSelectionChanged">
             <TabItem>
                 <TabItem.Header>
@@ -558,7 +570,8 @@
                             <Border Style="{StaticResource SummaryCard}" Margin="0,0,8,16">
                                 <StackPanel>
                                     <Border Style="{StaticResource SummaryTitleSeparator}">
-                                        <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewDisplays}" Style="{StaticResource SummaryCardTitle}" />
+                                        <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewDisplays}"
+                                                   Style="{StaticResource SummaryCardTitle}" />
                                     </Border>
                                     <TextBlock x:Name="OverviewDisplaysText" Style="{StaticResource SummaryCardValue}" />
                                     <WrapPanel x:Name="OverviewDisplayPills" Margin="0,8,0,0" />
@@ -631,6 +644,55 @@
                             <TextBlock Text="{DynamicResource LOCDisplayManager_DisplaysHelp}" Style="{StaticResource SectionSubtitleText}" />
                         </StackPanel>
 
+                        <StackPanel Style="{StaticResource PageSection}">
+                            <Border Style="{StaticResource PageHeader}">
+                                <TextBlock Text="{DynamicResource LOCDisplayManager_PrimaryDisplayTitle}" Style="{StaticResource SectionHeaderText}" />
+                            </Border>
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_PrimaryDisplayHelp}" Style="{StaticResource SectionSubtitleText}" />
+                            <ComboBox x:Name="TopologyTargetBox"
+                                      MinHeight="36"
+                                      DisplayMemberPath="EffectiveName"
+                                      SelectedValuePath="Id"
+                                      SelectionChanged="TopologyTargetBox_OnSelectionChanged" />
+                            <CheckBox x:Name="TopologyTurnOffOthersCheck"
+                                      Content="{DynamicResource LOCDisplayManager_TopologyTurnOffOthers}"
+                                      Margin="0,12,0,0"
+                                      Checked="TopologyTurnOffOthersCheck_OnChanged"
+                                      Unchecked="TopologyTurnOffOthersCheck_OnChanged" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTurnOffOthersWarning}"
+                                       Style="{StaticResource IndentedHintText}" />
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button Content="{DynamicResource LOCDisplayManager_TopologyTrialApply}"
+                                        Style="{StaticResource NarianPrimaryButton}"
+                                        MinWidth="180"
+                                        Margin="0,0,8,0"
+                                        Click="TopologyTrialApply_OnClick" />
+                                <Button Content="{DynamicResource LOCDisplayManager_TopologyTrialRestoreNow}"
+                                        MinWidth="140"
+                                        MinHeight="36"
+                                        Click="TopologyTrialRestore_OnClick" />
+                            </StackPanel>
+                            <TextBlock x:Name="TopologyTrialStatusText"
+                                       Style="{StaticResource HintText}"
+                                       Margin="0,12,0,0" />
+                            <Border Style="{StaticResource InfoCallout}" Margin="0,16,0,0">
+                                <DockPanel LastChildFill="True">
+                                    <Border DockPanel.Dock="Left" Style="{StaticResource InfoCalloutAccentBar}" />
+                                    <DockPanel Margin="12,10,12,10" LastChildFill="True">
+                                        <TextBlock DockPanel.Dock="Left"
+                                                   Text="&#xE946;"
+                                                   Style="{StaticResource InfoCalloutGlyph}" />
+                                        <StackPanel>
+                                            <TextBlock Text="{DynamicResource LOCDisplayManager_GameMenuOverrideTitle}"
+                                                       Style="{StaticResource InfoCalloutTitle}" />
+                                            <TextBlock Text="{DynamicResource LOCDisplayManager_PrimaryDisplayGameMenuHint}"
+                                                       Style="{StaticResource InfoCalloutBody}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </DockPanel>
+                            </Border>
+                        </StackPanel>
+
                         <StackPanel Style="{StaticResource PageSection}" Margin="0,0,0,8">
                             <Border Style="{StaticResource PageHeader}">
                                 <TextBlock Text="{DynamicResource LOCDisplayManager_DisplaysListTitle}" Style="{StaticResource SectionHeaderText}" />
@@ -645,7 +707,7 @@
             <TabItem>
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE713;" />
+                        <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE790;" />
                         <TextBlock Text="{DynamicResource LOCDisplayManager_GeneralTab}" Style="{StaticResource TabHeaderLabel}" />
                     </StackPanel>
                 </TabItem.Header>
@@ -656,7 +718,7 @@
                         <TabItem>
                             <TabItem.Header>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE713;" />
+                                    <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE7F4;" />
                                     <TextBlock Text="{DynamicResource LOCDisplayManager_OptionsTab}" Style="{StaticResource TabHeaderLabel}" />
                                 </StackPanel>
                             </TabItem.Header>
@@ -668,11 +730,9 @@
                                                     <TextBlock Text="{DynamicResource LOCDisplayManager_OptionsHelp}" Style="{StaticResource SectionSubtitleText}" />
 
                             <StackPanel Style="{StaticResource FieldGroup}">
-                                                        <TextBlock Text="{DynamicResource LOCDisplayManager_DesktopAccessTitle}" Style="{StaticResource FieldLabel}" />
-                                                        <TextBlock Text="{DynamicResource LOCDisplayManager_DesktopAccessHelp}" Style="{StaticResource HintText}" />
                                                         <CheckBox x:Name="ShowDesktopTopPanelCheck"
                                                                   Content="{DynamicResource LOCDisplayManager_ShowDesktopTopPanel}"
-                                                                  Margin="0,8,0,0"
+                                                                  Margin="0,0,0,0"
                                                                   Checked="ShowDesktopTopPanelCheck_OnChanged"
                                                                   Unchecked="ShowDesktopTopPanelCheck_OnChanged" />
                                                         <StackPanel Margin="24,16,0,0"
@@ -687,27 +747,19 @@
                                                                        Style="{StaticResource HintText}" />
                                                         </StackPanel>
                                                         </StackPanel>
-                                                        <StackPanel Style="{StaticResource FieldGroup}" Margin="0,16,0,0">
-                                                            <TextBlock Text="{DynamicResource LOCDisplayManager_FullscreenRelocateTitle}" Style="{StaticResource FieldLabel}" />
-                                                            <TextBlock Text="{DynamicResource LOCDisplayManager_FullscreenRelocateHelp}" Style="{StaticResource HintText}" />
-                                                            <CheckBox x:Name="RelocateFullscreenCheck"
-                                                                      Content="{DynamicResource LOCDisplayManager_FullscreenRelocate}"
-                                                                      Margin="0,8,0,0"
-                                                                      Checked="RelocateFullscreenCheck_OnChanged"
-                                                                      Unchecked="RelocateFullscreenCheck_OnChanged" />
-                                                        </StackPanel>
-                                                        <StackPanel Style="{StaticResource FieldGroup}" Margin="0,16,0,0">
-                                                            <TextBlock Text="{DynamicResource LOCDisplayManager_PostChangeSettleDelay}" Style="{StaticResource FieldLabel}" />
-                                                            <ComboBox ItemsSource="{Binding PostChangeSettleDelayOptions}"
-                                                                      DisplayMemberPath="DisplayName"
-                                                                      SelectedValuePath="Value"
-                                                                      SelectedValue="{Binding PostChangeSettleDelayMsValue, Mode=TwoWay}"
-                                                                      MinHeight="36" />
-                                                            <TextBlock Text="{DynamicResource LOCDisplayManager_PostChangeSettleDelayHelp}" Style="{StaticResource HintText}" />
-                                                        </StackPanel>
                                                             </StackPanel>
                                                         </ScrollViewer>
                         </TabItem>
+                        <TabItem>
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE768;" />
+                                    <TextBlock Text="{DynamicResource LOCDisplayManager_LaunchDefaultsTab}" Style="{StaticResource TabHeaderLabel}" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TabControl Style="{StaticResource SubTopTabs}"
+                                            SelectionChanged="RootTabsSelectionChanged">
                         <TabItem>
                             <TabItem.Header>
                                 <StackPanel Orientation="Horizontal">
@@ -760,6 +812,22 @@
                                                                      Content="{DynamicResource LOCDisplayManager_HdrPolicyMetadata}"
                                                                      Margin="0,8,0,0"
                                                                      Checked="HdrPolicyRadio_OnChecked" />
+                                                        <Border Style="{StaticResource InfoCallout}" Margin="0,16,0,0">
+                                                            <DockPanel LastChildFill="True">
+                                                                <Border DockPanel.Dock="Left" Style="{StaticResource InfoCalloutAccentBar}" />
+                                                                <DockPanel Margin="12,10,12,10" LastChildFill="True">
+                                                                    <TextBlock DockPanel.Dock="Left"
+                                                                               Text="&#xE946;"
+                                                                               Style="{StaticResource InfoCalloutGlyph}" />
+                                                                    <StackPanel>
+                                                                        <TextBlock Text="{DynamicResource LOCDisplayManager_GameMenuOverrideTitle}"
+                                                                                   Style="{StaticResource InfoCalloutTitle}" />
+                                                                        <TextBlock Text="{DynamicResource LOCDisplayManager_HdrGameMenuHint}"
+                                                                                   Style="{StaticResource InfoCalloutBody}" />
+                                                                    </StackPanel>
+                                                                </DockPanel>
+                                                            </DockPanel>
+                                                        </Border>
                                                     </StackPanel>
 
                                                     <StackPanel Style="{StaticResource FieldGroup}">
@@ -828,9 +896,22 @@
                                                                                  Content="{DynamicResource LOCDisplayManager_RefreshPolicyHighest}"
                                                                                  Margin="0,8,0,0"
                                                                                  Checked="RefreshRateRadio_OnChecked" />
-                                                                    <TextBlock Text="{DynamicResource LOCDisplayManager_RefreshRateGameMenuHint}"
-                                                                               Style="{StaticResource HintText}"
-                                                                               Margin="0,12,0,0" />
+                                                                    <Border Style="{StaticResource InfoCallout}" Margin="0,16,0,0">
+                                                                        <DockPanel LastChildFill="True">
+                                                                            <Border DockPanel.Dock="Left" Style="{StaticResource InfoCalloutAccentBar}" />
+                                                                            <DockPanel Margin="12,10,12,10" LastChildFill="True">
+                                                                                <TextBlock DockPanel.Dock="Left"
+                                                                                           Text="&#xE946;"
+                                                                                           Style="{StaticResource InfoCalloutGlyph}" />
+                                                                                <StackPanel>
+                                                                                    <TextBlock Text="{DynamicResource LOCDisplayManager_GameMenuOverrideTitle}"
+                                                                                               Style="{StaticResource InfoCalloutTitle}" />
+                                                                                    <TextBlock Text="{DynamicResource LOCDisplayManager_RefreshRateGameMenuHint}"
+                                                                                               Style="{StaticResource InfoCalloutBody}" />
+                                                                                </StackPanel>
+                                                                            </DockPanel>
+                                                                        </DockPanel>
+                                                                    </Border>
                                                                 </StackPanel>
                                                             </StackPanel>
                                                         </ScrollViewer>
@@ -858,7 +939,17 @@
                                                                                  Content="{DynamicResource LOCDisplayManager_ResolutionPolicyNative}"
                                                                                  Margin="0,8,0,0"
                                                                                  Checked="ResolutionRadio_OnChecked" />
-                                                                    <StackPanel x:Name="ResolutionExactPanel" />
+                                                                    <RadioButton x:Name="ResolutionPolicyExactRadio"
+                                                                                 GroupName="ResolutionPolicy"
+                                                                                 Tag="Exact"
+                                                                                 Content="{DynamicResource LOCDisplayManager_ResolutionPolicyExact}"
+                                                                                 Margin="0,8,0,0"
+                                                                                 Checked="ResolutionRadio_OnChecked" />
+                                                                    <ComboBox x:Name="ResolutionExactBox"
+                                                                              MinHeight="36"
+                                                                              Margin="24,8,0,0"
+                                                                              DisplayMemberPath="Label"
+                                                                              SelectionChanged="ResolutionExactBox_OnSelectionChanged" />
                                                                     <RadioButton x:Name="ResolutionPolicyLowestRadio"
                                                                                  GroupName="ResolutionPolicy"
                                                                                  Tag="LowestAvailable"
@@ -871,9 +962,22 @@
                                                                                  Content="{DynamicResource LOCDisplayManager_ResolutionPolicyHighest}"
                                                                                  Margin="0,8,0,0"
                                                                                  Checked="ResolutionRadio_OnChecked" />
-                                                                    <TextBlock Text="{DynamicResource LOCDisplayManager_ResolutionGameMenuHint}"
-                                                                               Style="{StaticResource HintText}"
-                                                                               Margin="0,12,0,0" />
+                                                                    <Border Style="{StaticResource InfoCallout}" Margin="0,16,0,0">
+                                                                        <DockPanel LastChildFill="True">
+                                                                            <Border DockPanel.Dock="Left" Style="{StaticResource InfoCalloutAccentBar}" />
+                                                                            <DockPanel Margin="12,10,12,10" LastChildFill="True">
+                                                                                <TextBlock DockPanel.Dock="Left"
+                                                                                           Text="&#xE946;"
+                                                                                           Style="{StaticResource InfoCalloutGlyph}" />
+                                                                                <StackPanel>
+                                                                                    <TextBlock Text="{DynamicResource LOCDisplayManager_GameMenuOverrideTitle}"
+                                                                                               Style="{StaticResource InfoCalloutTitle}" />
+                                                                                    <TextBlock Text="{DynamicResource LOCDisplayManager_ResolutionGameMenuHint}"
+                                                                                               Style="{StaticResource InfoCalloutBody}" />
+                                                                                </StackPanel>
+                                                                            </DockPanel>
+                                                                        </DockPanel>
+                                                                    </Border>
                                                                 </StackPanel>
                                                             </StackPanel>
                                                         </ScrollViewer>
@@ -898,7 +1002,7 @@
                                                                   DisplayMemberPath="DisplayName"
                                                                   SelectedValuePath="Value"
                                                                   SelectionChanged="MissingDisplayPolicyBox_OnSelectionChanged" />
-                                                        <TextBlock Text="{DynamicResource LOCDisplayManager_MissingDisplayFallback}" Style="{StaticResource FieldLabel}" Margin="0,12,0,0" />
+                                                        <TextBlock Text="{DynamicResource LOCDisplayManager_MissingDisplayFallback}" Style="{StaticResource FieldLabel}" Margin="0,12,0,4" />
                                                         <ComboBox x:Name="MissingDisplayFallbackBox"
                                                                   MinHeight="36"
                                                                   DisplayMemberPath="EffectiveName"
@@ -908,80 +1012,8 @@
                                                             </StackPanel>
                                                         </ScrollViewer>
                         </TabItem>
-                        <TabItem>
-                            <TabItem.Header>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE8B7;" />
-                                    <TextBlock Text="{DynamicResource LOCDisplayManager_DisplayProfilesTitle}" Style="{StaticResource TabHeaderLabel}" />
-                                </StackPanel>
-                            </TabItem.Header>
-                            <ScrollViewer Style="{StaticResource FillScrollViewer}">
-                                                            <StackPanel Margin="8,8,8,16">
-                            <StackPanel Style="{StaticResource PageSection}">
-                                                        <Border Style="{StaticResource PageHeader}">
-                                                            <TextBlock Text="{DynamicResource LOCDisplayManager_DisplayProfilesTitle}" Style="{StaticResource SectionHeaderText}" />
-                                                        </Border>
-                                                        <TextBlock Text="{DynamicResource LOCDisplayManager_DisplayProfilesHelp}" Style="{StaticResource SectionSubtitleText}" />
-                                                        <DockPanel Margin="0,0,0,0" LastChildFill="True">
-                                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="8,0,0,0">
-                                                                <Button Content="{DynamicResource LOCDisplayManager_DisplayProfileNew}"
-                                                                        MinWidth="90" MinHeight="36" Margin="0,0,8,0"
-                                                                        Click="DisplayProfileNew_OnClick" />
-                                                                <Button Content="{DynamicResource LOCDisplayManager_DisplayProfileRename}"
-                                                                        MinWidth="90" MinHeight="36" Margin="0,0,8,0"
-                                                                        Click="DisplayProfileRename_OnClick" />
-                                                                <Button Content="{DynamicResource LOCDisplayManager_DisplayProfileDelete}"
-                                                                        MinWidth="90" MinHeight="36" Margin="0,0,8,0"
-                                                                        Click="DisplayProfileDelete_OnClick" />
-                                                                <Button Content="{DynamicResource LOCDisplayManager_DisplayProfileView}"
-                                                                        MinWidth="90" MinHeight="36" Margin="0,0,8,0"
-                                                                        Click="DisplayProfileView_OnClick" />
-                                                                <Button Content="{DynamicResource LOCDisplayManager_DisplayProfileSetDefault}"
-                                                                        MinWidth="120" MinHeight="36"
-                                                                        Click="DisplayProfileSetDefault_OnClick" />
-                                                            </StackPanel>
-                                                            <ComboBox x:Name="DisplayProfileBox"
-                                                                      MinHeight="36"
-                                                                      DisplayMemberPath="Name"
-                                                                      SelectedValuePath="Id"
-                                                                      SelectionChanged="DisplayProfileBox_OnSelectionChanged" />
-                                                        </DockPanel>
-                                                        <TextBlock x:Name="DisplayProfileDefaultHint"
-                                                                   Style="{StaticResource HintText}"
-                                                                   Margin="0,8,0,0" />
-
-                                                        <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTrialTarget}" Style="{StaticResource FieldLabel}" Margin="0,16,0,4" />
-                                                        <ComboBox x:Name="TopologyTargetBox"
-                                                                  MinHeight="36"
-                                                                  DisplayMemberPath="EffectiveName"
-                                                                  SelectedValuePath="Id"
-                                                                  SelectionChanged="TopologyTargetBox_OnSelectionChanged" />
-                                                        <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTrialHelp}" Style="{StaticResource HintText}" />
-                                                        <CheckBox x:Name="TopologyTurnOffOthersCheck"
-                                                                  Content="{DynamicResource LOCDisplayManager_TopologyTurnOffOthers}"
-                                                                  Margin="0,12,0,0"
-                                                                  Checked="TopologyTurnOffOthersCheck_OnChanged"
-                                                                  Unchecked="TopologyTurnOffOthersCheck_OnChanged" />
-                                                        <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTurnOffOthersWarning}"
-                                                                   Style="{StaticResource IndentedHintText}" />
-
-                                                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                                            <Button Content="{DynamicResource LOCDisplayManager_TopologyTrialApply}"
-                                                                    Style="{StaticResource NarianPrimaryButton}"
-                                                                    MinWidth="180"
-                                                                    Margin="0,0,8,0"
-                                                                    Click="TopologyTrialApply_OnClick" />
-                                                            <Button Content="{DynamicResource LOCDisplayManager_TopologyTrialRestoreNow}"
-                                                                    MinWidth="140"
-                                                                    MinHeight="36"
-                                                                    Click="TopologyTrialRestore_OnClick" />
-                                                        </StackPanel>
-                                                        <TextBlock x:Name="TopologyTrialStatusText"
-                                                                   Style="{StaticResource HintText}"
-                                                                   Margin="0,12,0,0" />
-                                                    </StackPanel>
-                                                            </StackPanel>
-                                                        </ScrollViewer>
+                                </TabControl>
+                            </Grid>
                         </TabItem>
                         <TabItem>
                             <TabItem.Header>
@@ -1006,7 +1038,7 @@
                                                                                        Text="&#xE946;"
                                                                                        Style="{StaticResource InfoCalloutGlyph}" />
                                                                             <StackPanel>
-                                                                                <TextBlock Text="{DynamicResource LOCDisplayManager_GameProfilesPriorityTitle}"
+                                                                                <TextBlock Text="{DynamicResource LOCDisplayManager_GameMenuOverrideTitle}"
                                                                                            Style="{StaticResource InfoCalloutTitle}" />
                                                                                 <TextBlock Text="{DynamicResource LOCDisplayManager_GameProfilesPriorityHint}"
                                                                                            Style="{StaticResource InfoCalloutBody}" />
@@ -1014,9 +1046,21 @@
                                                                         </DockPanel>
                                                                     </DockPanel>
                                                                 </Border>
+                                                                <TextBlock Text="{DynamicResource LOCDisplayManager_GameProfilesSearchLabel}"
+                                                                           Style="{StaticResource FieldLabel}"
+                                                                           Margin="0,0,0,4" />
+                                                                <TextBox x:Name="GameProfilesSearchBox"
+                                                                         MinHeight="36"
+                                                                         Margin="0,0,0,12"
+                                                                         VerticalContentAlignment="Center"
+                                                                         TextChanged="GameProfilesSearchBox_OnTextChanged" />
                                                                 <TextBlock x:Name="NoGameProfilesText"
                                                                            Text="{DynamicResource LOCDisplayManager_NoConfiguredGameProfiles}"
                                                                            Style="{StaticResource HintText}" />
+                                                                <TextBlock x:Name="NoGameProfilesFilterText"
+                                                                           Text="{DynamicResource LOCDisplayManager_NoGameProfilesFilterMatches}"
+                                                                           Style="{StaticResource HintText}"
+                                                                           Visibility="Collapsed" />
                                                                 <StackPanel x:Name="GameProfileRowsPanel" />
                                                             </StackPanel>
                                                         </ScrollViewer>
@@ -1024,7 +1068,7 @@
                         <TabItem>
                             <TabItem.Header>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE8B7;" />
+                                    <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE774;" />
                                     <TextBlock Text="{DynamicResource LOCDisplayManager_PlatformProfilesTab}" Style="{StaticResource TabHeaderLabel}" />
                                 </StackPanel>
                             </TabItem.Header>
@@ -1103,6 +1147,46 @@
                     <TabControl Style="{StaticResource SettingsNavigationTabControl}"
                                 Tag="{DynamicResource LOCDisplayManager_AdvancedTab}"
                                 SelectionChanged="RootTabsSelectionChanged">
+                        <TabItem>
+                            <TabItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE7F4;" />
+                                    <TextBlock Text="{DynamicResource LOCDisplayManager_FullscreenRestoreTab}" Style="{StaticResource TabHeaderLabel}" />
+                                </StackPanel>
+                            </TabItem.Header>
+                            <ScrollViewer Style="{StaticResource FillScrollViewer}">
+                                <StackPanel Margin="8,8,8,16">
+                                    <StackPanel Style="{StaticResource PageSection}">
+                                        <Border Style="{StaticResource PageHeader}">
+                                            <TextBlock Text="{DynamicResource LOCDisplayManager_FullscreenRelocateTitle}" Style="{StaticResource SectionHeaderText}" />
+                                        </Border>
+                                        <TextBlock Text="{DynamicResource LOCDisplayManager_FullscreenRelocateHelp}" Style="{StaticResource SectionSubtitleText}" />
+                                        <CheckBox x:Name="RelocateFullscreenCheck"
+                                                  Content="{DynamicResource LOCDisplayManager_FullscreenRelocate}"
+                                                  Margin="0,8,0,0"
+                                                  Checked="RelocateFullscreenCheck_OnChanged"
+                                                  Unchecked="RelocateFullscreenCheck_OnChanged" />
+                                        <TextBlock Text="{DynamicResource LOCDisplayManager_FullscreenRelocateHint}"
+                                                   Style="{StaticResource HintText}"
+                                                   Margin="0,8,0,0" />
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource PageSection}" Margin="0,8,0,0">
+                                        <Border Style="{StaticResource PageHeader}">
+                                            <TextBlock Text="{DynamicResource LOCDisplayManager_PostChangeSettleDelay}" Style="{StaticResource SectionHeaderText}" />
+                                        </Border>
+                                        <TextBlock Text="{DynamicResource LOCDisplayManager_PostChangeSettleDelayHelp}" Style="{StaticResource SectionSubtitleText}" />
+                                        <ComboBox ItemsSource="{Binding PostChangeSettleDelayOptions}"
+                                                  DisplayMemberPath="DisplayName"
+                                                  SelectedValuePath="Value"
+                                                  SelectedValue="{Binding PostChangeSettleDelayMsValue, Mode=TwoWay}"
+                                                  MinHeight="36"
+                                                  Margin="0,8,0,0"
+                                                  HorizontalAlignment="Left"
+                                                  MinWidth="200" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </TabItem>
                         <TabItem>
                             <TabItem.Header>
                                 <StackPanel Orientation="Horizontal">
@@ -1270,6 +1354,5 @@
                 </ScrollViewer>
             </TabItem>
         </TabControl>
-        </DockPanel>
     </Grid>
 </UserControl>

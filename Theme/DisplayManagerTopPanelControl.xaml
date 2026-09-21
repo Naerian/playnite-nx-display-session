@@ -35,13 +35,12 @@
                 </Viewbox.Style>
                 <Path x:Name="IconPath"
                       Stretch="Uniform"
-                      Fill="{Binding Foreground, ElementName=Root}"
-                      RenderTransformOrigin="0.5,0.5">
-                    <!-- Potrace SVG paths are Y-up; WPF is Y-down without the SVG group transform. -->
-                    <Path.RenderTransform>
-                        <ScaleTransform ScaleY="-1" />
-                    </Path.RenderTransform>
-                </Path>
+                      Stroke="{Binding Foreground, ElementName=Root}"
+                      StrokeThickness="2"
+                      StrokeStartLineCap="Round"
+                      StrokeEndLineCap="Round"
+                      StrokeLineJoin="Round"
+                      Fill="Transparent" />
             </Viewbox>
             <TextBlock Text="{Binding PrimaryDisplayAlias}"
                        VerticalAlignment="Center"

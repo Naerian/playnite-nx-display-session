@@ -30,8 +30,6 @@ namespace PlayniteDisplayManager
         private bool syncingRefreshRadios;
         private bool syncingResolutionRadios;
         private bool syncingTopologyTarget;
-        private bool syncingDisplayProfileUi;
-        private Guid? editingDisplayProfileId;
         private const string WindowsPlayDisplayChoiceId = "__windows_primary__";
 
         private sealed class PlayDisplayChoice
@@ -551,7 +549,7 @@ namespace PlayniteDisplayManager
             UpdateOverview();
         }
 
-        private DisplayProfile GetEditingDisplayProfile(DisplayManagerSettings settings)
+        private DisplayProfile GetDefaultDisplayProfileForMissing(DisplayManagerSettings settings)
         {
             if (settings == null)
             {
@@ -559,15 +557,6 @@ namespace PlayniteDisplayManager
             }
 
             settings.MigrateDisplayProfilesPublic();
-            if (editingDisplayProfileId.HasValue)
-            {
-                var match = settings.GetDisplayProfile(editingDisplayProfileId);
-                if (match != null)
-                {
-                    return match;
-                }
-            }
-
             return settings.GetDefaultDisplayProfile();
         }
 
@@ -580,66 +569,32 @@ namespace PlayniteDisplayManager
             }
 
             settings.MigrateDisplayProfilesPublic();
-            syncingDisplayProfileUi = true;
-            try
+            if (MissingDisplayPolicyBox != null)
             {
-                if (DisplayProfileBox != null)
+                MissingDisplayPolicyBox.ItemsSource = new[]
                 {
-                    var profiles = settings.DisplayProfiles?.ToList() ?? new System.Collections.Generic.List<DisplayProfile>();
-                    DisplayProfileBox.ItemsSource = profiles;
-                    var selected = editingDisplayProfileId ?? settings.DefaultDisplayProfileId;
-                    if (!selected.HasValue || profiles.All(p => p.Id != selected.Value))
+                    new NamedChoice
                     {
-                        selected = settings.DefaultDisplayProfileId ?? profiles.FirstOrDefault()?.Id;
+                        Value = nameof(MissingDisplayPolicy.UseWindowsPrimary),
+                        DisplayName = TryFindResource("LOCDisplayManager_MissingDisplayWindows") as string
+                            ?? "Use Windows primary"
+                    },
+                    new NamedChoice
+                    {
+                        Value = nameof(MissingDisplayPolicy.UseFallbackDisplay),
+                        DisplayName = TryFindResource("LOCDisplayManager_MissingDisplayFallbackChoice") as string
+                            ?? "Use fallback display"
+                    },
+                    new NamedChoice
+                    {
+                        Value = nameof(MissingDisplayPolicy.NotifyAndContinue),
+                        DisplayName = TryFindResource("LOCDisplayManager_MissingDisplayNotify") as string
+                            ?? "Notify and continue"
                     }
-
-                    editingDisplayProfileId = selected;
-                    DisplayProfileBox.SelectedValue = selected;
-                }
-
-                if (DisplayProfileDefaultHint != null)
-                {
-                    var defaults = settings.GetDefaultDisplayProfile();
-                    DisplayProfileDefaultHint.Text = defaults == null
-                        ? string.Empty
-                        : string.Format(
-                            TryFindResource("LOCDisplayManager_DisplayProfileDefaultFormat") as string
-                            ?? "Default for launch: {0}",
-                            defaults.Name);
-                }
-
-                if (MissingDisplayPolicyBox != null)
-                {
-                    MissingDisplayPolicyBox.ItemsSource = new[]
-                    {
-                        new NamedChoice
-                        {
-                            Value = nameof(MissingDisplayPolicy.UseWindowsPrimary),
-                            DisplayName = TryFindResource("LOCDisplayManager_MissingDisplayWindows") as string
-                                ?? "Use Windows primary"
-                        },
-                        new NamedChoice
-                        {
-                            Value = nameof(MissingDisplayPolicy.UseFallbackDisplay),
-                            DisplayName = TryFindResource("LOCDisplayManager_MissingDisplayFallbackChoice") as string
-                                ?? "Use fallback display"
-                        },
-                        new NamedChoice
-                        {
-                            Value = nameof(MissingDisplayPolicy.NotifyAndContinue),
-                            DisplayName = TryFindResource("LOCDisplayManager_MissingDisplayNotify") as string
-                                ?? "Notify and continue"
-                        }
-                    };
-                }
-            }
-            finally
-            {
-                syncingDisplayProfileUi = false;
+                };
             }
 
             RefreshTopologyTargetBox();
-            UpdateActiveDisplayProfileCallout();
         }
 
         private void RefreshTopologyTargetBox()
@@ -650,8 +605,8 @@ namespace PlayniteDisplayManager
             }
 
             var settings = DataContext as DisplayManagerSettings;
-            var profile = GetEditingDisplayProfile(settings);
-            var previous = profile?.PreferredPlayDisplayId;
+            var previous = settings?.PreferredPlayDisplayId;
+            var defaults = GetDefaultDisplayProfileForMissing(settings);
             var connected = settings?.AvailableDisplays?
                 .Where(d => d.IsConnected)
                 .ToList() ?? new System.Collections.Generic.List<DisplayInfo>();
@@ -691,7 +646,7 @@ namespace PlayniteDisplayManager
                 if (MissingDisplayFallbackBox != null)
                 {
                     MissingDisplayFallbackBox.ItemsSource = choices;
-                    var fallback = profile?.FallbackDisplayId;
+                    var fallback = defaults?.FallbackDisplayId;
                     if (!string.IsNullOrWhiteSpace(fallback)
                         && connected.Any(d => string.Equals(d.Id, fallback, StringComparison.OrdinalIgnoreCase)))
                     {
@@ -703,14 +658,14 @@ namespace PlayniteDisplayManager
                     }
                 }
 
-                if (MissingDisplayPolicyBox != null && profile != null)
+                if (MissingDisplayPolicyBox != null && defaults != null)
                 {
-                    MissingDisplayPolicyBox.SelectedValue = profile.MissingDisplayPolicy.ToString();
+                    MissingDisplayPolicyBox.SelectedValue = defaults.MissingDisplayPolicy.ToString();
                 }
 
-                if (TopologyTurnOffOthersCheck != null && profile != null)
+                if (TopologyTurnOffOthersCheck != null)
                 {
-                    TopologyTurnOffOthersCheck.IsChecked = profile.TurnOffOtherDisplays;
+                    TopologyTurnOffOthersCheck.IsChecked = settings?.TurnOffOtherDisplaysOnLaunch == true;
                 }
             }
             finally
@@ -721,40 +676,7 @@ namespace PlayniteDisplayManager
             SyncHdrCapabilityUi();
         }
 
-        private void PersistEditingDisplayProfile(Action<DisplayProfile> mutate)
-        {
-            var settings = DataContext as DisplayManagerSettings;
-            var profile = GetEditingDisplayProfile(settings);
-            if (settings == null || profile == null || mutate == null)
-            {
-                return;
-            }
-
-            mutate(profile);
-            if (settings.DefaultDisplayProfileId == profile.Id)
-            {
-                settings.SyncLegacyFieldsFromDefaultTopology();
-            }
-        }
-
-        private void DisplayProfileBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (syncingDisplayProfileUi)
-            {
-                return;
-            }
-
-            if (DisplayProfileBox?.SelectedValue is Guid id)
-            {
-                editingDisplayProfileId = id;
-                RefreshTopologyTargetBox();
-                UpdateActiveDisplayProfileCallout();
-                RebuildDisplayCards();
-                UpdateOverview();
-            }
-        }
-
-        private void DisplayProfileNew_OnClick(object sender, RoutedEventArgs e)
+        private void PersistLaunchDisplaySettings()
         {
             var settings = DataContext as DisplayManagerSettings;
             if (settings == null)
@@ -762,121 +684,25 @@ namespace PlayniteDisplayManager
                 return;
             }
 
-            var caption = TryFindResource("LOCDisplayManager_DisplayProfilesTitle") as string ?? "display profiles";
-            var prompt = TryFindResource("LOCDisplayManager_DisplayProfileNewPrompt") as string ?? "Profile name";
-            var suggested = TryFindResource("LOCDisplayManager_DisplayProfileNewDefault") as string ?? "New profile";
-            var result = settings.Plugin?.PlayniteApi?.Dialogs?.SelectString(prompt, caption, suggested);
-            if (result == null || !result.Result || string.IsNullOrWhiteSpace(result.SelectedString))
+            var defaults = settings.GetDefaultDisplayProfile();
+            if (defaults != null)
             {
-                return;
+                defaults.PreferredPlayDisplayId = settings.PreferredPlayDisplayId;
+                defaults.TurnOffOtherDisplays = settings.TurnOffOtherDisplaysOnLaunch;
             }
-
-            var created = new DisplayProfile
-            {
-                Id = Guid.NewGuid(),
-                Name = result.SelectedString.Trim(),
-                PreferredPlayDisplayId = null,
-                TurnOffOtherDisplays = false,
-                MissingDisplayPolicy = MissingDisplayPolicy.UseWindowsPrimary
-            };
-            settings.DisplayProfiles.Add(created);
-            editingDisplayProfileId = created.Id;
-            RefreshDisplayProfilesUi();
         }
 
-        private void UpdateActiveDisplayProfileCallout()
+        private void PersistDefaultDisplayProfile(Action<DisplayProfile> mutate)
         {
             var settings = DataContext as DisplayManagerSettings;
-            var profile = GetEditingDisplayProfile(settings);
-            if (ActiveDisplayProfileCalloutTitle == null || ActiveDisplayProfileCalloutBody == null)
+            var profile = GetDefaultDisplayProfileForMissing(settings);
+            if (settings == null || profile == null || mutate == null)
             {
                 return;
             }
 
-            ActiveDisplayProfileCalloutTitle.Text = profile?.Name ?? string.Empty;
-            var isDefault = settings != null && profile != null && settings.DefaultDisplayProfileId == profile.Id;
-            ActiveDisplayProfileCalloutBody.Text = isDefault
-                ? (TryFindResource("LOCDisplayManager_ActiveProfileDefaultSource") as string ?? "Launch default")
-                : (TryFindResource("LOCDisplayManager_DisplayProfilesTitle") as string ?? "Display profile");
-        }
-
-        private void DisplayProfileRename_OnClick(object sender, RoutedEventArgs e)
-        {
-            var settings = DataContext as DisplayManagerSettings;
-            var profile = GetEditingDisplayProfile(settings);
-            if (profile == null)
-            {
-                return;
-            }
-
-            var caption = TryFindResource("LOCDisplayManager_DisplayProfilesTitle") as string ?? "display profiles";
-            var prompt = TryFindResource("LOCDisplayManager_DisplayProfileRenamePrompt") as string ?? "New name";
-            var result = settings.Plugin?.PlayniteApi?.Dialogs?.SelectString(prompt, caption, profile.Name);
-            if (result == null || !result.Result || string.IsNullOrWhiteSpace(result.SelectedString))
-            {
-                return;
-            }
-
-            profile.Name = result.SelectedString.Trim();
-            RefreshDisplayProfilesUi();
-        }
-
-        private void DisplayProfileDelete_OnClick(object sender, RoutedEventArgs e)
-        {
-            var settings = DataContext as DisplayManagerSettings;
-            var profile = GetEditingDisplayProfile(settings);
-            if (settings == null || profile == null || settings.DisplayProfiles.Count <= 1)
-            {
-                MessageBox.Show(
-                    TryFindResource("LOCDisplayManager_DisplayProfileDeleteLast") as string
-                    ?? "Keep at least one display profile.",
-                    "Display Manager");
-                return;
-            }
-
-            settings.DisplayProfiles.RemoveAll(p => p.Id == profile.Id);
-            if (settings.DefaultDisplayProfileId == profile.Id)
-            {
-                settings.DefaultDisplayProfileId = settings.DisplayProfiles[0].Id;
-                settings.SyncLegacyFieldsFromDefaultTopology();
-            }
-
-            editingDisplayProfileId = settings.DefaultDisplayProfileId;
-            RefreshDisplayProfilesUi();
-            RebuildDisplayCards();
-            UpdateOverview();
-        }
-
-        private void DisplayProfileView_OnClick(object sender, RoutedEventArgs e)
-        {
-            var settings = DataContext as DisplayManagerSettings;
-            var profile = GetEditingDisplayProfile(settings);
-            if (settings == null || profile == null)
-            {
-                return;
-            }
-
-            var window = new DisplayProfileViewWindow(settings, profile)
-            {
-                Owner = Window.GetWindow(this)
-            };
-            window.ShowDialog();
-        }
-
-        private void DisplayProfileSetDefault_OnClick(object sender, RoutedEventArgs e)
-        {
-            var settings = DataContext as DisplayManagerSettings;
-            var profile = GetEditingDisplayProfile(settings);
-            if (settings == null || profile == null)
-            {
-                return;
-            }
-
-            settings.DefaultDisplayProfileId = profile.Id;
+            mutate(profile);
             settings.SyncLegacyFieldsFromDefaultTopology();
-            RefreshDisplayProfilesUi();
-            RebuildDisplayCards();
-            UpdateOverview();
         }
 
         private void TopologyTargetBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -886,20 +712,24 @@ namespace PlayniteDisplayManager
                 return;
             }
 
-            var selectedId = TopologyTargetBox?.SelectedValue as string;
-            PersistEditingDisplayProfile(profile =>
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null)
             {
-                if (string.IsNullOrWhiteSpace(selectedId)
-                    || string.Equals(selectedId, WindowsPlayDisplayChoiceId, StringComparison.Ordinal))
-                {
-                    profile.PreferredPlayDisplayId = null;
-                }
-                else
-                {
-                    profile.PreferredPlayDisplayId = selectedId;
-                }
-            });
+                return;
+            }
 
+            var selectedId = TopologyTargetBox?.SelectedValue as string;
+            if (string.IsNullOrWhiteSpace(selectedId)
+                || string.Equals(selectedId, WindowsPlayDisplayChoiceId, StringComparison.Ordinal))
+            {
+                settings.PreferredPlayDisplayId = null;
+            }
+            else
+            {
+                settings.PreferredPlayDisplayId = selectedId;
+            }
+
+            PersistLaunchDisplaySettings();
             RebuildDisplayCards();
             SyncHdrCapabilityUi();
             UpdateOverview();
@@ -912,8 +742,14 @@ namespace PlayniteDisplayManager
                 return;
             }
 
-            PersistEditingDisplayProfile(profile =>
-                profile.TurnOffOtherDisplays = TopologyTurnOffOthersCheck.IsChecked == true);
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null)
+            {
+                return;
+            }
+
+            settings.TurnOffOtherDisplaysOnLaunch = TopologyTurnOffOthersCheck.IsChecked == true;
+            PersistLaunchDisplaySettings();
         }
 
         private void MissingDisplayPolicyBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -925,7 +761,7 @@ namespace PlayniteDisplayManager
 
             if (Enum.TryParse(MissingDisplayPolicyBox.SelectedValue as string, out MissingDisplayPolicy policy))
             {
-                PersistEditingDisplayProfile(profile => profile.MissingDisplayPolicy = policy);
+                PersistDefaultDisplayProfile(profile => profile.MissingDisplayPolicy = policy);
             }
         }
 
@@ -937,7 +773,7 @@ namespace PlayniteDisplayManager
             }
 
             var selectedId = MissingDisplayFallbackBox?.SelectedValue as string;
-            PersistEditingDisplayProfile(profile =>
+            PersistDefaultDisplayProfile(profile =>
             {
                 if (string.IsNullOrWhiteSpace(selectedId)
                     || string.Equals(selectedId, WindowsPlayDisplayChoiceId, StringComparison.Ordinal))
@@ -1730,32 +1566,27 @@ namespace PlayniteDisplayManager
             syncingResolutionRadios = true;
             try
             {
-                if (ResolutionExactPanel != null)
+                var modes = settings.Plugin?.Resolutions?.GetAvailableModes(primary)
+                    ?? (IReadOnlyList<ResolutionMode>)Array.Empty<ResolutionMode>();
+                if (ResolutionExactBox != null)
                 {
-                    ResolutionExactPanel.Children.Clear();
-                    var modes = settings.Plugin?.Resolutions?.GetAvailableModes(primary)
-                        ?? (IReadOnlyList<ResolutionMode>)Array.Empty<ResolutionMode>();
-                    var preferredW = settings.PreferredResolutionWidth;
-                    var preferredH = settings.PreferredResolutionHeight;
-                    var exactSelected = settings.GlobalResolutionPolicy == ResolutionPolicy.Exact;
+                    ResolutionExactBox.ItemsSource = modes.ToList();
+                    ResolutionExactBox.IsEnabled = modes.Count > 0;
 
-                    foreach (var mode in modes)
+                    ResolutionMode selected = null;
+                    if (settings.PreferredResolutionWidth > 0 && settings.PreferredResolutionHeight > 0)
                     {
-                        var format = TryFindResource("LOCDisplayManager_ResolutionPolicyExactFormat") as string
-                            ?? "{0} × {1}";
-                        var radio = new RadioButton
-                        {
-                            GroupName = "ResolutionPolicy",
-                            Content = string.Format(format, mode.Width, mode.Height),
-                            Tag = mode,
-                            Margin = new Thickness(0, 8, 0, 0),
-                            IsChecked = exactSelected
-                                && preferredW == mode.Width
-                                && preferredH == mode.Height
-                        };
-                        radio.Checked += ResolutionRadio_OnChecked;
-                        ResolutionExactPanel.Children.Add(radio);
+                        selected = modes.FirstOrDefault(m =>
+                            m.Width == settings.PreferredResolutionWidth
+                            && m.Height == settings.PreferredResolutionHeight);
                     }
+
+                    if (selected == null && settings.GlobalResolutionPolicy == ResolutionPolicy.Exact)
+                    {
+                        selected = modes.FirstOrDefault();
+                    }
+
+                    ResolutionExactBox.SelectedItem = selected;
                 }
 
                 switch (settings.GlobalResolutionPolicy)
@@ -1773,8 +1604,11 @@ namespace PlayniteDisplayManager
                         }
                         break;
                     case ResolutionPolicy.Exact:
-                        if (ResolutionExactPanel == null
-                            || !ResolutionExactPanel.Children.OfType<RadioButton>().Any(r => r.IsChecked == true))
+                        if (ResolutionPolicyExactRadio != null)
+                        {
+                            ResolutionPolicyExactRadio.IsChecked = true;
+                        }
+                        else
                         {
                             ResolutionPolicyNativeRadio.IsChecked = true;
                         }
@@ -1782,6 +1616,12 @@ namespace PlayniteDisplayManager
                     default:
                         ResolutionPolicyNativeRadio.IsChecked = true;
                         break;
+                }
+
+                if (ResolutionExactBox != null)
+                {
+                    ResolutionExactBox.IsEnabled =
+                        ResolutionPolicyExactRadio?.IsChecked == true && modes.Count > 0;
                 }
             }
             finally
@@ -1833,46 +1673,18 @@ namespace PlayniteDisplayManager
                 ResolutionPrimaryPanel.Children.Add(pills);
             }
 
-            var modes = settings?.Plugin?.Resolutions?.GetAvailableModes(primary)
-                ?? (IReadOnlyList<ResolutionMode>)Array.Empty<ResolutionMode>();
+            var modeCount = settings?.Plugin?.Resolutions?.GetAvailableModes(primary)?.Count ?? 0;
             ResolutionPrimaryPanel.Children.Add(new TextBlock
             {
-                Text = TryFindResource("LOCDisplayManager_ResolutionAvailableLabel") as string
-                    ?? "Available modes",
-                Style = TryFindResource("FieldLabel") as Style,
-                Margin = new Thickness(0, 4, 0, 4)
+                Text = modeCount > 0
+                    ? string.Format(
+                        TryFindResource("LOCDisplayManager_ResolutionAvailableCountFormat") as string
+                        ?? "{0} modes available in the list below",
+                        modeCount)
+                    : (TryFindResource("LOCDisplayManager_ResolutionAvailableLabel") as string ?? "Available modes"),
+                Style = TryFindResource("HintText") as Style,
+                Margin = new Thickness(0, 4, 0, 0)
             });
-
-            if (modes.Count == 0)
-            {
-                ResolutionPrimaryPanel.Children.Add(new TextBlock
-                {
-                    Text = "—",
-                    Style = TryFindResource("HintText") as Style
-                });
-                return;
-            }
-
-            var modePills = new WrapPanel();
-            foreach (var mode in modes.Take(12))
-            {
-                modePills.Children.Add(CreateStatusBadge(
-                    null,
-                    mode.Label,
-                    "GlyphBrush",
-                    0.95));
-            }
-
-            if (modes.Count > 12)
-            {
-                modePills.Children.Add(CreateStatusBadge(
-                    null,
-                    "+" + (modes.Count - 12),
-                    "GlyphBrush",
-                    0.95));
-            }
-
-            ResolutionPrimaryPanel.Children.Add(modePills);
         }
 
         private void ResolutionRadio_OnChecked(object sender, RoutedEventArgs e)
@@ -1908,17 +1720,92 @@ namespace PlayniteDisplayManager
                 settings.PreferredResolutionWidth = null;
                 settings.PreferredResolutionHeight = null;
             }
-            else if (radio.Tag is ResolutionMode mode)
+            else if (ReferenceEquals(radio, ResolutionPolicyExactRadio)
+                || string.Equals(radio.Tag as string, "Exact", StringComparison.OrdinalIgnoreCase))
             {
                 settings.GlobalResolutionPolicy = ResolutionPolicy.Exact;
-                settings.PreferredResolutionWidth = mode.Width;
-                settings.PreferredResolutionHeight = mode.Height;
+                ApplySelectedExactResolution(settings);
             }
             else
             {
                 settings.GlobalResolutionPolicy = ResolutionPolicy.Native;
                 settings.PreferredResolutionWidth = null;
                 settings.PreferredResolutionHeight = null;
+            }
+
+            if (ResolutionExactBox != null)
+            {
+                ResolutionExactBox.IsEnabled = settings.GlobalResolutionPolicy == ResolutionPolicy.Exact
+                    && ResolutionExactBox.Items.Count > 0;
+            }
+        }
+
+        private void ResolutionExactBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (syncingResolutionRadios)
+            {
+                return;
+            }
+
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null)
+            {
+                return;
+            }
+
+            if (ResolutionPolicyExactRadio?.IsChecked != true
+                && settings.GlobalResolutionPolicy != ResolutionPolicy.Exact)
+            {
+                return;
+            }
+
+            settings.GlobalResolutionPolicy = ResolutionPolicy.Exact;
+            if (ResolutionPolicyExactRadio != null && ResolutionPolicyExactRadio.IsChecked != true)
+            {
+                syncingResolutionRadios = true;
+                try
+                {
+                    ResolutionPolicyExactRadio.IsChecked = true;
+                }
+                finally
+                {
+                    syncingResolutionRadios = false;
+                }
+            }
+
+            ApplySelectedExactResolution(settings);
+            if (ResolutionExactBox != null)
+            {
+                ResolutionExactBox.IsEnabled = ResolutionExactBox.Items.Count > 0;
+            }
+        }
+
+        private void ApplySelectedExactResolution(DisplayManagerSettings settings)
+        {
+            if (settings == null)
+            {
+                return;
+            }
+
+            var mode = ResolutionExactBox?.SelectedItem as ResolutionMode;
+            if (mode == null && ResolutionExactBox?.Items.Count > 0)
+            {
+                syncingResolutionRadios = true;
+                try
+                {
+                    ResolutionExactBox.SelectedIndex = 0;
+                    mode = ResolutionExactBox.SelectedItem as ResolutionMode;
+                }
+                finally
+                {
+                    syncingResolutionRadios = false;
+                }
+            }
+
+            if (mode != null)
+            {
+                settings.PreferredResolutionWidth = mode.Width;
+                settings.PreferredResolutionHeight = mode.Height;
             }
         }
 
@@ -2221,30 +2108,6 @@ namespace PlayniteDisplayManager
 
             root.Children.Add(pills);
 
-            if (display.IsConnected)
-            {
-                var identifyButton = new Button
-                {
-                    Content = TryFindResource("LOCDisplayManager_IdentifyDisplay") as string ?? "Identify",
-                    MinWidth = 120,
-                    MinHeight = 36,
-                    HorizontalAlignment = HorizontalAlignment.Left,
-                    Margin = new Thickness(0, 0, 0, 4),
-                    Cursor = Cursors.Hand,
-                    Style = TryFindResource("NarianPrimaryButton") as Style
-                };
-                var displayCapture = display;
-                identifyButton.Click += (_, __) => IdentifyDisplay(displayCapture);
-                root.Children.Add(identifyButton);
-                root.Children.Add(new TextBlock
-                {
-                    Text = TryFindResource("LOCDisplayManager_IdentifyDisplayHint") as string
-                        ?? "Shows a large label on that monitor for a few seconds.",
-                    Style = TryFindResource("HintText") as Style,
-                    Margin = new Thickness(0, 0, 0, 12)
-                });
-            }
-
             var aliasLabel = new TextBlock
             {
                 Text = TryFindResource("LOCDisplayManager_DisplayAlias") as string ?? "Custom name",
@@ -2252,11 +2115,49 @@ namespace PlayniteDisplayManager
             };
             root.Children.Add(aliasLabel);
 
+            var aliasRow = new DockPanel
+            {
+                LastChildFill = true,
+                Margin = new Thickness(0, 0, 0, 4)
+            };
+
+            if (display.IsConnected)
+            {
+                var identifyTooltip = TryFindResource("LOCDisplayManager_IdentifyDisplay") as string
+                    ?? "Identify display";
+                var identifyButton = new Button
+                {
+                    Style = TryFindResource("IconSquareButton") as Style,
+                    Width = 36,
+                    Height = 36,
+                    MinWidth = 36,
+                    MinHeight = 36,
+                    MaxWidth = 36,
+                    MaxHeight = 36,
+                    Margin = new Thickness(8, 0, 0, 0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    ToolTip = identifyTooltip,
+                    Cursor = Cursors.Hand,
+                    Content = new TextBlock
+                    {
+                        Text = "\uE7B3",
+                        FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                        FontSize = 16,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center
+                    }
+                };
+                DockPanel.SetDock(identifyButton, Dock.Right);
+                var displayCapture = display;
+                identifyButton.Click += (_, __) => IdentifyDisplay(displayCapture);
+                aliasRow.Children.Add(identifyButton);
+            }
+
             var aliasBox = new TextBox
             {
                 Text = string.IsNullOrWhiteSpace(display.CustomName) ? (display.Name ?? string.Empty) : display.CustomName,
                 MinHeight = 36,
-                Margin = new Thickness(0, 0, 0, 4)
+                VerticalContentAlignment = VerticalAlignment.Center
             };
             aliasBox.TextChanged += (_, __) =>
             {
@@ -2274,7 +2175,8 @@ namespace PlayniteDisplayManager
                 UpdateOverview();
                 RefreshTopologyTargetBox();
             };
-            root.Children.Add(aliasBox);
+            aliasRow.Children.Add(aliasBox);
+            root.Children.Add(aliasRow);
 
             var aliasHelp = new TextBlock
             {
@@ -2285,16 +2187,6 @@ namespace PlayniteDisplayManager
             };
             root.Children.Add(aliasHelp);
 
-            var showCheck = new CheckBox
-            {
-                Content = TryFindResource("LOCDisplayManager_DisplayShowInList") as string ?? "Show in Display Manager",
-                IsChecked = display.IsVisible,
-                Margin = new Thickness(0, 12, 0, 0)
-            };
-            showCheck.Checked += (_, __) => display.IsVisible = true;
-            showCheck.Unchecked += (_, __) => display.IsVisible = false;
-            root.Children.Add(showCheck);
-
             card.Child = root;
             return card;
         }
@@ -2303,6 +2195,11 @@ namespace PlayniteDisplayManager
         {
             var primary = TryFindResource("LOCDisplayManager_StatusPrimary") as string ?? "Primary";
             DisplayIdentifyOverlay.Show(display, primary);
+        }
+
+        private void GameProfilesSearchBox_OnTextChanged(object sender, TextChangedEventArgs e)
+        {
+            RebuildGameProfileRows();
         }
 
         private void RebuildGameProfileRows()
@@ -2319,8 +2216,28 @@ namespace PlayniteDisplayManager
                 .ToList()
                 ?? new System.Collections.Generic.List<GameDisplayProfileEntry>();
 
+            var filter = GameProfilesSearchBox?.Text?.Trim() ?? string.Empty;
+            var filtered = string.IsNullOrEmpty(filter)
+                ? profiles
+                : profiles
+                    .Where(profile =>
+                        !string.IsNullOrWhiteSpace(profile.GameName)
+                        && profile.GameName.IndexOf(filter, StringComparison.CurrentCultureIgnoreCase) >= 0)
+                    .ToList();
+
             NoGameProfilesText.Visibility = profiles.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-            foreach (var profile in profiles)
+            if (NoGameProfilesFilterText != null)
+            {
+                NoGameProfilesFilterText.Visibility =
+                    profiles.Count > 0 && filtered.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            }
+
+            if (GameProfilesSearchBox != null)
+            {
+                GameProfilesSearchBox.IsEnabled = profiles.Count > 0;
+            }
+
+            foreach (var profile in filtered)
             {
                 GameProfileRowsPanel.Children.Add(CreateGameProfileRow(profile, settings));
             }
@@ -2332,36 +2249,24 @@ namespace PlayniteDisplayManager
             {
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0, 0, 0, 1),
-                Padding = new Thickness(0, 0, 8, 16),
-                Margin = new Thickness(0, 0, 0, 24),
+                Padding = new Thickness(0, 0, 0, 16),
+                Margin = new Thickness(0, 0, 0, 20),
                 Cursor = Cursors.Arrow
             };
             container.SetResourceReference(Border.BorderBrushProperty, "GlyphBrush");
 
-            var content = new StackPanel();
-            var titleRow = new Grid { Margin = new Thickness(0, 0, 0, 12) };
-            titleRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            titleRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            titleRow.Children.Add(new TextBlock
-            {
-                Text = string.IsNullOrWhiteSpace(profile.GameName)
-                    ? (TryFindResource("LOCDisplayManager_UnknownGame") as string ?? "Unknown game")
-                    : profile.GameName,
-                FontSize = 14,
-                FontWeight = FontWeights.SemiBold,
-                TextWrapping = TextWrapping.Wrap,
-                VerticalAlignment = VerticalAlignment.Center
-            });
+            var body = new StackPanel { VerticalAlignment = VerticalAlignment.Top };
 
+            var header = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 0, 0, 12) };
             var removeButton = new Button
             {
                 Content = TryFindResource("LOCDisplayManager_RemoveProfile") as string ?? "Remove",
                 MinWidth = 90,
-                MinHeight = 36,
-                HorizontalAlignment = HorizontalAlignment.Right,
-                Margin = new Thickness(8, 0, 0, 0),
-                Cursor = Cursors.Hand,
-                Style = TryFindResource("NarianPrimaryButton") as Style
+                MinHeight = 32,
+                Padding = new Thickness(12, 4, 12, 4),
+                Margin = new Thickness(12, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+                Cursor = Cursors.Hand
             };
             removeButton.Click += (_, __) =>
             {
@@ -2375,31 +2280,376 @@ namespace PlayniteDisplayManager
                 settings.AvailableGameProfiles.Remove(profile);
                 RebuildGameProfileRows();
             };
-            Grid.SetColumn(removeButton, 1);
-            titleRow.Children.Add(removeButton);
-            content.Children.Add(titleRow);
+            DockPanel.SetDock(removeButton, Dock.Right);
+            header.Children.Add(removeButton);
+            header.Children.Add(new TextBlock
+            {
+                Text = string.IsNullOrWhiteSpace(profile.GameName)
+                    ? (TryFindResource("LOCDisplayManager_UnknownGame") as string ?? "Unknown game")
+                    : profile.GameName,
+                FontSize = 15,
+                FontWeight = FontWeights.SemiBold,
+                TextWrapping = TextWrapping.Wrap,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            body.Children.Add(header);
 
-            content.Children.Add(CreateProfileSummaryLine(
-                TryFindResource("LOCDisplayManager_GameMenuHdrSection") as string ?? "HDR",
-                FormatHdrOverrideSummary(profile.HdrOverride)));
-            content.Children.Add(CreateProfileSummaryLine(
-                TryFindResource("LOCDisplayManager_GameMenuDisplaySection") as string ?? "Display",
-                FormatPlayDisplayOverrideSummary(profile.PreferredPlayDisplayId, settings)));
-            content.Children.Add(CreateProfileSummaryLine(
-                TryFindResource("LOCDisplayManager_DisplayProfilesTitle") as string ?? "display profile",
-                FormatDisplayProfileSummary(profile.DisplayProfileId, settings)));
-            content.Children.Add(CreateProfileSummaryLine(
-                TryFindResource("LOCDisplayManager_GameMenuHzSection") as string ?? "Refresh rate",
-                FormatRefreshOverrideSummary(profile.RefreshRateOverride, profile.PreferredRefreshRateHz)));
-            content.Children.Add(CreateProfileSummaryLine(
-                TryFindResource("LOCDisplayManager_GameMenuResolutionSection") as string ?? "Resolution",
-                FormatResolutionOverrideSummary(
-                    profile.ResolutionOverride,
-                    profile.PreferredResolutionWidth,
-                    profile.PreferredResolutionHeight)));
+            var controls = new Grid();
+            for (var i = 0; i < 4; i++)
+            {
+                controls.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            }
 
-            container.Child = content;
+            var editors = new[]
+            {
+                CreateGameProfileDisplayEditor(profile, settings),
+                CreateGameProfileHdrEditor(profile),
+                CreateGameProfileRefreshEditor(profile, settings),
+                CreateGameProfileResolutionEditor(profile, settings)
+            };
+            for (var i = 0; i < editors.Length; i++)
+            {
+                var editor = editors[i];
+                if (editor is FrameworkElement fe)
+                {
+                    fe.Margin = new Thickness(i == 0 ? 0 : 12, 0, 0, 0);
+                    fe.HorizontalAlignment = HorizontalAlignment.Stretch;
+                }
+
+                Grid.SetColumn(editor, i);
+                controls.Children.Add(editor);
+            }
+
+            body.Children.Add(controls);
+            container.Child = body;
             return container;
+        }
+
+        private UIElement CreateGameProfileDisplayEditor(
+            GameDisplayProfileEntry profile,
+            DisplayManagerSettings settings)
+        {
+            var choices = new List<GameProfileChoice>
+            {
+                new GameProfileChoice
+                {
+                    Label = TryFindResource("LOCDisplayManager_GameDisplayInherit") as string
+                        ?? "Keep global settings",
+                    DisplayId = null,
+                    HasDisplayId = false
+                },
+                new GameProfileChoice
+                {
+                    Label = TryFindResource("LOCDisplayManager_PlayDisplayWindowsDefault") as string
+                        ?? "Keep Windows default",
+                    DisplayId = string.Empty,
+                    HasDisplayId = true
+                }
+            };
+
+            foreach (var display in settings?.AvailableDisplays?.Where(d => d.IsConnected)
+                     ?? Enumerable.Empty<DisplayInfo>())
+            {
+                choices.Add(new GameProfileChoice
+                {
+                    Label = display.EffectiveName,
+                    DisplayId = display.Id,
+                    HasDisplayId = true
+                });
+            }
+
+            GameProfileChoice selected;
+            if (profile.PreferredPlayDisplayId == null)
+            {
+                selected = choices[0];
+            }
+            else if (string.IsNullOrEmpty(profile.PreferredPlayDisplayId))
+            {
+                selected = choices[1];
+            }
+            else
+            {
+                selected = choices.FirstOrDefault(c =>
+                    c.HasDisplayId
+                    && string.Equals(c.DisplayId, profile.PreferredPlayDisplayId, StringComparison.OrdinalIgnoreCase))
+                    ?? choices[0];
+            }
+
+            return CreateLabeledProfileCombo(
+                TryFindResource("LOCDisplayManager_GameMenuDisplaySection") as string ?? "Display",
+                choices,
+                selected,
+                choice =>
+                {
+                    profile.PreferredPlayDisplayId = choice.HasDisplayId ? choice.DisplayId : null;
+                });
+        }
+
+        private UIElement CreateGameProfileHdrEditor(GameDisplayProfileEntry profile)
+        {
+            var choices = new List<GameProfileChoice>
+            {
+                new GameProfileChoice
+                {
+                    Label = TryFindResource("LOCDisplayManager_GameHdrInherit") as string ?? "Keep global settings",
+                    Hdr = GameHdrOverride.Inherit
+                },
+                new GameProfileChoice
+                {
+                    Label = TryFindResource("LOCDisplayManager_GameHdrForceOn") as string ?? "Always turn HDR on",
+                    Hdr = GameHdrOverride.ForceOn
+                },
+                new GameProfileChoice
+                {
+                    Label = TryFindResource("LOCDisplayManager_GameHdrForceOff") as string ?? "Always turn HDR off",
+                    Hdr = GameHdrOverride.ForceOff
+                }
+            };
+
+            var selected = choices.FirstOrDefault(c => c.Hdr == profile.HdrOverride) ?? choices[0];
+            return CreateLabeledProfileCombo(
+                TryFindResource("LOCDisplayManager_GameMenuHdrSection") as string ?? "HDR",
+                choices,
+                selected,
+                choice =>
+                {
+                    profile.HdrOverride = choice.Hdr;
+                });
+        }
+
+        private UIElement CreateGameProfileRefreshEditor(
+            GameDisplayProfileEntry profile,
+            DisplayManagerSettings settings)
+        {
+            var choices = new List<GameProfileChoice>
+            {
+                new GameProfileChoice
+                {
+                    Label = TryFindResource("LOCDisplayManager_GameHzInherit") as string ?? "Keep global settings",
+                    Refresh = GameRefreshRateOverride.Inherit
+                },
+                new GameProfileChoice
+                {
+                    Label = TryFindResource("LOCDisplayManager_GameHzNative") as string ?? "Native",
+                    Refresh = GameRefreshRateOverride.Native
+                }
+            };
+
+            var primary = ResolvePrimaryDisplayForEditors(settings);
+            var rates = settings?.Plugin?.RefreshRates?.GetAvailableRates(primary) ?? Array.Empty<double>();
+            var exactFormat = TryFindResource("LOCDisplayManager_RefreshPolicyExactFormat") as string
+                ?? "{0:0.###} Hz";
+            foreach (var rate in rates)
+            {
+                choices.Add(new GameProfileChoice
+                {
+                    Label = string.Format(exactFormat, rate),
+                    Refresh = GameRefreshRateOverride.ExactHz,
+                    Hz = rate
+                });
+            }
+
+            choices.Add(new GameProfileChoice
+            {
+                Label = TryFindResource("LOCDisplayManager_GameHzHighest") as string ?? "Highest available",
+                Refresh = GameRefreshRateOverride.HighestDetected
+            });
+
+            GameProfileChoice selected;
+            if (profile.RefreshRateOverride == GameRefreshRateOverride.ExactHz
+                || profile.RefreshRateOverride == GameRefreshRateOverride.Prefer60
+                || profile.RefreshRateOverride == GameRefreshRateOverride.Prefer120)
+            {
+                selected = choices.FirstOrDefault(c =>
+                    c.Refresh == GameRefreshRateOverride.ExactHz
+                    && c.Hz.HasValue
+                    && profile.PreferredRefreshRateHz.HasValue
+                    && Math.Abs(c.Hz.Value - profile.PreferredRefreshRateHz.Value) < 0.05)
+                    ?? choices[0];
+            }
+            else
+            {
+                selected = choices.FirstOrDefault(c => c.Refresh == profile.RefreshRateOverride) ?? choices[0];
+            }
+
+            return CreateLabeledProfileCombo(
+                TryFindResource("LOCDisplayManager_GameMenuHzSection") as string ?? "Refresh rate",
+                choices,
+                selected,
+                choice =>
+                {
+                    profile.RefreshRateOverride = choice.Refresh;
+                    profile.PreferredRefreshRateHz = choice.Refresh == GameRefreshRateOverride.ExactHz
+                        ? choice.Hz
+                        : null;
+                });
+        }
+
+        private UIElement CreateGameProfileResolutionEditor(
+            GameDisplayProfileEntry profile,
+            DisplayManagerSettings settings)
+        {
+            var choices = new List<GameProfileChoice>
+            {
+                new GameProfileChoice
+                {
+                    Label = TryFindResource("LOCDisplayManager_GameResolutionInherit") as string
+                        ?? "Keep global settings",
+                    Resolution = GameResolutionOverride.Inherit
+                },
+                new GameProfileChoice
+                {
+                    Label = TryFindResource("LOCDisplayManager_GameResolutionNative") as string
+                        ?? "Native",
+                    Resolution = GameResolutionOverride.Native
+                }
+            };
+
+            var primary = ResolvePrimaryDisplayForEditors(settings);
+            var modes = settings?.Plugin?.Resolutions?.GetAvailableModes(primary)
+                ?? new List<ResolutionMode>();
+            foreach (var mode in modes)
+            {
+                choices.Add(new GameProfileChoice
+                {
+                    Label = mode.Label,
+                    Resolution = GameResolutionOverride.Exact,
+                    Width = mode.Width,
+                    Height = mode.Height
+                });
+            }
+
+            choices.Add(new GameProfileChoice
+            {
+                Label = TryFindResource("LOCDisplayManager_GameResolutionLowest") as string
+                    ?? "Lowest available",
+                Resolution = GameResolutionOverride.LowestAvailable
+            });
+            choices.Add(new GameProfileChoice
+            {
+                Label = TryFindResource("LOCDisplayManager_GameResolutionHighest") as string
+                    ?? "Highest available",
+                Resolution = GameResolutionOverride.HighestAvailable
+            });
+
+            GameProfileChoice selected;
+            if (profile.ResolutionOverride == GameResolutionOverride.Exact)
+            {
+                selected = choices.FirstOrDefault(c =>
+                    c.Resolution == GameResolutionOverride.Exact
+                    && c.Width == profile.PreferredResolutionWidth
+                    && c.Height == profile.PreferredResolutionHeight)
+                    ?? choices[0];
+            }
+            else
+            {
+                selected = choices.FirstOrDefault(c => c.Resolution == profile.ResolutionOverride)
+                    ?? choices[0];
+            }
+
+            return CreateLabeledProfileCombo(
+                TryFindResource("LOCDisplayManager_GameMenuResolutionSection") as string ?? "Resolution",
+                choices,
+                selected,
+                choice =>
+                {
+                    profile.ResolutionOverride = choice.Resolution;
+                    if (choice.Resolution == GameResolutionOverride.Exact)
+                    {
+                        profile.PreferredResolutionWidth = choice.Width;
+                        profile.PreferredResolutionHeight = choice.Height;
+                    }
+                    else
+                    {
+                        profile.PreferredResolutionWidth = null;
+                        profile.PreferredResolutionHeight = null;
+                    }
+                });
+        }
+
+        private DisplayInfo ResolvePrimaryDisplayForEditors(DisplayManagerSettings settings)
+        {
+            var preferredId = settings?.PreferredPlayDisplayId;
+            var displays = settings?.AvailableDisplays;
+            if (displays == null)
+            {
+                return null;
+            }
+
+            if (!string.IsNullOrWhiteSpace(preferredId))
+            {
+                var preferred = displays.FirstOrDefault(d =>
+                    d.IsConnected
+                    && string.Equals(d.Id, preferredId, StringComparison.OrdinalIgnoreCase));
+                if (preferred != null)
+                {
+                    return preferred;
+                }
+            }
+
+            return displays.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
+                ?? displays.FirstOrDefault(d => d.IsConnected);
+        }
+
+        private UIElement CreateLabeledProfileCombo(
+            string label,
+            IList<GameProfileChoice> choices,
+            GameProfileChoice selected,
+            Action<GameProfileChoice> onChanged)
+        {
+            var panel = new StackPanel
+            {
+                Margin = new Thickness(0),
+                HorizontalAlignment = HorizontalAlignment.Stretch
+            };
+            panel.Children.Add(new TextBlock
+            {
+                Text = label,
+                FontSize = 12,
+                Margin = new Thickness(0, 0, 0, 4),
+                Opacity = 0.85
+            });
+
+            var box = new ComboBox
+            {
+                MinHeight = 36,
+                DisplayMemberPath = "Label",
+                ItemsSource = choices,
+                SelectedItem = selected,
+                HorizontalAlignment = HorizontalAlignment.Stretch
+            };
+            box.SelectionChanged += (_, __) =>
+            {
+                if (!(box.SelectedItem is GameProfileChoice choice) || onChanged == null)
+                {
+                    return;
+                }
+
+                onChanged(choice);
+            };
+            panel.Children.Add(box);
+            return panel;
+        }
+
+        private sealed class GameProfileChoice
+        {
+            public string Label { get; set; }
+
+            public bool HasDisplayId { get; set; }
+
+            public string DisplayId { get; set; }
+
+            public GameHdrOverride Hdr { get; set; }
+
+            public GameRefreshRateOverride Refresh { get; set; }
+
+            public double? Hz { get; set; }
+
+            public GameResolutionOverride Resolution { get; set; }
+
+            public int? Width { get; set; }
+
+            public int? Height { get; set; }
         }
 
         private void RebuildPlatformProfileRows()
@@ -2524,33 +2774,6 @@ namespace PlayniteDisplayManager
             titleRow.Children.Add(removeButton);
             content.Children.Add(titleRow);
 
-            content.Children.Add(new TextBlock
-            {
-                Text = TryFindResource("LOCDisplayManager_DisplayProfilesTitle") as string ?? "display profile",
-                Style = TryFindResource("FieldLabel") as Style
-            });
-            var topoBox = new ComboBox
-            {
-                MinHeight = 36,
-                Margin = new Thickness(0, 4, 0, 12),
-                DisplayMemberPath = "Name",
-                SelectedValuePath = "Id",
-                ItemsSource = settings?.DisplayProfiles
-            };
-            topoBox.SelectedValue = profile.DisplayProfileId;
-            topoBox.SelectionChanged += (_, __) =>
-            {
-                if (topoBox.SelectedValue is Guid id)
-                {
-                    profile.DisplayProfileId = id;
-                }
-                else
-                {
-                    profile.DisplayProfileId = null;
-                }
-            };
-            content.Children.Add(topoBox);
-
             content.Children.Add(CreateProfileSummaryLine(
                 TryFindResource("LOCDisplayManager_GameMenuHdrSection") as string ?? "HDR",
                 FormatHdrOverrideSummary(profile.HdrOverride)));
@@ -2569,18 +2792,6 @@ namespace PlayniteDisplayManager
 
             container.Child = content;
             return container;
-        }
-
-        private string FormatDisplayProfileSummary(Guid? DisplayProfileId, DisplayManagerSettings settings)
-        {
-            if (!DisplayProfileId.HasValue)
-            {
-                return TryFindResource("LOCDisplayManager_GameDisplayInherit") as string
-                    ?? "Keep global settings";
-            }
-
-            var match = settings?.GetDisplayProfile(DisplayProfileId);
-            return match?.Name ?? DisplayProfileId.Value.ToString();
         }
 
         private static TextBlock CreateProfileSummaryLine(string label, string value)

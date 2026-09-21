@@ -1394,15 +1394,13 @@ namespace PlayniteDisplayManager
 
             try
             {
-                if (!string.IsNullOrWhiteSpace(game.Icon) && File.Exists(game.Icon))
+                var cover = ResolveGameMediaPath(game.CoverImage);
+                if (!string.IsNullOrWhiteSpace(cover))
                 {
-                    return game.Icon;
+                    return cover;
                 }
 
-                if (!string.IsNullOrWhiteSpace(game.CoverImage) && File.Exists(game.CoverImage))
-                {
-                    return game.CoverImage;
-                }
+                return ResolveGameMediaPath(game.Icon);
             }
             catch
             {
@@ -1410,6 +1408,29 @@ namespace PlayniteDisplayManager
             }
 
             return null;
+        }
+
+        private string ResolveGameMediaPath(string mediaPath)
+        {
+            if (string.IsNullOrWhiteSpace(mediaPath))
+            {
+                return null;
+            }
+
+            try
+            {
+                var full = PlayniteApi?.Database?.GetFullFilePath(mediaPath);
+                if (!string.IsNullOrWhiteSpace(full) && File.Exists(full))
+                {
+                    return full;
+                }
+            }
+            catch
+            {
+                // Fall through to the raw path.
+            }
+
+            return File.Exists(mediaPath) ? mediaPath : null;
         }
 
         private string DescribePlanAction(HdrSessionPlan plan)
@@ -1462,14 +1483,6 @@ namespace PlayniteDisplayManager
                     {
                         gameProfiles.SetHdrOverride(game, hdrOverride);
                     }
-
-                    var first = games.FirstOrDefault();
-                    if (first != null)
-                    {
-                        PlayniteApi.Dialogs.ShowMessage(
-                            first.Name + ": " + DescribeHdrOverride(hdrOverride),
-                            Loc("LOCDisplayManager_PluginName"));
-                    }
                 }
             };
         }
@@ -1496,14 +1509,6 @@ namespace PlayniteDisplayManager
                     foreach (var game in games)
                     {
                         gameProfiles.SetRefreshRateOverride(game, refreshOverride, preferredHz);
-                    }
-
-                    var first = games.FirstOrDefault();
-                    if (first != null)
-                    {
-                        PlayniteApi.Dialogs.ShowMessage(
-                            first.Name + ": " + DescribeRefreshOverride(refreshOverride, preferredHz),
-                            Loc("LOCDisplayManager_PluginName"));
                     }
                 }
             };
@@ -1533,14 +1538,6 @@ namespace PlayniteDisplayManager
                     {
                         gameProfiles.SetResolutionOverride(game, resolutionOverride, preferredWidth, preferredHeight);
                     }
-
-                    var first = games.FirstOrDefault();
-                    if (first != null)
-                    {
-                        PlayniteApi.Dialogs.ShowMessage(
-                            first.Name + ": " + DescribeResolutionOverride(resolutionOverride, preferredWidth, preferredHeight),
-                            Loc("LOCDisplayManager_PluginName"));
-                    }
                 }
             };
         }
@@ -1566,14 +1563,6 @@ namespace PlayniteDisplayManager
                     foreach (var game in games)
                     {
                         gameProfiles.SetPreferredPlayDisplayId(game, displayId);
-                    }
-
-                    var first = games.FirstOrDefault();
-                    if (first != null)
-                    {
-                        PlayniteApi.Dialogs.ShowMessage(
-                            first.Name + ": " + DescribePlayDisplayOverride(displayId),
-                            Loc("LOCDisplayManager_PluginName"));
                     }
                 }
             };
