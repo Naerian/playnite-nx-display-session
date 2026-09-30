@@ -270,6 +270,13 @@
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyExactFormat">{0} × {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyLowest">A mais baixa disponível</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyHighest">A mais alta disponível</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionGroupMonitor">Do monitor</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionGroupCustom">Adicionais</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionCustomSuffix">adicional</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionRefreshModes">Atualizar lista de resoluções</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionGroupsHelp">Adicionais são modos que o driver da GPU expõe e que não estão no EDID do monitor: modos redimensionados e timings personalizados da AMD, NVIDIA ou CRU.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableFormat">{0} (indisponível)</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableHint">A resolução selecionada não está mais disponível neste monitor. Escolha outra ou atualize a lista. Os jogos ignorarão a alteração até lá.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionCurrentLabel">Resolução atual</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableLabel">Modos disponíveis</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableCountFormat">{0} modos disponíveis na lista abaixo</sys:String>

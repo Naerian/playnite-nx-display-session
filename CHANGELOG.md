@@ -1,5 +1,11 @@
 # Changelog
 
+
+## 1.0.1 — 2026-09-30
+- Enumerate driver custom timings (AMD/NVIDIA/CRU) via EnumDisplaySettingsEx EDS_RAWMODE.
+- Group Exact resolutions into From monitor vs Additional (non-EDID), styled like Controller Manager Looks.
+- Add a refresh control for the resolution list and keep unavailable Exact picks visible without breaking game launch.
+
 ## 1.0.0 — 2026-09-20
 - Applied Windows display topology and optional refresh rate when a game starts, with RestoreHost lease restore on stop, cancel, crash, or Playnite exit.
 - Owned HDR for game sessions: global policies (leave alone / always on / Features+Tags metadata), per-game Inherit / Force on / Force off / Do not touch, and write-off restore that does not trust ACM readback.

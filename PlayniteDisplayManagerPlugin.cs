@@ -481,6 +481,7 @@ namespace PlayniteDisplayManager
                 GameResolutionOverride.Native);
 
             var availableModes = Resolutions?.GetAvailableModes(primary) ?? new List<ResolutionMode>();
+            var customSuffix = Loc("LOCDisplayManager_ResolutionCustomSuffix");
             foreach (var mode in availableModes)
             {
                 var selected = resolutionProfiles.Count > 0 && resolutionProfiles.All(p =>
@@ -488,9 +489,12 @@ namespace PlayniteDisplayManager
                     && p.ResolutionOverride == GameResolutionOverride.Exact
                     && p.PreferredResolutionWidth == mode.Width
                     && p.PreferredResolutionHeight == mode.Height);
+                var label = mode.IsCustom && !string.IsNullOrWhiteSpace(customSuffix)
+                    ? mode.Label + " (" + customSuffix + ")"
+                    : mode.Label;
                 yield return CreateResolutionOverrideMenuItem(
                     resolutionSection,
-                    CheckedMenuLabel(selected, mode.Label),
+                    CheckedMenuLabel(selected, label),
                     args,
                     GameResolutionOverride.Exact,
                     mode.Width,

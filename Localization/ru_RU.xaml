@@ -270,6 +270,13 @@
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyExactFormat">{0} × {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyLowest">Самое низкое доступное</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyHighest">Самое высокое доступное</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionGroupMonitor">С монитора</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionGroupCustom">Дополнительные</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionCustomSuffix">доп.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionRefreshModes">Обновить список разрешений</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionGroupsHelp">Дополнительные — режимы драйвера GPU, которых нет в EDID монитора: масштабированные и пользовательские тайминги AMD, NVIDIA или CRU.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableFormat">{0} (недоступно)</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableHint">Выбранное разрешение больше недоступно на этом дисплее. Выберите другое или обновите список. Игры пропустят смену до тех пор.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionCurrentLabel">Текущее разрешение</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableLabel">Доступные режимы</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableCountFormat">{0} режимов доступно в списке ниже</sys:String>

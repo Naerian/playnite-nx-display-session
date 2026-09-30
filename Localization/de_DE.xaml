@@ -270,6 +270,13 @@
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyExactFormat">{0} × {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyLowest">Niedrigste verfügbare</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyHighest">Höchste verfügbare</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionGroupMonitor">Vom Monitor</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionGroupCustom">Zusätzlich</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionCustomSuffix">zusätzlich</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionRefreshModes">Auflösungsliste aktualisieren</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionGroupsHelp">Zusätzlich sind Modi, die der Grafiktreiber meldet und die nicht in der Monitor-EDID stehen: skalierte Modi und eigene Timings von AMD, NVIDIA oder CRU.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableFormat">{0} (nicht verfügbar)</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableHint">Die gewählte Auflösung ist auf diesem Display nicht mehr verfügbar. Wähle eine andere oder aktualisiere die Liste. Spiele überspringen die Änderung bis dahin.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionCurrentLabel">Aktuelle Auflösung</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableLabel">Verfügbare Modi</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableCountFormat">{0} Modi in der Liste unten verfügbar</sys:String>

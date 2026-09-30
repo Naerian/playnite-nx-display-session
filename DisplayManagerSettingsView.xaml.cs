@@ -38,6 +38,25 @@ namespace PlayniteDisplayManager
             public string EffectiveName { get; set; }
         }
 
+        /// <summary>
+        /// ComboBox row for Exact resolution: group header, real mode, or stale/unavailable mode.
+        /// Flat list avoids WPF GroupStyle + themed ComboBox templates (headers without items).
+        /// </summary>
+        private sealed class ResolutionExactItem
+        {
+            public bool IsHeader { get; set; }
+
+            public bool IsUnavailable { get; set; }
+
+            public string Label { get; set; }
+
+            public ResolutionMode Mode { get; set; }
+
+            public int Width => Mode?.Width ?? 0;
+
+            public int Height => Mode?.Height ?? 0;
+        }
+
         private sealed class NamedChoice
         {
             public string Value { get; set; }
@@ -1577,27 +1596,33 @@ namespace PlayniteDisplayManager
             syncingResolutionRadios = true;
             try
             {
-                var modes = settings.Plugin?.Resolutions?.GetAvailableModes(primary)
-                    ?? (IReadOnlyList<ResolutionMode>)Array.Empty<ResolutionMode>();
+                var modes = PrepareResolutionModesForUi(
+                    settings.Plugin?.Resolutions?.GetAvailableModes(primary)
+                    ?? (IReadOnlyList<ResolutionMode>)Array.Empty<ResolutionMode>());
                 if (ResolutionExactBox != null)
                 {
-                    ResolutionExactBox.ItemsSource = modes.ToList();
-                    ResolutionExactBox.IsEnabled = modes.Count > 0;
+                    int? preferredW = settings.PreferredResolutionWidth;
+                    int? preferredH = settings.PreferredResolutionHeight;
+                    var items = BuildResolutionExactItems(modes, preferredW, preferredH);
+                    ResolutionExactBox.ItemsSource = items;
 
-                    ResolutionMode selected = null;
-                    if (settings.PreferredResolutionWidth > 0 && settings.PreferredResolutionHeight > 0)
+                    ResolutionExactItem selected = null;
+                    if (preferredW > 0 && preferredH > 0)
                     {
-                        selected = modes.FirstOrDefault(m =>
-                            m.Width == settings.PreferredResolutionWidth
-                            && m.Height == settings.PreferredResolutionHeight);
+                        selected = items.FirstOrDefault(i =>
+                            !i.IsHeader
+                            && i.Width == preferredW.Value
+                            && i.Height == preferredH.Value);
                     }
 
-                    if (selected == null && settings.GlobalResolutionPolicy == ResolutionPolicy.Exact)
+                    if (selected == null
+                        && settings.GlobalResolutionPolicy == ResolutionPolicy.Exact)
                     {
-                        selected = modes.FirstOrDefault();
+                        selected = items.FirstOrDefault(i => !i.IsHeader && !i.IsUnavailable);
                     }
 
                     ResolutionExactBox.SelectedItem = selected;
+                    UpdateResolutionUnavailableHint(selected);
                 }
 
                 switch (settings.GlobalResolutionPolicy)
@@ -1631,14 +1656,135 @@ namespace PlayniteDisplayManager
 
                 if (ResolutionExactBox != null)
                 {
+                    var selectableCount = (ResolutionExactBox.ItemsSource as IEnumerable<ResolutionExactItem>)
+                        ?.Count(i => !i.IsHeader) ?? ResolutionExactBox.Items.Count;
                     ResolutionExactBox.IsEnabled =
-                        ResolutionPolicyExactRadio?.IsChecked == true && modes.Count > 0;
+                        ResolutionPolicyExactRadio?.IsChecked == true && selectableCount > 0;
+                }
+
+                if (ResolutionExactRefreshButton != null)
+                {
+                    ResolutionExactRefreshButton.IsEnabled = true;
                 }
             }
             finally
             {
                 syncingResolutionRadios = false;
             }
+        }
+
+        private List<ResolutionMode> PrepareResolutionModesForUi(IReadOnlyList<ResolutionMode> source)
+        {
+            var monitorGroup = TryFindResource("LOCDisplayManager_ResolutionGroupMonitor") as string
+                ?? "From monitor";
+            var customGroup = TryFindResource("LOCDisplayManager_ResolutionGroupCustom") as string
+                ?? "Additional";
+            var list = (source ?? Array.Empty<ResolutionMode>()).ToList();
+            foreach (var mode in list)
+            {
+                mode.GroupName = mode.IsCustom ? customGroup : monitorGroup;
+            }
+
+            return list;
+        }
+
+        private List<ResolutionExactItem> BuildResolutionExactItems(
+            IReadOnlyList<ResolutionMode> modes,
+            int? preferredWidth,
+            int? preferredHeight)
+        {
+            var list = modes?.ToList() ?? new List<ResolutionMode>();
+            var items = new List<ResolutionExactItem>();
+            var monitorGroup = TryFindResource("LOCDisplayManager_ResolutionGroupMonitor") as string
+                ?? "From monitor";
+            var customGroup = TryFindResource("LOCDisplayManager_ResolutionGroupCustom") as string
+                ?? "Additional";
+            var unavailableFormat = TryFindResource("LOCDisplayManager_ResolutionUnavailableFormat") as string
+                ?? "{0} (unavailable)";
+
+            var monitorModes = list.Where(m => !m.IsCustom).ToList();
+            var customModes = list.Where(m => m.IsCustom).ToList();
+            var useGroups = monitorModes.Count > 0 && customModes.Count > 0;
+
+            void AddModes(IEnumerable<ResolutionMode> groupModes)
+            {
+                foreach (var mode in groupModes)
+                {
+                    items.Add(new ResolutionExactItem
+                    {
+                        Mode = mode,
+                        Label = mode.Label
+                    });
+                }
+            }
+
+            if (useGroups)
+            {
+                items.Add(new ResolutionExactItem { IsHeader = true, Label = monitorGroup });
+                AddModes(monitorModes);
+                items.Add(new ResolutionExactItem { IsHeader = true, Label = customGroup });
+                AddModes(customModes);
+            }
+            else
+            {
+                AddModes(list);
+            }
+
+            if (preferredWidth > 0 && preferredHeight > 0
+                && !list.Any(m => m.Width == preferredWidth.Value && m.Height == preferredHeight.Value))
+            {
+                var missing = new ResolutionMode
+                {
+                    Width = preferredWidth.Value,
+                    Height = preferredHeight.Value,
+                    IsCustom = true,
+                    GroupName = customGroup
+                };
+                var missingItem = new ResolutionExactItem
+                {
+                    Mode = missing,
+                    IsUnavailable = true,
+                    Label = string.Format(unavailableFormat, missing.Label)
+                };
+
+                if (useGroups)
+                {
+                    var customHeaderIndex = items.FindIndex(i => i.IsHeader && i.Label == customGroup);
+                    if (customHeaderIndex >= 0)
+                    {
+                        items.Insert(customHeaderIndex + 1, missingItem);
+                    }
+                    else
+                    {
+                        items.Add(new ResolutionExactItem { IsHeader = true, Label = customGroup });
+                        items.Add(missingItem);
+                    }
+                }
+                else
+                {
+                    items.Insert(0, missingItem);
+                }
+            }
+
+            return items;
+        }
+
+        private void UpdateResolutionUnavailableHint(ResolutionExactItem selected)
+        {
+            if (ResolutionExactMissingHint == null)
+            {
+                return;
+            }
+
+            ResolutionExactMissingHint.Visibility =
+                selected != null && selected.IsUnavailable
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+        }
+
+        private void ResolutionExactRefreshButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            SyncResolutionRadios();
         }
 
         private void BuildResolutionPrimaryPanel(DisplayManagerSettings settings, DisplayInfo primary)
@@ -1798,14 +1944,27 @@ namespace PlayniteDisplayManager
                 return;
             }
 
-            var mode = ResolutionExactBox?.SelectedItem as ResolutionMode;
-            if (mode == null && ResolutionExactBox?.Items.Count > 0)
+            var item = ResolutionExactBox?.SelectedItem as ResolutionExactItem;
+            if (item != null && item.IsHeader)
+            {
+                UpdateResolutionUnavailableHint(null);
+                return;
+            }
+
+            if (item == null && ResolutionExactBox?.Items.Count > 0)
             {
                 syncingResolutionRadios = true;
                 try
                 {
-                    ResolutionExactBox.SelectedIndex = 0;
-                    mode = ResolutionExactBox.SelectedItem as ResolutionMode;
+                    var first = (ResolutionExactBox.ItemsSource as IEnumerable<ResolutionExactItem>)
+                        ?.FirstOrDefault(i => !i.IsHeader && !i.IsUnavailable)
+                        ?? (ResolutionExactBox.ItemsSource as IEnumerable<ResolutionExactItem>)
+                        ?.FirstOrDefault(i => !i.IsHeader);
+                    if (first != null)
+                    {
+                        ResolutionExactBox.SelectedItem = first;
+                        item = first;
+                    }
                 }
                 finally
                 {
@@ -1813,11 +1972,13 @@ namespace PlayniteDisplayManager
                 }
             }
 
-            if (mode != null)
+            if (item?.Mode != null)
             {
-                settings.PreferredResolutionWidth = mode.Width;
-                settings.PreferredResolutionHeight = mode.Height;
+                settings.PreferredResolutionWidth = item.Width;
+                settings.PreferredResolutionHeight = item.Height;
             }
+
+            UpdateResolutionUnavailableHint(item);
         }
 
         private void SyncNativeHdrMigrationStatus()
@@ -2517,13 +2678,18 @@ namespace PlayniteDisplayManager
             };
 
             var primary = ResolvePrimaryDisplayForEditors(settings);
-            var modes = settings?.Plugin?.Resolutions?.GetAvailableModes(primary)
-                ?? new List<ResolutionMode>();
+            var modes = PrepareResolutionModesForUi(
+                settings?.Plugin?.Resolutions?.GetAvailableModes(primary)
+                ?? new List<ResolutionMode>());
+            var customSuffix = TryFindResource("LOCDisplayManager_ResolutionCustomSuffix") as string
+                ?? "custom";
             foreach (var mode in modes)
             {
                 choices.Add(new GameProfileChoice
                 {
-                    Label = mode.Label,
+                    Label = mode.IsCustom
+                        ? mode.Label + " (" + customSuffix + ")"
+                        : mode.Label,
                     Resolution = GameResolutionOverride.Exact,
                     Width = mode.Width,
                     Height = mode.Height

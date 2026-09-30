@@ -17,7 +17,7 @@ namespace PlayniteDisplayManager.Refresh
         /// <summary>Legacy — migrated to ExactHz (~120).</summary>
         Prefer120 = 2,
 
-        /// <summary>Highest rate EnumDisplaySettings reports for the current resolution.</summary>
+        /// <summary>Highest rate the driver reports for the current resolution (incl. custom).</summary>
         HighestDetected = 3,
 
         /// <summary>Use PreferredRefreshRateHz (matched to an available rate on the target).</summary>
@@ -55,6 +55,8 @@ namespace PlayniteDisplayManager.Refresh
     {
         private const int EnumCurrentSettings = -1;
         private const int CdsTest = 0x00000002;
+        private const uint EdsRawMode = 0x00000002;
+        private const int CdsEnableUnsafeModes = 0x00000100;
         private const uint DmDisplayFrequency = 0x00400000;
 
         public IReadOnlyList<double> GetAvailableRates(DisplayInfo display)
@@ -71,8 +73,10 @@ namespace PlayniteDisplayManager.Refresh
             var mode = new DEVMODE();
             mode.dmSize = (ushort)Marshal.SizeOf(typeof(DEVMODE));
 
-            for (var i = 0; EnumDisplaySettings(device, i, ref mode); i++)
+            // EDS_RAWMODE so custom refresh rates (NVIDIA/AMD/CRU) are included.
+            for (var i = 0; EnumDisplaySettingsEx(device, i, ref mode, EdsRawMode); i++)
             {
+                mode.dmDriverExtra = 0;
                 if (width > 0 && height > 0 &&
                     (mode.dmPelsWidth != width || mode.dmPelsHeight != height))
                 {
@@ -205,14 +209,26 @@ namespace PlayniteDisplayManager.Refresh
             mode.dmDisplayFrequency = frequency;
             mode.dmFields = DmDisplayFrequency;
 
+            var applyFlags = 0;
             var test = ChangeDisplaySettingsEx(display.GdiDeviceName, ref mode, IntPtr.Zero, CdsTest, IntPtr.Zero);
             if (test != 0)
             {
-                error = "Refresh rate " + frequency + " Hz is not valid for the current mode (CDS code " + test + ").";
-                return false;
+                test = ChangeDisplaySettingsEx(
+                    display.GdiDeviceName,
+                    ref mode,
+                    IntPtr.Zero,
+                    CdsTest | CdsEnableUnsafeModes,
+                    IntPtr.Zero);
+                if (test != 0)
+                {
+                    error = "Refresh rate " + frequency + " Hz is not valid for the current mode (CDS code " + test + ").";
+                    return false;
+                }
+
+                applyFlags |= CdsEnableUnsafeModes;
             }
 
-            var apply = ChangeDisplaySettingsEx(display.GdiDeviceName, ref mode, IntPtr.Zero, 0, IntPtr.Zero);
+            var apply = ChangeDisplaySettingsEx(display.GdiDeviceName, ref mode, IntPtr.Zero, applyFlags, IntPtr.Zero);
             if (apply != 0)
             {
                 error = "ChangeDisplaySettingsEx failed with code " + apply + ".";
@@ -289,6 +305,13 @@ namespace PlayniteDisplayManager.Refresh
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern bool EnumDisplaySettings(string lpszDeviceName, int iModeNum, ref DEVMODE lpDevMode);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern bool EnumDisplaySettingsEx(
+            string lpszDeviceName,
+            int iModeNum,
+            ref DEVMODE lpDevMode,
+            uint dwFlags);
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern int ChangeDisplaySettingsEx(

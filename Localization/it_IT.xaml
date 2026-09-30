@@ -270,6 +270,13 @@
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyExactFormat">{0} × {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyLowest">La più bassa disponibile</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyHighest">La più alta disponibile</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionGroupMonitor">Dal monitor</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionGroupCustom">Aggiuntive</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionCustomSuffix">aggiuntiva</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionRefreshModes">Aggiorna elenco risoluzioni</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionGroupsHelp">Aggiuntive: modalità esposte dal driver GPU assenti dall’EDID del monitor (modalità scalate e timing personalizzati AMD, NVIDIA o CRU).</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableFormat">{0} (non disponibile)</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableHint">La risoluzione selezionata non è più disponibile su questo display. Scegline un’altra o aggiorna l’elenco. I giochi salteranno la modifica fino ad allora.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionCurrentLabel">Risoluzione attuale</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableLabel">Modalità disponibili</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableCountFormat">{0} modalità disponibili nell'elenco sotto</sys:String>

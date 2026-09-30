@@ -227,6 +227,68 @@
                 <Setter Property="VerticalContentAlignment" Value="Center" />
                 <Setter Property="Cursor" Value="Hand" />
             </Style>
+            <!-- Same grouped-combo pattern as Controller Manager Looks selectors. -->
+            <Style x:Key="ResolutionExactItemStyle" TargetType="ComboBoxItem"
+                   BasedOn="{StaticResource {x:Type ComboBoxItem}}">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="Foreground" Value="{DynamicResource Narian.Text}" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ComboBoxItem">
+                            <Border x:Name="ResolutionItemBackground"
+                                    Background="{TemplateBinding Background}"
+                                    Padding="{TemplateBinding Padding}"
+                                    CornerRadius="2"
+                                    TextElement.Foreground="{TemplateBinding Foreground}">
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsHighlighted" Value="True">
+                                    <Setter TargetName="ResolutionItemBackground" Property="Background" Value="{DynamicResource Narian.Hover}" />
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="ResolutionItemBackground" Property="Background" Value="{DynamicResource Narian.Accent}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource Narian.AccentOn}" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsHeader}" Value="True">
+                        <Setter Property="IsHitTestVisible" Value="False" />
+                        <Setter Property="Focusable" Value="False" />
+                        <Setter Property="Margin" Value="0,8,0,0" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+            <DataTemplate x:Key="ResolutionExactItemTemplate">
+                <Border x:Name="ResolutionRow" Padding="7,3" BorderThickness="0">
+                    <TextBlock x:Name="ResolutionLabel" Text="{Binding Label}" VerticalAlignment="Center"
+                               Foreground="{DynamicResource Narian.Text}" />
+                </Border>
+                <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType={x:Type ComboBoxItem}}}"
+                                 Value="True">
+                        <Setter TargetName="ResolutionLabel" Property="Foreground" Value="{DynamicResource Narian.AccentOn}" />
+                        <Setter TargetName="ResolutionLabel" Property="FontWeight" Value="SemiBold" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding IsHeader}" Value="True">
+                        <Setter TargetName="ResolutionRow" Property="BorderBrush" Value="{DynamicResource Narian.Accent}" />
+                        <Setter TargetName="ResolutionRow" Property="BorderThickness" Value="0,0,0,1" />
+                        <Setter TargetName="ResolutionRow" Property="Padding" Value="7,3,7,6" />
+                        <Setter TargetName="ResolutionLabel" Property="Foreground" Value="{DynamicResource Narian.Accent}" />
+                        <Setter TargetName="ResolutionLabel" Property="FontWeight" Value="SemiBold" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding IsUnavailable}" Value="True">
+                        <Setter TargetName="ResolutionLabel" Property="FontStyle" Value="Italic" />
+                        <Setter TargetName="ResolutionLabel" Property="Opacity" Value="0.75" />
+                    </DataTrigger>
+                </DataTemplate.Triggers>
+            </DataTemplate>
             <Style x:Key="ExpanderHeaderButton" TargetType="ToggleButton">
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
@@ -966,11 +1028,41 @@
                                                                                  Content="{DynamicResource LOCDisplayManager_ResolutionPolicyExact}"
                                                                                  Margin="0,8,0,0"
                                                                                  Checked="ResolutionRadio_OnChecked" />
-                                                                    <ComboBox x:Name="ResolutionExactBox"
-                                                                              MinHeight="36"
-                                                                              Margin="24,8,0,0"
-                                                                              DisplayMemberPath="Label"
-                                                                              SelectionChanged="ResolutionExactBox_OnSelectionChanged" />
+                                                                    <DockPanel Margin="24,8,0,0" LastChildFill="True">
+                                                                        <Button x:Name="ResolutionExactRefreshButton"
+                                                                                DockPanel.Dock="Right"
+                                                                                Style="{StaticResource IconSquareButton}"
+                                                                                Width="36"
+                                                                                Height="36"
+                                                                                MinWidth="36"
+                                                                                MinHeight="36"
+                                                                                MaxWidth="36"
+                                                                                MaxHeight="36"
+                                                                                Margin="8,0,0,0"
+                                                                                VerticalAlignment="Center"
+                                                                                ToolTip="{DynamicResource LOCDisplayManager_ResolutionRefreshModes}"
+                                                                                Click="ResolutionExactRefreshButton_OnClick">
+                                                                            <TextBlock Text="&#xE72C;"
+                                                                                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                                                                       FontSize="16"
+                                                                                       HorizontalAlignment="Center"
+                                                                                       VerticalAlignment="Center" />
+                                                                        </Button>
+                                                                        <ComboBox x:Name="ResolutionExactBox"
+                                                                                  MinHeight="36"
+                                                                                  IsSynchronizedWithCurrentItem="False"
+                                                                                  ItemContainerStyle="{StaticResource ResolutionExactItemStyle}"
+                                                                                  ItemTemplate="{StaticResource ResolutionExactItemTemplate}"
+                                                                                  SelectionChanged="ResolutionExactBox_OnSelectionChanged" />
+                                                                    </DockPanel>
+                                                                    <TextBlock Style="{StaticResource HintText}"
+                                                                               Margin="24,6,0,0"
+                                                                               Text="{DynamicResource LOCDisplayManager_ResolutionGroupsHelp}" />
+                                                                    <TextBlock x:Name="ResolutionExactMissingHint"
+                                                                               Style="{StaticResource HintText}"
+                                                                               Margin="24,0,0,0"
+                                                                               Visibility="Collapsed"
+                                                                               Text="{DynamicResource LOCDisplayManager_ResolutionUnavailableHint}" />
                                                                     <RadioButton x:Name="ResolutionPolicyLowestRadio"
                                                                                  GroupName="ResolutionPolicy"
                                                                                  Tag="LowestAvailable"

@@ -270,6 +270,13 @@
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyExactFormat">{0} × {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyLowest">可用最低</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyHighest">可用最高</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionGroupMonitor">来自显示器</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionGroupCustom">额外</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionCustomSuffix">额外</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionRefreshModes">刷新分辨率列表</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionGroupsHelp">额外是指 GPU 驱动公开、但不在显示器 EDID 中的模式：缩放模式以及 AMD/NVIDIA/CRU 自定义时序。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableFormat">{0}（不可用）</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableHint">所选分辨率在此显示器上已不可用。请另选或刷新列表。在此之前游戏会跳过更改。</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionCurrentLabel">当前分辨率</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableLabel">可用模式</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableCountFormat">下方列表中有 {0} 种可用模式</sys:String>

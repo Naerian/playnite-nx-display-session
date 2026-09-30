@@ -270,6 +270,13 @@
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyExactFormat">{0} × {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyLowest">利用可能な最低</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionPolicyHighest">利用可能な最高</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionGroupMonitor">モニターから</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionGroupCustom">追加</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionCustomSuffix">追加</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionRefreshModes">解像度リストを更新</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionGroupsHelp">追加は、モニター EDID にない GPU ドライバーのモードです（スケーリングや AMD / NVIDIA / CRU のカスタムタイミング）。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableFormat">{0}（利用不可）</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableHint">選択した解像度はこのディスプレイで利用できなくなりました。別の解像度を選ぶかリストを更新してください。それまでゲームでは変更をスキップします。</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionCurrentLabel">現在の解像度</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableLabel">利用可能なモード</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableCountFormat">下のリストに {0} モードあります</sys:String>

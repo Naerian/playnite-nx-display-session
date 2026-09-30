@@ -14,10 +14,10 @@ namespace PlayniteDisplayManager.Resolution
         /// <summary>Use PreferredWidth x PreferredHeight when available.</summary>
         Exact = 1,
 
-        /// <summary>Lowest area mode EnumDisplaySettings reports for the target.</summary>
+        /// <summary>Lowest area mode the driver reports for the target (incl. custom).</summary>
         LowestAvailable = 2,
 
-        /// <summary>Highest area mode EnumDisplaySettings reports for the target.</summary>
+        /// <summary>Highest area mode the driver reports for the target (incl. custom).</summary>
         HighestAvailable = 3
     }
 
@@ -35,6 +35,15 @@ namespace PlayniteDisplayManager.Resolution
         public int Width { get; set; }
 
         public int Height { get; set; }
+
+        /// <summary>
+        /// True when the mode is exposed by the driver but not advertised in the monitor EDID
+        /// (scaled modes, NVIDIA/AMD/CRU custom timings, etc.).
+        /// </summary>
+        public bool IsCustom { get; set; }
+
+        /// <summary>Localized group header for UI combos; set by the settings view.</summary>
+        public string GroupName { get; set; }
 
         public string Label => Width + " × " + Height;
     }
@@ -61,6 +70,10 @@ namespace PlayniteDisplayManager.Resolution
         private const int EnumCurrentSettings = -1;
         private const int CdsTest = 0x00000002;
         private const int CdsUpdateregistry = 0x00000001;
+        // Include driver-reported modes that are not in the monitor EDID
+        // (NVIDIA/AMD/CRU custom resolutions). Vendor-agnostic Win32 flag.
+        private const uint EdsRawMode = 0x00000002;
+        private const int CdsEnableUnsafeModes = 0x00000100;
         private const uint DmPelsWidth = 0x00080000;
         private const uint DmPelsHeight = 0x00100000;
         private const uint DmDisplayFrequency = 0x00400000;
@@ -74,30 +87,71 @@ namespace PlayniteDisplayManager.Resolution
             }
 
             var device = display.GdiDeviceName;
+            var edidKeys = DisplayEdidReader.TryReadResolutionKeys(display.MonitorDevicePath);
+            var plainKeys = CollectModeKeys(device, raw: false);
+
             var mode = new DEVMODE();
             mode.dmSize = (ushort)Marshal.SizeOf(typeof(DEVMODE));
 
-            for (var i = 0; EnumDisplaySettings(device, i, ref mode); i++)
+            // EDS_RAWMODE: all modes the adapter driver reports, including custom
+            // timings registered via NVIDIA CP / AMD / CRU that EnumDisplaySettings
+            // would otherwise filter as "incompatible with the monitor".
+            for (var i = 0; EnumDisplaySettingsEx(device, i, ref mode, EdsRawMode); i++)
             {
+                mode.dmDriverExtra = 0;
                 if (mode.dmPelsWidth < 640 || mode.dmPelsHeight < 480)
                 {
                     continue;
                 }
 
-                var key = ((long)mode.dmPelsWidth << 32) | (uint)mode.dmPelsHeight;
-                if (!modes.ContainsKey(key))
+                var key = DisplayEdidReader.ToKey(mode.dmPelsWidth, mode.dmPelsHeight);
+                if (modes.ContainsKey(key))
                 {
-                    modes[key] = new ResolutionMode
-                    {
-                        Width = mode.dmPelsWidth,
-                        Height = mode.dmPelsHeight
-                    };
+                    continue;
                 }
+
+                var onlyInRaw = plainKeys != null && !plainKeys.Contains(key);
+                var missingFromEdid = edidKeys != null && !edidKeys.Contains(key);
+                modes[key] = new ResolutionMode
+                {
+                    Width = mode.dmPelsWidth,
+                    Height = mode.dmPelsHeight,
+                    IsCustom = onlyInRaw || missingFromEdid
+                };
             }
 
+            // Monitor (EDID) first, then custom/driver extras; largest area within each group.
             return modes.Values
-                .OrderByDescending(m => (long)m.Width * m.Height)
+                .OrderBy(m => m.IsCustom)
+                .ThenByDescending(m => (long)m.Width * m.Height)
                 .ToList();
+        }
+
+        private static HashSet<long> CollectModeKeys(string device, bool raw)
+        {
+            var keys = new HashSet<long>();
+            var mode = new DEVMODE();
+            mode.dmSize = (ushort)Marshal.SizeOf(typeof(DEVMODE));
+            for (var i = 0; ; i++)
+            {
+                mode.dmDriverExtra = 0;
+                var ok = raw
+                    ? EnumDisplaySettingsEx(device, i, ref mode, EdsRawMode)
+                    : EnumDisplaySettings(device, i, ref mode);
+                if (!ok)
+                {
+                    break;
+                }
+
+                if (mode.dmPelsWidth < 640 || mode.dmPelsHeight < 480)
+                {
+                    continue;
+                }
+
+                keys.Add(DisplayEdidReader.ToKey(mode.dmPelsWidth, mode.dmPelsHeight));
+            }
+
+            return keys;
         }
 
         public ResolutionPlan Plan(
@@ -216,18 +270,32 @@ namespace PlayniteDisplayManager.Resolution
                 mode.dmFields |= DmDisplayFrequency;
             }
 
+            var applyFlags = CdsUpdateregistry;
             var test = ChangeDisplaySettingsEx(target.GdiDeviceName, ref mode, IntPtr.Zero, CdsTest, IntPtr.Zero);
             if (test != 0)
             {
-                error = "Resolution test failed (" + test + ").";
-                return false;
+                // Custom timings often fail the safe CDS_TEST; retry as unsafe mode
+                // (same path Windows uses after NVIDIA/AMD custom resolutions are enabled).
+                test = ChangeDisplaySettingsEx(
+                    target.GdiDeviceName,
+                    ref mode,
+                    IntPtr.Zero,
+                    CdsTest | CdsEnableUnsafeModes,
+                    IntPtr.Zero);
+                if (test != 0)
+                {
+                    error = "Resolution test failed (" + test + ").";
+                    return false;
+                }
+
+                applyFlags |= CdsEnableUnsafeModes;
             }
 
             var apply = ChangeDisplaySettingsEx(
                 target.GdiDeviceName,
                 ref mode,
                 IntPtr.Zero,
-                CdsUpdateregistry,
+                applyFlags,
                 IntPtr.Zero);
             if (apply != 0)
             {
@@ -259,6 +327,13 @@ namespace PlayniteDisplayManager.Resolution
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern bool EnumDisplaySettings(string lpszDeviceName, int iModeNum, ref DEVMODE lpDevMode);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern bool EnumDisplaySettingsEx(
+            string lpszDeviceName,
+            int iModeNum,
+            ref DEVMODE lpDevMode,
+            uint dwFlags);
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern int ChangeDisplaySettingsEx(

@@ -1,5 +1,13 @@
 AddonId: PlayniteDisplayManager_9c2e4a71-b8d3-4f6a-a1c5-0e7d92f3b846
 Packages:
+  - Version: 1.0.1
+    RequiredApiVersion: 6.16.0
+    ReleaseDate: 2026-09-30
+    PackageUrl: https://github.com/Naerian/playnite-nx-display-session/releases/download/v1.0.1/PlayniteDisplayManager_9c2e4a71-b8d3-4f6a-a1c5-0e7d92f3b846_1_0_1.pext
+    Changelog:
+      - 'Enumerate driver custom timings (AMD/NVIDIA/CRU) via EnumDisplaySettingsEx EDS_RAWMODE.'
+      - 'Group Exact resolutions into From monitor vs Additional (non-EDID), styled like Controller Manager Looks.'
+      - 'Add a refresh control for the resolution list and keep unavailable Exact picks visible without breaking game launch.'
   - Version: 1.0.0
     RequiredApiVersion: 6.16.0
     ReleaseDate: 2026-09-21
