@@ -277,6 +277,14 @@
     <sys:String x:Key="LOCDisplayManager_ResolutionGroupsHelp">Dodatkowe to tryby zgłaszane przez sterownik GPU, których nie ma w EDID monitora: tryby skalowane oraz własne timingi AMD, NVIDIA lub CRU.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableFormat">{0} (niedostępna)</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableHint">Wybrana rozdzielczość nie jest już dostępna na tym ekranie. Wybierz inną lub odśwież listę. Gry pominą zmianę do tego czasu.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetTitle">Ustawienia zresetowane dla tego wyświetlacza</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetIntro">Niektóre ustawienia są niedostępne na wybranym wyświetlaczu i zostały zresetowane:</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetResolutionFormat">Rozdzielczość {0}</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetRefreshFormat">Częstotliwość odświeżania {0} Hz</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetHdr">Wymuś włączenie HDR</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetAfterInherit">Zachowaj ustawienia globalne</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetAfterNative">Nie zmieniaj</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DialogOk">OK</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionCurrentLabel">Bieżąca rozdzielczość</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableLabel">Dostępne tryby</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableCountFormat">{0} trybów dostępnych na liście poniżej</sys:String>

@@ -389,6 +389,12 @@ namespace PlayniteDisplayManager
                 yield break;
             }
 
+            // Heal stale Exact / ExactHz / ForceOn left over after a play-display switch.
+            foreach (var game in games)
+            {
+                SanitizeGameProfileForCurrentPlayDisplay(game);
+            }
+
             var hdrSection = "Display Manager|" + Loc("LOCDisplayManager_GameMenuHdrSection");
             var hdrCurrent = games.Select(g => gameProfiles.GetHdrOverride(g)).ToList();
 
@@ -433,10 +439,8 @@ namespace PlayniteDisplayManager
                 args,
                 GameRefreshRateOverride.Native);
 
-            var primary = Displays.GetDisplays()
-                .FirstOrDefault(d => d.IsPrimary && d.IsConnected)
-                ?? Displays.GetDisplays().FirstOrDefault(d => d.IsConnected);
-            var availableRates = RefreshRates?.GetAvailableRates(primary) ?? Array.Empty<double>();
+            var targetDisplay = ResolveMenuTargetDisplay(games);
+            var availableRates = RefreshRates?.GetAvailableRates(targetDisplay) ?? Array.Empty<double>();
             foreach (var rate in availableRates)
             {
                 var selected = hzProfiles.Count > 0 && hzProfiles.All(p =>
@@ -480,7 +484,7 @@ namespace PlayniteDisplayManager
                 args,
                 GameResolutionOverride.Native);
 
-            var availableModes = Resolutions?.GetAvailableModes(primary) ?? new List<ResolutionMode>();
+            var availableModes = Resolutions?.GetAvailableModes(targetDisplay) ?? new List<ResolutionMode>();
             var customSuffix = Loc("LOCDisplayManager_ResolutionCustomSuffix");
             foreach (var mode in availableModes)
             {
@@ -877,6 +881,56 @@ namespace PlayniteDisplayManager
             {
                 logger.Error(ex, "Failed to end Display Manager game session (" + reason + ").");
             }
+        }
+
+        /// <summary>
+        /// Same target as Settings Exact/Hz lists: per-game play display override when shared,
+        /// otherwise the global preferred play display, otherwise Windows primary.
+        /// </summary>
+        private DisplayInfo ResolveMenuTargetDisplay(IList<Game> games)
+        {
+            var live = Displays.GetDisplays()
+                .Where(d => d.IsConnected)
+                .ToList();
+            if (live.Count == 0)
+            {
+                return null;
+            }
+
+            string preferredId = null;
+            if (games != null && games.Count > 0)
+            {
+                var playIds = games
+                    .Select(g => gameProfiles.GetProfile(g))
+                    .Select(p => p != null && p.HasPlayDisplayOverride
+                        ? p.PreferredPlayDisplayId
+                        : null)
+                    .ToList();
+                // null = inherit global; empty = keep Windows primary; otherwise display id.
+                if (playIds.Count > 0 && playIds.All(id => id != null)
+                    && playIds.All(id => string.Equals(id, playIds[0], StringComparison.OrdinalIgnoreCase)))
+                {
+                    preferredId = playIds[0];
+                }
+            }
+
+            if (preferredId == null)
+            {
+                preferredId = settings?.PreferredPlayDisplayId;
+            }
+
+            if (!string.IsNullOrWhiteSpace(preferredId))
+            {
+                var match = live.FirstOrDefault(d =>
+                    string.Equals(d.Id, preferredId, StringComparison.OrdinalIgnoreCase));
+                if (match != null)
+                {
+                    return match;
+                }
+            }
+
+            // Empty override or missing preferred → Windows primary.
+            return live.FirstOrDefault(d => d.IsPrimary) ?? live[0];
         }
 
         private string ResolveMissingDisplayFallback(
@@ -1595,12 +1649,151 @@ namespace PlayniteDisplayManager
                         return;
                     }
 
+                    var aggregate = new DisplayOverrideSanitizeResult();
                     foreach (var game in games)
                     {
                         gameProfiles.SetPreferredPlayDisplayId(game, displayId);
+                        aggregate.Merge(SanitizeGameProfileForCurrentPlayDisplay(game));
+                    }
+
+                    if (aggregate.Changed)
+                    {
+                        ShowOverrideResetMessage(aggregate);
                     }
                 }
             };
+        }
+
+        /// <returns>Details of what was reset; silent when called from menu open heal.</returns>
+        private DisplayOverrideSanitizeResult SanitizeGameProfileForCurrentPlayDisplay(Game game)
+        {
+            var result = new DisplayOverrideSanitizeResult();
+            if (game == null || gameProfiles == null)
+            {
+                return result;
+            }
+
+            var target = ResolveMenuTargetDisplay(new[] { game });
+            if (target == null)
+            {
+                return result;
+            }
+
+            gameProfiles.UpdateProfile(game, profile =>
+            {
+                result = DisplayOverrideSanitizer.SanitizeGameProfile(
+                    profile,
+                    target,
+                    Resolutions,
+                    RefreshRates,
+                    IsDisplayHdrSupported);
+            });
+
+            return result;
+        }
+
+        public void ShowOverrideResetMessage(
+            DisplayOverrideSanitizeResult result,
+            bool useNativeDefault = false)
+        {
+            if (result == null || !result.Changed)
+            {
+                return;
+            }
+
+            var after = useNativeDefault
+                ? Loc("LOCDisplayManager_OverrideResetAfterNative")
+                : Loc("LOCDisplayManager_OverrideResetAfterInherit");
+            var changes = new List<MessageDialogChange>();
+
+            if (result.ResetResolution)
+            {
+                var format = Loc("LOCDisplayManager_OverrideResetResolutionFormat");
+                changes.Add(new MessageDialogChange
+                {
+                    Before = string.Format(
+                        format,
+                        result.ResetResolutionLabel ?? Loc("LOCDisplayManager_GameMenuResolutionSection")),
+                    After = after
+                });
+            }
+
+            if (result.ResetRefreshRate)
+            {
+                var format = Loc("LOCDisplayManager_OverrideResetRefreshFormat");
+                var hz = result.ResetRefreshRateHz.HasValue
+                    ? result.ResetRefreshRateHz.Value.ToString("0.###")
+                    : "?";
+                changes.Add(new MessageDialogChange
+                {
+                    Before = string.Format(format, hz),
+                    After = after
+                });
+            }
+
+            if (result.ResetHdr)
+            {
+                changes.Add(new MessageDialogChange
+                {
+                    Before = Loc("LOCDisplayManager_OverrideResetHdr"),
+                    After = after
+                });
+            }
+
+            ShowNarianMessage(
+                Loc("LOCDisplayManager_OverrideResetTitle"),
+                Loc("LOCDisplayManager_OverrideResetIntro"),
+                changes);
+        }
+
+        public void ShowNarianMessage(
+            string title,
+            string message,
+            IEnumerable<MessageDialogChange> changes = null)
+        {
+            try
+            {
+                var window = new MessageDialogWindow(
+                    title,
+                    message,
+                    Loc("LOCDisplayManager_DialogOk"),
+                    changes);
+                var owner = PlayniteApi?.Dialogs?.GetCurrentAppWindow();
+                if (owner != null)
+                {
+                    window.Owner = owner;
+                }
+                else if (Application.Current?.MainWindow != null)
+                {
+                    window.Owner = Application.Current.MainWindow;
+                }
+
+                SettingsAppearance.ApplyWindow(window, settings?.AppearancePreset);
+                window.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Failed to show Display Manager message dialog.");
+                PlayniteApi?.Dialogs?.ShowMessage(message ?? string.Empty, title ?? "Display Manager");
+            }
+        }
+
+        private bool IsDisplayHdrSupported(DisplayInfo display)
+        {
+            if (display == null || Hdr == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                var probe = Hdr.ProbeActiveTargets(new[] { display }).FirstOrDefault();
+                return probe != null && probe.HdrSupported;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private string DescribePlayDisplayOverride(string displayId)

@@ -277,6 +277,14 @@
     <sys:String x:Key="LOCDisplayManager_ResolutionGroupsHelp">Дополнительные — режимы драйвера GPU, которых нет в EDID монитора: масштабированные и пользовательские тайминги AMD, NVIDIA или CRU.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableFormat">{0} (недоступно)</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableHint">Выбранное разрешение больше недоступно на этом дисплее. Выберите другое или обновите список. Игры пропустят смену до тех пор.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetTitle">Настройки сброшены для этого дисплея</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetIntro">Некоторые настройки недоступны на выбранном дисплее и были сброшены:</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetResolutionFormat">Разрешение {0}</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetRefreshFormat">Частота обновления {0} Гц</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetHdr">Принудительно включить HDR</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetAfterInherit">Сохранить глобальные настройки</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetAfterNative">Не менять</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DialogOk">OK</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionCurrentLabel">Текущее разрешение</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableLabel">Доступные режимы</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableCountFormat">{0} режимов доступно в списке ниже</sys:String>

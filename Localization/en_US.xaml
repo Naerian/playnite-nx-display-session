@@ -278,6 +278,14 @@
     <sys:String x:Key="LOCDisplayManager_ResolutionGroupsHelp">Additional means modes the GPU driver exposes that are not in the monitor EDID: scaled modes and custom timings from AMD, NVIDIA, or CRU.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableFormat">{0} (unavailable)</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableHint">The selected resolution is no longer available on this display. Pick another or refresh the list. Games will skip the change until then.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetTitle">Settings reset for this display</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetIntro">Some settings are not available on the selected display and were reset:</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetResolutionFormat">Resolution {0}</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetRefreshFormat">Refresh rate {0} Hz</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetHdr">Force HDR on</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetAfterInherit">Keep global settings</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetAfterNative">Do not change</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DialogOk">OK</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionCurrentLabel">Current resolution</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableLabel">Available modes</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableCountFormat">{0} modes available in the list below</sys:String>

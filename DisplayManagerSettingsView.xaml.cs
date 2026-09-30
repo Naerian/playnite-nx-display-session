@@ -748,10 +748,57 @@ namespace PlayniteDisplayManager
                 settings.PreferredPlayDisplayId = selectedId;
             }
 
+            SanitizeGlobalOverridesForPlayDisplay(settings);
             PersistLaunchDisplaySettings();
             RebuildDisplayCards();
             SyncHdrCapabilityUi();
+            SyncResolutionRadios();
+            SyncRefreshRateRadios();
             UpdateOverview();
+        }
+
+        private void SanitizeGlobalOverridesForPlayDisplay(DisplayManagerSettings settings)
+        {
+            if (settings == null)
+            {
+                return;
+            }
+
+            var connected = settings.AvailableDisplays?
+                .Where(d => d.IsConnected)
+                .ToList() ?? new List<DisplayInfo>();
+            var target = ResolvePreferredPlayDisplay(settings, connected);
+            if (target == null)
+            {
+                return;
+            }
+
+            var result = DisplayOverrideSanitizer.SanitizeGlobalSettings(
+                settings.PreferredResolutionWidth,
+                settings.PreferredResolutionHeight,
+                settings.GlobalResolutionPolicy,
+                settings.PreferredRefreshRateHz,
+                settings.GlobalRefreshRatePolicy,
+                target,
+                settings.Plugin?.Resolutions,
+                settings.Plugin?.RefreshRates,
+                out var newResolutionPolicy,
+                out var newPreferredWidth,
+                out var newPreferredHeight,
+                out var newRefreshPolicy,
+                out var newPreferredHz);
+
+            if (!result.Changed)
+            {
+                return;
+            }
+
+            settings.GlobalResolutionPolicy = newResolutionPolicy;
+            settings.PreferredResolutionWidth = newPreferredWidth;
+            settings.PreferredResolutionHeight = newPreferredHeight;
+            settings.GlobalRefreshRatePolicy = newRefreshPolicy;
+            settings.PreferredRefreshRateHz = newPreferredHz;
+            settings.Plugin?.ShowOverrideResetMessage(result, useNativeDefault: true);
         }
 
         private void TopologyTurnOffOthersCheck_OnChanged(object sender, RoutedEventArgs e)
@@ -2554,7 +2601,53 @@ namespace PlayniteDisplayManager
                 choice =>
                 {
                     profile.PreferredPlayDisplayId = choice.HasDisplayId ? choice.DisplayId : null;
+                    var result = SanitizeGameProfileEntryForPlayDisplay(profile, settings);
+                    if (result != null && result.Changed)
+                    {
+                        settings?.Plugin?.ShowOverrideResetMessage(result);
+                    }
                 });
+        }
+
+        private DisplayOverrideSanitizeResult SanitizeGameProfileEntryForPlayDisplay(
+            GameDisplayProfileEntry profile,
+            DisplayManagerSettings settings)
+        {
+            if (profile == null)
+            {
+                return new DisplayOverrideSanitizeResult();
+            }
+
+            var connected = settings?.AvailableDisplays?
+                .Where(d => d.IsConnected)
+                .ToList() ?? new List<DisplayInfo>();
+
+            DisplayInfo target = null;
+            if (profile.PreferredPlayDisplayId == null)
+            {
+                target = ResolvePreferredPlayDisplay(settings, connected);
+            }
+            else if (string.IsNullOrEmpty(profile.PreferredPlayDisplayId))
+            {
+                target = connected.FirstOrDefault(d => d.IsPrimary) ?? connected.FirstOrDefault();
+            }
+            else
+            {
+                target = connected.FirstOrDefault(d =>
+                    string.Equals(d.Id, profile.PreferredPlayDisplayId, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (target == null)
+            {
+                return new DisplayOverrideSanitizeResult();
+            }
+
+            return DisplayOverrideSanitizer.SanitizeGameProfileEntry(
+                profile,
+                target,
+                settings?.Plugin?.Resolutions,
+                settings?.Plugin?.RefreshRates,
+                display => ProbeDisplayHdrSupported(settings, display));
         }
 
         private UIElement CreateGameProfileHdrEditor(GameDisplayProfileEntry profile)

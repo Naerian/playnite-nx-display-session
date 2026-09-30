@@ -277,6 +277,14 @@
     <sys:String x:Key="LOCDisplayManager_ResolutionGroupsHelp">Aggiuntive: modalità esposte dal driver GPU assenti dall’EDID del monitor (modalità scalate e timing personalizzati AMD, NVIDIA o CRU).</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableFormat">{0} (non disponibile)</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableHint">La risoluzione selezionata non è più disponibile su questo display. Scegline un’altra o aggiorna l’elenco. I giochi salteranno la modifica fino ad allora.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetTitle">Impostazioni ripristinate per questo display</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetIntro">Alcune impostazioni non sono disponibili sul display selezionato e sono state ripristinate:</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetResolutionFormat">Risoluzione {0}</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetRefreshFormat">Frequenza {0} Hz</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetHdr">Forza HDR attivo</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetAfterInherit">Mantieni impostazioni globali</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetAfterNative">Non modificare</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DialogOk">OK</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionCurrentLabel">Risoluzione attuale</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableLabel">Modalità disponibili</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableCountFormat">{0} modalità disponibili nell'elenco sotto</sys:String>

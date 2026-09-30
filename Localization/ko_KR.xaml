@@ -277,6 +277,14 @@
     <sys:String x:Key="LOCDisplayManager_ResolutionGroupsHelp">추가는 모니터 EDID에 없는 GPU 드라이버 모드입니다(스케일 모드 및 AMD/NVIDIA/CRU 사용자 지정 타이밍).</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableFormat">{0} (사용 불가)</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionUnavailableHint">선택한 해상도를 이 디스플레이에서 더 이상 사용할 수 없습니다. 다른 해상도를 고르거나 목록을 새로 고치세요. 그전까지 게임은 변경을 건너뜁니다.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetTitle">이 디스플레이에 대한 설정이 초기화됨</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetIntro">선택한 디스플레이에서 사용할 수 없는 설정이 있어 초기화되었습니다:</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetResolutionFormat">해상도 {0}</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetRefreshFormat">새로 고침 빈도 {0} Hz</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetHdr">HDR 강제 켜기</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetAfterInherit">전역 설정 유지</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverrideResetAfterNative">변경 안 함</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DialogOk">확인</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionCurrentLabel">현재 해상도</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableLabel">사용 가능한 모드</sys:String>
     <sys:String x:Key="LOCDisplayManager_ResolutionAvailableCountFormat">아래 목록에 {0}개 모드 사용 가능</sys:String>

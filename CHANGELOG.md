@@ -1,6 +1,12 @@
 # Changelog
 
 
+
+## 1.0.2 — 2026-09-30
+- When you change the preferred display for games, options that do not work on that screen (exact resolution, refresh rate, or Force HDR) are reset automatically.
+- A clear dialog shows what was changed, with before and after values, on the same screen where Playnite is open.
+- The game context menu now uses the same preferred display as Settings, so custom resolutions appear when they should.
+
 ## 1.0.1 — 2026-09-30
 - Enumerate driver custom timings (AMD/NVIDIA/CRU) via EnumDisplaySettingsEx EDS_RAWMODE.
 - Group Exact resolutions into From monitor vs Additional (non-EDID), styled like Controller Manager Looks.

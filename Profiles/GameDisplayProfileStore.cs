@@ -186,6 +186,24 @@ namespace PlayniteDisplayManager.Profiles
             }
         }
 
+        /// <summary>
+        /// Load-mutate-save a per-game profile (used after play-display changes to reset incompatibles).
+        /// </summary>
+        public void UpdateProfile(Game game, Action<GameDisplayProfile> mutate)
+        {
+            if (game == null || mutate == null)
+            {
+                return;
+            }
+
+            lock (syncRoot)
+            {
+                var profile = GetOrCreateUnlocked(game.Id);
+                mutate(profile);
+                PersistUnlocked(game.Id, profile);
+            }
+        }
+
         public void SetDisplayProfileId(Game game, Guid? displayProfileId)
         {
             if (game == null)
