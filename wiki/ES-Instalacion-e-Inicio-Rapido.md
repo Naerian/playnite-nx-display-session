@@ -26,6 +26,7 @@ Menú contextual de la biblioteca → **Display Manager → HDR**: Heredar / For
 
 - Tras salir, el escritorio debe coincidir con el estado previo.
 - El HDR debe quedar off cuando NX escribió SDR (no confíes en el readback de Ajustes bajo ACM — ver [Solución ACM](ES-Solucion-de-Problemas-ACM)).
+- Registro de soporte (compártelo si reportas un fallo): Ajustes → Avanzado → Mantenimiento → Abrir registro, o el archivo `display-manager.log` en la carpeta ExtensionsData del plugin.
 - Log de RestoreHost (si hace falta): `%TEMP%\PlayniteDisplayManager-RestoreHost.log`
 
 ## Compilar desde fuente

@@ -1,5 +1,13 @@
 AddonId: PlayniteDisplayManager_9c2e4a71-b8d3-4f6a-a1c5-0e7d92f3b846
 Packages:
+  - Version: 1.0.4
+    RequiredApiVersion: 6.16.0
+    ReleaseDate: 2026-10-02
+    PackageUrl: https://github.com/Naerian/playnite-nx-display-session/releases/download/v1.0.4/PlayniteDisplayManager_9c2e4a71-b8d3-4f6a-a1c5-0e7d92f3b846_1_0_4.pext
+    Changelog:
+      - 'Added a dedicated support log file under plugin user data so users can share diagnostics when something fails.'
+      - 'Structured the support log like a readable session diary: SESSION begin/end, fixed topics, levels, and detail dumps on warn/error (or verbose).'
+      - 'Debug log controls live under Advanced â†’ Maintenance (open / clear / verbose), matching Metadata AIâ€™s maintenance pattern.'
   - Version: 1.0.3
     RequiredApiVersion: 6.16.0
     ReleaseDate: 2026-10-02

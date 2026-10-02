@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -13,6 +14,7 @@ using Playnite.SDK.Models;
 using Playnite.SDK.Plugins;
 using PlayniteDisplayManager.Displays;
 using PlayniteDisplayManager.Hdr;
+using PlayniteDisplayManager.Logging;
 using PlayniteDisplayManager.Profiles;
 using PlayniteDisplayManager.Refresh;
 using PlayniteDisplayManager.Restore;
@@ -24,6 +26,7 @@ namespace PlayniteDisplayManager
     public sealed class PlayniteDisplayManagerPlugin : GenericPlugin
     {
         private readonly ILogger logger;
+        private readonly PluginFileLogger fileLogger;
         private readonly HdrService hdr = new HdrService();
         private readonly RefreshRateService refreshRates = new RefreshRateService();
         private readonly ResolutionService resolutions = new ResolutionService();
@@ -64,7 +67,12 @@ namespace PlayniteDisplayManager
 
         public PlayniteDisplayManagerPlugin(IPlayniteAPI playniteApi) : base(playniteApi)
         {
-            logger = LogManager.GetLogger();
+            var playniteLogger = LogManager.GetLogger();
+            fileLogger = new PluginFileLogger(
+                GetPluginUserDataPath(),
+                playniteLogger,
+                () => settings?.EnableVerboseLogging == true);
+            logger = fileLogger;
             Displays = new DisplayEnumerator();
             Topology = new DisplayTopologyService();
             gameProfiles = new GameDisplayProfileStore(GetPluginUserDataPath());
@@ -99,6 +107,117 @@ namespace PlayniteDisplayManager
             EnsureEnglishFallbackResources();
             ReloadSettings();
             Theme.Refresh();
+            logger.Info("Display Manager loaded. Support log: " + fileLogger.LogFilePath);
+        }
+
+        public string SupportLogFilePath => fileLogger?.LogFilePath;
+
+        public string SupportLogDirectory => fileLogger?.LogDirectory;
+
+        public void LogInfo(string message)
+        {
+            logger?.Info(message);
+        }
+
+        public bool TryOpenSupportLogFolder(out string error)
+        {
+            error = null;
+            try
+            {
+                var dir = SupportLogDirectory;
+                if (string.IsNullOrWhiteSpace(dir))
+                {
+                    error = "Log directory is not available.";
+                    return false;
+                }
+
+                Directory.CreateDirectory(dir);
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = dir,
+                    UseShellExecute = true
+                });
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                logger.Warn(ex, "Failed to open support log folder.");
+                return false;
+            }
+        }
+
+        public bool TryOpenSupportLogFile(out string error)
+        {
+            error = null;
+            try
+            {
+                var path = SupportLogFilePath;
+                if (string.IsNullOrWhiteSpace(path) || fileLogger == null)
+                {
+                    error = "Log file path is not available.";
+                    return false;
+                }
+
+                fileLogger.EnsureFileExists();
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = path,
+                    UseShellExecute = true
+                });
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                logger.Warn(ex, "Failed to open support log file.");
+                return false;
+            }
+        }
+
+        public bool TryClearSupportLog(out string error)
+        {
+            error = null;
+            try
+            {
+                if (fileLogger == null)
+                {
+                    error = "Log file path is not available.";
+                    return false;
+                }
+
+                fileLogger.Clear();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                logger.Warn(ex, "Failed to clear support log.");
+                return false;
+            }
+        }
+
+        public bool TryCopySupportLogPath(out string error)
+        {
+            error = null;
+            try
+            {
+                var path = SupportLogFilePath;
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    error = "Log file path is not available.";
+                    return false;
+                }
+
+                System.Windows.Clipboard.SetText(path);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                logger.Warn(ex, "Failed to copy support log path.");
+                return false;
+            }
         }
 
         public DisplayManagerSettings Settings => settings;
@@ -269,7 +388,23 @@ namespace PlayniteDisplayManager
 
         public override void OnApplicationStarted(OnApplicationStartedEventArgs args)
         {
+            logger.Info("Display Manager application started (verbose=" +
+                        (settings?.EnableVerboseLogging == true) + ").");
             TryOfferFirstRunSetupWizard();
+        }
+
+        public override void OnApplicationStopped(OnApplicationStoppedEventArgs args)
+        {
+            EndGameSession("app-stopped");
+            StopRestoreHeartbeat();
+            if (restoreClient != null)
+            {
+                try { restoreClient.Disarm(); } catch { /* ignore */ }
+                restoreClient.Dispose();
+                restoreClient = null;
+            }
+
+            logger.Info("Display Manager application stopped.");
         }
 
         public void OpenSetupWizard()
@@ -379,6 +514,9 @@ namespace PlayniteDisplayManager
             NotifyDisplaysChanged();
             Theme?.Refresh();
             RefreshTopPanelItem();
+            logger.Info("Setup wizard finished (HDR policy=" + settings.GlobalHdrPolicy +
+                        ", refresh=" + settings.GlobalRefreshRatePolicy +
+                        ", clearNativeHdr=" + draft.ClearNativeHdrFlags + ").");
         }
 
         public override IEnumerable<GameMenuItem> GetGameMenuItems(GetGameMenuItemsArgs args)
@@ -602,18 +740,6 @@ namespace PlayniteDisplayManager
             EndGameSession("startup-cancelled");
         }
 
-        public override void OnApplicationStopped(OnApplicationStoppedEventArgs args)
-        {
-            EndGameSession("app-stopped");
-            StopRestoreHeartbeat();
-            if (restoreClient != null)
-            {
-                try { restoreClient.Disarm(); } catch { /* ignore */ }
-                restoreClient.Dispose();
-                restoreClient = null;
-            }
-        }
-
         private void BeginGameSession(Game game)
         {
             if (game == null || settings == null)
@@ -673,16 +799,22 @@ namespace PlayniteDisplayManager
                 && !hzPlan.ShouldApply
                 && !wantsTopology)
             {
-                logger.Info("Display session skipped for " + game.Name +
-                            " (resolution: " + resolutionPlan.Reason +
-                            " (HDR: " + hdrPlan.Reason + "; Hz: " + hzPlan.Reason +
-                            "; topology: none; source: " + resolved.Source + ").");
+                fileLogger.InfoTopic(
+                    "session.skip",
+                    "game=" + (game.Name ?? string.Empty) +
+                    " id=" + PluginFileLogger.ShortId(game.Id) +
+                    " source=" + resolved.Source +
+                    " hdr=" + hdrPlan.Reason +
+                    " resolution=" + resolutionPlan.Reason +
+                    " hz=" + hzPlan.Reason +
+                    " topology=none");
                 return;
             }
 
             try
             {
                 EndGameSession("replace-session");
+                fileLogger.SessionBegin(game.Id, game.Name);
 
                 var live = Displays.GetDisplays().ToList();
                 var primary = live.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
@@ -706,6 +838,34 @@ namespace PlayniteDisplayManager
                     offWrites = hdr.BuildForceOffWrites(live);
                 }
 
+                var topologyPlan =
+                    (wantsMakePrimary ? "makePrimary" : string.Empty) +
+                    (wantsMakePrimary && wantsTurnOffOthers ? "+" : string.Empty) +
+                    (wantsTurnOffOthers ? "turnOffOthers" : string.Empty);
+                if (string.IsNullOrEmpty(topologyPlan))
+                {
+                    topologyPlan = "none";
+                }
+
+                fileLogger.InfoTopic(
+                    "session.plan",
+                    "source=" + resolved.Source +
+                    " preferred=" + (topologyTargetId ?? "(windows-primary)") +
+                    " missingPreferred=" + missingPreferred +
+                    " topology=" + topologyPlan +
+                    " resolution=" + (resolutionPlan.ShouldApply
+                        ? resolutionPlan.TargetWidth + "x" + resolutionPlan.TargetHeight
+                        : "skip") +
+                    " (" + resolutionPlan.Reason + ")" +
+                    " hz=" + (hzPlan.ShouldApply
+                        ? hzPlan.TargetHz.Value.ToString("0.###")
+                        : "skip") +
+                    " (" + hzPlan.Reason + ")" +
+                    " hdr=" + hdrPlan.Action + " (" + hdrPlan.Reason + ")" +
+                    " applyWrites=" + applyWrites.Count +
+                    " restoreOffWrites=" + offWrites.Count,
+                    FormatHdrWritesDetail(applyWrites, offWrites));
+
                 var snapshot = Topology.CaptureSnapshot();
                 snapshot.HdrRestoreWrites = offWrites;
                 gameSessionSnapshot = snapshot;
@@ -716,6 +876,8 @@ namespace PlayniteDisplayManager
                 EnsureRestoreClient();
                 restoreClient.Arm(snapshot);
                 StartRestoreHeartbeat();
+                fileLogger.InfoTopic("restore.arm", "lease armed snapshotTargets=" +
+                    (snapshot.HdrRestoreWrites == null ? 0 : snapshot.HdrRestoreWrites.Count));
                 var appliedAny = false;
 
                 if (wantsTopology)
@@ -728,12 +890,20 @@ namespace PlayniteDisplayManager
                     });
                     if (!topologyApply.Success)
                     {
-                        logger.Warn("Topology apply failed for " + activeGameName + ": " + topologyApply.Error);
+                        fileLogger.WarnTopic(
+                            "topology.apply",
+                            "failed target=" + (topologyTargetId ?? string.Empty) +
+                            " plan=" + topologyPlan,
+                            topologyApply.Error);
                     }
                     else
                     {
                         appliedAny = true;
-                        logger.Info("Topology applied for " + activeGameName + " (" + topologyApply.Message + ").");
+                        fileLogger.InfoTopic(
+                            "topology.apply",
+                            "ok target=" + (topologyTargetId ?? string.Empty) +
+                            " plan=" + topologyPlan +
+                            " message=" + (topologyApply.Message ?? string.Empty));
                         live = Displays.GetDisplays().ToList();
                         primary = live.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
                             ?? live.FirstOrDefault(d => d.IsConnected);
@@ -755,16 +925,22 @@ namespace PlayniteDisplayManager
                     if (resolutions.TryApply(primary, resolutionPlan.TargetWidth.Value, resolutionPlan.TargetHeight.Value, out var resolutionError))
                     {
                         appliedAny = true;
-                        logger.Info("Resolution set to " + resolutionPlan.TargetWidth.Value + "x" +
-                                    resolutionPlan.TargetHeight.Value + " for " + activeGameName +
-                                    " (" + resolutionPlan.Reason + ").");
+                        fileLogger.InfoTopic(
+                            "resolution.apply",
+                            "ok " + resolutionPlan.TargetWidth.Value + "x" + resolutionPlan.TargetHeight.Value +
+                            " display=" + (primary.Id ?? string.Empty) +
+                            " (" + resolutionPlan.Reason + ")");
                         live = Displays.GetDisplays().ToList();
                         primary = live.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
                             ?? live.FirstOrDefault(d => d.IsConnected);
                     }
                     else
                     {
-                        logger.Warn("Resolution apply failed (" + resolutionPlan.Reason + "): " + resolutionError);
+                        fileLogger.WarnTopic(
+                            "resolution.apply",
+                            "failed " + resolutionPlan.TargetWidth.Value + "x" + resolutionPlan.TargetHeight.Value +
+                            " (" + resolutionPlan.Reason + ")",
+                            resolutionError);
                     }
                 }
 
@@ -774,12 +950,19 @@ namespace PlayniteDisplayManager
                     if (refreshRates.TryApply(primary, hzPlan.TargetHz.Value, out var hzError))
                     {
                         appliedAny = true;
-                        logger.Info("Refresh rate set to " + hzPlan.TargetHz.Value.ToString("0.###") +
-                                    " Hz for " + activeGameName + " (" + hzPlan.Reason + ").");
+                        fileLogger.InfoTopic(
+                            "hz.apply",
+                            "ok " + hzPlan.TargetHz.Value.ToString("0.###") + " Hz" +
+                            " display=" + (primary.Id ?? string.Empty) +
+                            " (" + hzPlan.Reason + ")");
                     }
                     else
                     {
-                        logger.Warn("Refresh rate apply failed (" + hzPlan.Reason + "): " + hzError);
+                        fileLogger.WarnTopic(
+                            "hz.apply",
+                            "failed " + hzPlan.TargetHz.Value.ToString("0.###") + " Hz" +
+                            " (" + hzPlan.Reason + ")",
+                            hzError);
                     }
                 }
 
@@ -791,8 +974,10 @@ namespace PlayniteDisplayManager
 
                 if (applyWrites.Count == 0)
                 {
-                    logger.Info("HDR plan " + hdrPlan.Action + " (" + hdrPlan.Reason +
-                                "): no advanced-color-capable target; lease armed for topology/Hz.");
+                    fileLogger.InfoTopic(
+                        "hdr.apply",
+                        "skip action=" + hdrPlan.Action +
+                        " (" + hdrPlan.Reason + "): no advanced-color-capable target; lease armed");
                     SettleAfterDisplayChange(appliedAny);
                     return;
                 }
@@ -800,21 +985,68 @@ namespace PlayniteDisplayManager
                 var written = hdr.ApplyHdrWrites(applyWrites, out var error);
                 if (written == 0)
                 {
-                    logger.Warn("HDR write failed (" + hdrPlan.Reason + "): " + error);
+                    fileLogger.WarnTopic(
+                        "hdr.apply",
+                        "failed action=" + hdrPlan.Action + " (" + hdrPlan.Reason + ") wrote=0",
+                        error);
                 }
                 else
                 {
                     appliedAny = true;
-                    logger.Info("HDR " + hdrPlan.Action + " wrote " + written +
-                                " target(s) for " + activeGameName + " (" + hdrPlan.Reason + ").");
+                    fileLogger.InfoTopic(
+                        "hdr.apply",
+                        "ok action=" + hdrPlan.Action +
+                        " wrote=" + written +
+                        " (" + hdrPlan.Reason + ")",
+                        FormatHdrWritesDetail(applyWrites, null));
                 }
 
                 SettleAfterDisplayChange(appliedAny);
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "Failed to begin Display Manager game session.");
+                fileLogger.ErrorTopic("session.begin", "Failed to begin Display Manager game session.", ex);
+                if (gameSessionSnapshot == null && activeGameId == null)
+                {
+                    fileLogger.SessionEnd(false, "begin-failed");
+                }
             }
+        }
+
+        private static string FormatHdrWritesDetail(
+            IList<HdrWriteTarget> applyWrites,
+            IList<HdrWriteTarget> offWrites)
+        {
+            var sb = new System.Text.StringBuilder();
+            if (applyWrites != null && applyWrites.Count > 0)
+            {
+                sb.Append("applyWrites:");
+                sb.Append(Environment.NewLine);
+                foreach (var w in applyWrites)
+                {
+                    sb.Append("  enable=").Append(w.Enable)
+                        .Append(" targetId=").Append(w.TargetId)
+                        .Append(" display=").Append(w.DisplayId ?? string.Empty)
+                        .Append(" name=").Append(w.Name ?? string.Empty)
+                        .Append(Environment.NewLine);
+                }
+            }
+
+            if (offWrites != null && offWrites.Count > 0)
+            {
+                sb.Append("restoreOffWrites:");
+                sb.Append(Environment.NewLine);
+                foreach (var w in offWrites)
+                {
+                    sb.Append("  enable=").Append(w.Enable)
+                        .Append(" targetId=").Append(w.TargetId)
+                        .Append(" display=").Append(w.DisplayId ?? string.Empty)
+                        .Append(" name=").Append(w.Name ?? string.Empty)
+                        .Append(Environment.NewLine);
+                }
+            }
+
+            return sb.Length == 0 ? null : sb.ToString();
         }
 
         private static HdrWriteTarget ToOffWrite(HdrWriteTarget w)
@@ -852,7 +1084,11 @@ namespace PlayniteDisplayManager
                     // Restore writes HDR off from snapshot.HdrRestoreWrites — no GET trust.
                     if (!Topology.TryRestoreSnapshot(snapshot, out var error))
                     {
-                        logger.Warn("Session restore failed (" + reason + "): " + error);
+                        fileLogger.WarnTopic(
+                            "session.restore",
+                            "failed reason=" + reason +
+                            (string.IsNullOrWhiteSpace(name) ? string.Empty : " game=" + name),
+                            error);
                         if (snapshot.HdrRestoreWrites != null && snapshot.HdrRestoreWrites.Count > 0)
                         {
                             hdr.ApplyHdrWrites(snapshot.HdrRestoreWrites, out _);
@@ -861,8 +1097,10 @@ namespace PlayniteDisplayManager
                     else
                     {
                         restoreOk = true;
-                        logger.Info("Session restored (" + reason + ")" +
-                                    (string.IsNullOrWhiteSpace(name) ? "." : " for " + name + "."));
+                        fileLogger.InfoTopic(
+                            "session.restore",
+                            "ok reason=" + reason +
+                            (string.IsNullOrWhiteSpace(name) ? string.Empty : " game=" + name));
                     }
 
                     if (restoreOk
@@ -872,6 +1110,12 @@ namespace PlayniteDisplayManager
                     {
                         PlayniteWindowRelocator.TryRelocateToPrimaryMonitor(logger);
                     }
+
+                    fileLogger.SessionEnd(restoreOk, reason);
+                }
+                else
+                {
+                    fileLogger.SessionEnd(true, reason);
                 }
 
                 DisarmRestoreLease();
@@ -879,7 +1123,14 @@ namespace PlayniteDisplayManager
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "Failed to end Display Manager game session (" + reason + ").");
+                fileLogger.ErrorTopic(
+                    "session.end",
+                    "Failed to end Display Manager game session (" + reason + ").",
+                    ex);
+                if (fileLogger.HasOpenSession)
+                {
+                    fileLogger.SessionEnd(false, reason);
+                }
             }
         }
 

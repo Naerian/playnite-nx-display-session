@@ -21,4 +21,5 @@ En Windows 11 (sobre todo 24H2) con **Administrar el color de las aplicaciones a
 - Ajustes → HDR → **Escribir HDR off ahora**.
 - Resumen → **Juego seleccionado (HDR)** previsualiza metadatos y el plan efectivo.
 - Resumen / Mantenimiento → conteo de `EnableSystemHdr` y limpiar/restaurar.
+- Registro de soporte: Ajustes → Avanzado → Mantenimiento (`display-manager.log` en ExtensionsData del plugin).
 - Log RestoreHost: `%TEMP%\PlayniteDisplayManager-RestoreHost.log`

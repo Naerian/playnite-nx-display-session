@@ -15,7 +15,8 @@ Display Manager never trusts that GET for restore.
 1. Prefer **visual confirmation**: **Win+Alt+B** (Xbox Game Bar HDR toggle) and watch the display.
 2. In Display Manager Settings → HDR, use **Write HDR off now** to force SDR by write on capable active displays.
 3. Clear native `EnableSystemHdr` via Overview / Maintenance so Playnite and NX do not stack restores ([Native HDR checkbox](EN-Native-HDR-Checkbox)).
-4. Check RestoreHost log: `%TEMP%\PlayniteDisplayManager-RestoreHost.log`
+4. Share Display Manager’s support log: Settings → Advanced → Maintenance → Open log (`display-manager.log` in the plugin ExtensionsData folder). Look for a `SESSION` block for the game (plan → topology/resolution/Hz/HDR apply → restore).
+5. Check RestoreHost log: `%TEMP%\PlayniteDisplayManager-RestoreHost.log`
 5. If ACM is optional for your workflow, try toggling **Automatically manage apps colors** in Windows color settings and retest — NX still writes; ACM mainly poisons *readback*.
 
 ## Why Unknown is correct

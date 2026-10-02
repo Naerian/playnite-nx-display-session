@@ -2,6 +2,11 @@
 
 
 
+## 1.0.4 — 2026-10-02
+- Added a dedicated support log file under plugin user data so users can share diagnostics when something fails.
+- Structured the support log like a readable session diary: `SESSION begin/end`, fixed topics (`session.plan`, `topology.apply`, `hdr.apply`, …), levels, and detail dumps on warn/error (or verbose).
+- Debug log controls live under Advanced → Maintenance (open / clear / verbose), matching Metadata AI’s maintenance pattern.
+
 ## 1.0.3 — 2026-10-02
 - Added global HDR policy to defer to Playnite’s native per-game Enable HDR setting (NX does not write HDR or clear the flag).
 - Show HDR metadata match names only when the metadata policy is selected.

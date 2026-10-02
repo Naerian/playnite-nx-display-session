@@ -15,7 +15,8 @@ Display Manager **nunca** confía en ese GET para restaurar.
 1. Prefiere **confirmación visual**: **Win+Alt+B** (toggle HDR de Xbox Game Bar) y mira la pantalla.
 2. En Ajustes de Display Manager → HDR, usa **Escribir HDR off ahora** para forzar SDR por escritura en pantallas activas capaces.
 3. Limpia `EnableSystemHdr` nativo vía Overview / Mantenimiento para que Playnite y NX no apilen restauraciones ([Checkbox HDR nativo](ES-Checkbox-HDR-nativo)).
-4. Revisa el log de RestoreHost: `%TEMP%\PlayniteDisplayManager-RestoreHost.log`
+4. Comparte el registro de soporte de Display Manager: Ajustes → Avanzado → Mantenimiento → Abrir registro (`display-manager.log` en ExtensionsData del plugin). Busca el bloque `SESSION` del juego (plan → apply de topología/resolución/Hz/HDR → restore).
+5. Revisa el log de RestoreHost: `%TEMP%\PlayniteDisplayManager-RestoreHost.log`
 5. Si ACM es opcional en tu flujo, prueba a desactivar **Administrar automáticamente los colores…** en color de Windows y retestea — NX sigue escribiendo; ACM envenena sobre todo el *readback*.
 
 ## Por qué Unknown es correcto

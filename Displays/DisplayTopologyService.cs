@@ -383,6 +383,9 @@ namespace PlayniteDisplayManager.Displays
                 {
                     error = "SetDisplayConfig failed with code " + result + ".";
                     Debug.WriteLine("Display Manager: " + error);
+#if !RESTORE_HOST
+                    PlayniteDisplayManager.Logging.PluginFileLogger.Current?.Warn("Display Manager: " + error);
+#endif
                     return false;
                 }
 
@@ -409,6 +412,9 @@ namespace PlayniteDisplayManager.Displays
             if (!string.IsNullOrWhiteSpace(hdrError))
             {
                 Debug.WriteLine("Display Manager HDR restore writes: " + hdrError);
+#if !RESTORE_HOST
+                PlayniteDisplayManager.Logging.PluginFileLogger.Current?.Warn("Display Manager HDR restore writes: " + hdrError);
+#endif
             }
         }
 

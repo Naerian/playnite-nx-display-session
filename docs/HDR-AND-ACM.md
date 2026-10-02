@@ -21,6 +21,7 @@ On Windows 11 (especially 24H2) with **Automatically manage apps colors** (ACM),
 - Settings → HDR → **Write HDR off now** forces SDR by write on capable active displays.
 - Overview → **Selected game (HDR)** previews metadata match and the effective plan for the library selection.
 - Overview / Maintenance → native `EnableSystemHdr` count and clear/restore.
+- Support log: Settings → Advanced → Maintenance (`display-manager.log` in plugin ExtensionsData).
 - RestoreHost log: `%TEMP%\PlayniteDisplayManager-RestoreHost.log`
 
 ## Spanish

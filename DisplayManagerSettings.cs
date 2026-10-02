@@ -49,6 +49,7 @@ namespace PlayniteDisplayManager
         private List<DisplayProfile> displayProfiles = new List<DisplayProfile>();
         private Guid? defaultDisplayProfileId;
         private bool relocatePlayniteFullscreenAfterRestore;
+        private bool enableVerboseLogging;
         private List<GameDisplayProfileEntry> availableGameProfiles = new List<GameDisplayProfileEntry>();
         private List<PlatformProfileEntry> availablePlatformProfiles = new List<PlatformProfileEntry>();
 
@@ -89,6 +90,7 @@ namespace PlayniteDisplayManager
                 DisplayProfiles = savedSettings.DisplayProfiles ?? new List<DisplayProfile>();
                 DefaultDisplayProfileId = savedSettings.DefaultDisplayProfileId;
                 RelocatePlayniteFullscreenAfterRestore = savedSettings.RelocatePlayniteFullscreenAfterRestore;
+                EnableVerboseLogging = savedSettings.EnableVerboseLogging;
             }
 
             AppearancePreset = SettingsAppearance.Normalize(AppearancePreset);
@@ -252,6 +254,13 @@ namespace PlayniteDisplayManager
         {
             get => relocatePlayniteFullscreenAfterRestore;
             set => SetValue(ref relocatePlayniteFullscreenAfterRestore, value);
+        }
+
+        /// <summary>When true, Debug/Trace lines are also written to the support log file.</summary>
+        public bool EnableVerboseLogging
+        {
+            get => enableVerboseLogging;
+            set => SetValue(ref enableVerboseLogging, value);
         }
 
         [DontSerialize]
@@ -461,6 +470,7 @@ namespace PlayniteDisplayManager
             DisplayProfiles = editingClone.DisplayProfiles ?? new List<DisplayProfile>();
             DefaultDisplayProfileId = editingClone.DefaultDisplayProfileId;
             RelocatePlayniteFullscreenAfterRestore = editingClone.RelocatePlayniteFullscreenAfterRestore;
+            EnableVerboseLogging = editingClone.EnableVerboseLogging;
             editingClone = null;
             AvailableGameProfiles = plugin?.GetGameProfileEntries() ?? new List<GameDisplayProfileEntry>();
             AvailablePlatformProfiles = plugin?.GetPlatformProfileEntries() ?? new List<PlatformProfileEntry>();
@@ -483,6 +493,7 @@ namespace PlayniteDisplayManager
             plugin.ReplacePlatformProfiles(AvailablePlatformProfiles);
             plugin.SavePluginSettings(this);
             plugin.ReloadSettings();
+            plugin.LogInfo("Settings saved.");
             editingClone = null;
         }
 

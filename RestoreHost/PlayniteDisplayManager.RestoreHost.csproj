@@ -9,6 +9,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>..\bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>$(DefineConstants);RESTORE_HOST</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

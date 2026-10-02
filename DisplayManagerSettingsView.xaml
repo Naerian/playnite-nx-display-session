@@ -1381,49 +1381,82 @@
                                         <TextBlock Text="{DynamicResource LOCDisplayManager_MaintenanceHelp}" Style="{StaticResource SectionSubtitleText}" />
                                     </StackPanel>
 
-                                    <StackPanel Style="{StaticResource PageSection}">
-                                        <Border Style="{StaticResource PageHeader}">
-                                            <TextBlock Text="{DynamicResource LOCDisplayManager_NativeHdrMigrationTitle}" Style="{StaticResource SectionHeaderText}" />
-                                        </Border>
-                                        <TextBlock Text="{DynamicResource LOCDisplayManager_NativeHdrMigrationHelp}" Style="{StaticResource SectionSubtitleText}" />
-                                    </StackPanel>
-                                    <TextBlock x:Name="NativeHdrMigrationStatusText"
-                                               Style="{StaticResource BodyText}"
-                                               Margin="0,0,0,8" />
-                                    <WrapPanel>
-                                        <Button Content="{DynamicResource LOCDisplayManager_NativeHdrClearNow}"
-                                                Style="{StaticResource NarianPrimaryButton}"
-                                                MinWidth="180"
-                                                Margin="0,0,8,8"
-                                                Click="NativeHdrClearNow_OnClick" />
-                                        <Button Content="{DynamicResource LOCDisplayManager_NativeHdrRestoreBackup}"
-                                                MinWidth="180"
-                                                MinHeight="36"
-                                                Margin="0,0,0,8"
-                                                Click="NativeHdrRestore_OnClick" />
-                                    </WrapPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="14" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
 
-                                    <StackPanel Style="{StaticResource PageSection}" Margin="0,16,0,0">
-                                        <Border Style="{StaticResource PageHeader}">
-                                            <TextBlock Text="{DynamicResource LOCDisplayManager_RestoreLeaseTitle}" Style="{StaticResource SectionHeaderText}" />
-                                        </Border>
-                                        <TextBlock Text="{DynamicResource LOCDisplayManager_RestoreLeaseHelp}" Style="{StaticResource SectionSubtitleText}" />
-                                    </StackPanel>
-                                    <WrapPanel>
-                                        <Button Content="{DynamicResource LOCDisplayManager_RestoreLeaseArm}"
-                                                Style="{StaticResource NarianPrimaryButton}"
-                                                MinWidth="180"
-                                                Margin="0,0,8,8"
-                                                Click="ArmRestoreLease_OnClick" />
-                                        <Button Content="{DynamicResource LOCDisplayManager_RestoreLeaseDisarm}"
-                                                MinWidth="180"
-                                                MinHeight="36"
-                                                Margin="0,0,0,8"
-                                                Click="DisarmRestoreLease_OnClick" />
-                                    </WrapPanel>
-                                    <TextBlock x:Name="RestoreLeaseStatusText"
-                                               Style="{StaticResource HintText}"
-                                               Margin="0,12,0,0" />
+                                        <StackPanel Grid.Row="0" Grid.Column="0">
+                                            <Border Style="{StaticResource SectionHeaderBorder}">
+                                                <TextBlock Text="{DynamicResource LOCDisplayManager_NativeHdrMigrationTitle}" Style="{StaticResource SectionHeaderText}" />
+                                            </Border>
+                                            <TextBlock Text="{DynamicResource LOCDisplayManager_NativeHdrMigrationHelp}" Style="{StaticResource HintText}" />
+                                            <TextBlock x:Name="NativeHdrMigrationStatusText"
+                                                       Style="{StaticResource BodyText}"
+                                                       Margin="0,0,0,8" />
+                                            <WrapPanel>
+                                                <Button Content="{DynamicResource LOCDisplayManager_NativeHdrClearNow}"
+                                                        Style="{StaticResource NarianPrimaryButton}"
+                                                        MinWidth="180"
+                                                        Margin="0,0,8,8"
+                                                        Click="NativeHdrClearNow_OnClick" />
+                                                <Button Content="{DynamicResource LOCDisplayManager_NativeHdrRestoreBackup}"
+                                                        MinWidth="180"
+                                                        MinHeight="36"
+                                                        Margin="0,0,0,8"
+                                                        Click="NativeHdrRestore_OnClick" />
+                                            </WrapPanel>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="0" Grid.Column="2">
+                                            <Border Style="{StaticResource SectionHeaderBorder}">
+                                                <TextBlock Text="{DynamicResource LOCDisplayManager_RestoreLeaseTitle}" Style="{StaticResource SectionHeaderText}" />
+                                            </Border>
+                                            <TextBlock Text="{DynamicResource LOCDisplayManager_RestoreLeaseHelp}" Style="{StaticResource HintText}" />
+                                            <WrapPanel>
+                                                <Button Content="{DynamicResource LOCDisplayManager_RestoreLeaseArm}"
+                                                        Style="{StaticResource NarianPrimaryButton}"
+                                                        MinWidth="180"
+                                                        Margin="0,0,8,8"
+                                                        Click="ArmRestoreLease_OnClick" />
+                                                <Button Content="{DynamicResource LOCDisplayManager_RestoreLeaseDisarm}"
+                                                        MinWidth="180"
+                                                        MinHeight="36"
+                                                        Margin="0,0,0,8"
+                                                        Click="DisarmRestoreLease_OnClick" />
+                                            </WrapPanel>
+                                            <TextBlock x:Name="RestoreLeaseStatusText"
+                                                       Style="{StaticResource HintText}"
+                                                       Margin="0,12,0,0" />
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,24,0,0">
+                                            <Border Style="{StaticResource SectionHeaderBorder}">
+                                                <TextBlock Text="{DynamicResource LOCDisplayManager_DebugLogTitle}" Style="{StaticResource SectionHeaderText}" />
+                                            </Border>
+                                            <TextBlock Text="{DynamicResource LOCDisplayManager_DebugLogHelp}" Style="{StaticResource HintText}" />
+                                            <CheckBox x:Name="VerboseLoggingCheck"
+                                                      Content="{DynamicResource LOCDisplayManager_LoggingVerbose}"
+                                                      Margin="0,0,0,10"
+                                                      Checked="VerboseLoggingCheck_OnChanged"
+                                                      Unchecked="VerboseLoggingCheck_OnChanged" />
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Content="{DynamicResource LOCDisplayManager_LoggingOpenFile}"
+                                                        MinWidth="160"
+                                                        Margin="0,0,8,0"
+                                                        Click="OpenSupportLogFile_OnClick" />
+                                                <Button Content="{DynamicResource LOCDisplayManager_LoggingClear}"
+                                                        MinWidth="160"
+                                                        Click="ClearSupportLog_OnClick" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Grid>
                                 </StackPanel>
                             </ScrollViewer>
                         </TabItem>

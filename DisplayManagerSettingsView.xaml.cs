@@ -100,6 +100,7 @@ namespace PlayniteDisplayManager
                 SyncResolutionRadios();
                 SyncDesktopAccessControls();
                 SyncFullscreenRelocateControl();
+                SyncLoggingControls();
                 UpdateOverview();
             };
             Loaded += OnLoaded;
@@ -126,6 +127,7 @@ namespace PlayniteDisplayManager
             SyncResolutionRadios();
             SyncDesktopAccessControls();
             SyncFullscreenRelocateControl();
+            SyncLoggingControls();
             UpdateOverview();
         }
 
@@ -883,6 +885,88 @@ namespace PlayniteDisplayManager
             }
 
             RelocateFullscreenCheck.IsChecked = settings.RelocatePlayniteFullscreenAfterRestore;
+        }
+
+        private void SyncLoggingControls()
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null || VerboseLoggingCheck == null)
+            {
+                return;
+            }
+
+            VerboseLoggingCheck.IsChecked = settings.EnableVerboseLogging;
+        }
+
+        private void VerboseLoggingCheck_OnChanged(object sender, RoutedEventArgs e)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null || VerboseLoggingCheck == null)
+            {
+                return;
+            }
+
+            settings.EnableVerboseLogging = VerboseLoggingCheck.IsChecked == true;
+        }
+
+        private void OpenSupportLogFile_OnClick(object sender, RoutedEventArgs e)
+        {
+            var plugin = (DataContext as DisplayManagerSettings)?.Plugin;
+            if (plugin == null)
+            {
+                return;
+            }
+
+            if (!plugin.TryOpenSupportLogFile(out var error))
+            {
+                MessageBox.Show(
+                    (TryFindResource("LOCDisplayManager_LoggingOpenFailed") as string
+                        ?? "Could not open the debug log.") +
+                    (string.IsNullOrWhiteSpace(error) ? string.Empty : "\n\n" + error),
+                    "Display Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+        }
+
+        private void ClearSupportLog_OnClick(object sender, RoutedEventArgs e)
+        {
+            var plugin = (DataContext as DisplayManagerSettings)?.Plugin;
+            if (plugin == null)
+            {
+                return;
+            }
+
+            var confirm = TryFindResource("LOCDisplayManager_LoggingClearConfirm") as string
+                ?? "Clear the debug log? Only the header will remain.";
+            if (MessageBox.Show(
+                    confirm,
+                    "Display Manager",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question) != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            if (plugin.TryClearSupportLog(out var error))
+            {
+                MessageBox.Show(
+                    TryFindResource("LOCDisplayManager_LoggingCleared") as string
+                        ?? "Debug log cleared.",
+                    "Display Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show(
+                    (TryFindResource("LOCDisplayManager_LoggingClearFailed") as string
+                        ?? "Could not clear the debug log.") +
+                    (string.IsNullOrWhiteSpace(error) ? string.Empty : "\n\n" + error),
+                    "Display Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
         }
 
         private void TopologyTrialApply_OnClick(object sender, RoutedEventArgs e)

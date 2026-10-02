@@ -26,6 +26,7 @@ Library context menu → **Display Manager → HDR**: Inherit / Force on / Force
 
 - After exit, desktop layout should match pre-game.
 - HDR should be off when NX wrote SDR (do not trust Settings readback under ACM — use [ACM troubleshooting](EN-Troubleshooting-ACM)).
+- Support log (share when reporting issues): Settings → Advanced → Maintenance → Open log, or the `display-manager.log` file under the plugin’s ExtensionsData folder.
 - RestoreHost log (if needed): `%TEMP%\PlayniteDisplayManager-RestoreHost.log`
 
 ## Build from source

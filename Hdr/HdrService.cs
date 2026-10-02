@@ -146,6 +146,9 @@ namespace PlayniteDisplayManager.Hdr
 
             error = "DisplayConfigSetDeviceInfo failed (advancedColor=" + result + ", hdrState=" + hdrResult + ").";
             Debug.WriteLine("Display Manager HDR: " + error);
+#if !RESTORE_HOST
+            PlayniteDisplayManager.Logging.PluginFileLogger.Current?.Warn("Display Manager HDR: " + error);
+#endif
             return false;
         }
 
