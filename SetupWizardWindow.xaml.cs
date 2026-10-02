@@ -63,12 +63,14 @@ namespace PlayniteDisplayManager
             TurnOffOthersCheck.Content = Loc("LOCDisplayManager_TopologyTurnOffOthers");
             TurnOffOthersHelp.Text = Loc("LOCDisplayManager_TopologyTurnOffOthersWarning");
             HdrNoneRadio.Content = Loc("LOCDisplayManager_HdrPolicyNone");
+            HdrPlayniteNativeRadio.Content = Loc("LOCDisplayManager_HdrPolicyPlayniteNative");
             HdrAllRadio.Content = Loc("LOCDisplayManager_HdrPolicyAllGames");
             HdrMetadataRadio.Content = Loc("LOCDisplayManager_HdrPolicyMetadata");
             HdrHelp.Text = Loc("LOCDisplayManager_HdrPolicyHelp");
             HdrNoSupportTitle.Text = Loc("LOCDisplayManager_HdrPrimaryNoSupportTitle");
             HdrNoSupportBody.Text = Loc("LOCDisplayManager_HdrPrimaryNoSupport");
             RefreshNativeRadio.Content = Loc("LOCDisplayManager_RefreshPolicyNative");
+            RefreshExactRadio.Content = Loc("LOCDisplayManager_RefreshPolicyExactChoice");
             RefreshHighestRadio.Content = Loc("LOCDisplayManager_RefreshPolicyHighest");
             RefreshHelp.Text = Loc("LOCDisplayManager_RefreshRateHelp");
             ClearNativeFlagsCheck.Content = Loc("LOCDisplayManager_SetupWizardClearNative");
@@ -89,17 +91,32 @@ namespace PlayniteDisplayManager
                 case GlobalHdrPolicy.OnWhenMetadataIndicates:
                     HdrMetadataRadio.IsChecked = true;
                     break;
+                case GlobalHdrPolicy.UsePlayniteNative:
+                    HdrPlayniteNativeRadio.IsChecked = true;
+                    break;
                 default:
                     HdrNoneRadio.IsChecked = true;
                     break;
             }
 
-            RebuildRefreshRadios();
+            RebuildRefreshUi();
 
-            ClearNativeFlagsCheck.IsChecked = draft.ClearNativeHdrFlags;
+            ClearNativeFlagsCheck.IsChecked = draft.ClearNativeHdrFlags
+                && draft.GlobalHdrPolicy != GlobalHdrPolicy.UsePlayniteNative;
+            SyncMigrationNativeClearUi();
             MigrationCountText.Text = string.Format(
                 Loc("LOCDisplayManager_SetupWizardMigrationCountFormat"),
                 nativeHdrEnabledCount);
+        }
+
+        private void SyncMigrationNativeClearUi()
+        {
+            var deferNative = draft.GlobalHdrPolicy == GlobalHdrPolicy.UsePlayniteNative;
+            ClearNativeFlagsCheck.IsEnabled = !deferNative;
+            if (deferNative)
+            {
+                ClearNativeFlagsCheck.IsChecked = false;
+            }
         }
 
         private void PopulatePlayDisplayBox()
@@ -134,40 +151,60 @@ namespace PlayniteDisplayManager
             }
         }
 
-        private void RebuildRefreshRadios()
+        private sealed class WizardRefreshExactItem
+        {
+            public string Label { get; set; }
+            public double Hz { get; set; }
+            public bool IsUnavailable { get; set; }
+        }
+
+        private void RebuildRefreshUi()
         {
             syncingRefreshRadios = true;
             try
             {
-                RefreshExactPanel.Children.Clear();
                 var primary = ResolvePrimaryForRates();
                 var rates = primary != null
                     ? (plugin.RefreshRates?.GetAvailableRates(primary) ?? Array.Empty<double>()).ToList()
                     : new List<double>();
 
-                var exactSelected = draft.GlobalRefreshRatePolicy == RefreshRatePolicy.ExactHz
-                    || draft.GlobalRefreshRatePolicy == RefreshRatePolicy.Prefer60
-                    || draft.GlobalRefreshRatePolicy == RefreshRatePolicy.Prefer120;
                 var preferred = draft.PreferredRefreshRateHz;
-
-                foreach (var rate in rates)
+                var format = Loc("LOCDisplayManager_RefreshPolicyExactFormat");
+                var items = rates.Select(rate => new WizardRefreshExactItem
                 {
-                    var radio = new RadioButton
+                    Hz = rate,
+                    Label = string.Format(CultureInfo.CurrentCulture, format, rate)
+                }).ToList();
+
+                if (preferred.HasValue
+                    && !items.Any(i => Math.Abs(i.Hz - preferred.Value) < 0.05))
+                {
+                    items.Insert(0, new WizardRefreshExactItem
                     {
-                        GroupName = "WizardRefresh",
-                        Content = string.Format(
-                            CultureInfo.CurrentCulture,
-                            Loc("LOCDisplayManager_RefreshPolicyExactFormat"),
-                            rate),
-                        Tag = rate,
-                        Margin = new Thickness(0, 0, 0, 8),
-                        IsChecked = exactSelected
-                            && preferred.HasValue
-                            && Math.Abs(preferred.Value - rate) < 0.05
-                    };
-                    radio.Checked += RefreshRadio_OnChecked;
-                    RefreshExactPanel.Children.Add(radio);
+                        Hz = preferred.Value,
+                        IsUnavailable = true,
+                        Label = string.Format(CultureInfo.CurrentCulture, format, preferred.Value)
+                            + " · "
+                            + Loc("LOCDisplayManager_StatusUnknown")
+                    });
                 }
+
+                RefreshExactBox.ItemsSource = items;
+                WizardRefreshExactItem selected = null;
+                if (preferred.HasValue)
+                {
+                    selected = items.FirstOrDefault(i => Math.Abs(i.Hz - preferred.Value) < 0.05);
+                }
+
+                if (selected == null
+                    && (draft.GlobalRefreshRatePolicy == RefreshRatePolicy.ExactHz
+                        || draft.GlobalRefreshRatePolicy == RefreshRatePolicy.Prefer60
+                        || draft.GlobalRefreshRatePolicy == RefreshRatePolicy.Prefer120))
+                {
+                    selected = items.FirstOrDefault(i => !i.IsUnavailable);
+                }
+
+                RefreshExactBox.SelectedItem = selected;
 
                 switch (draft.GlobalRefreshRatePolicy)
                 {
@@ -177,15 +214,14 @@ namespace PlayniteDisplayManager
                     case RefreshRatePolicy.ExactHz:
                     case RefreshRatePolicy.Prefer60:
                     case RefreshRatePolicy.Prefer120:
-                        if (!RefreshExactPanel.Children.OfType<RadioButton>().Any(r => r.IsChecked == true))
-                        {
-                            RefreshNativeRadio.IsChecked = true;
-                        }
+                        RefreshExactRadio.IsChecked = true;
                         break;
                     default:
                         RefreshNativeRadio.IsChecked = true;
                         break;
                 }
+
+                RefreshExactBox.IsEnabled = RefreshExactRadio.IsChecked == true && items.Count > 0;
             }
             finally
             {
@@ -283,13 +319,18 @@ namespace PlayniteDisplayManager
             {
                 draft.GlobalHdrPolicy = GlobalHdrPolicy.OnWhenMetadataIndicates;
             }
+            else if (HdrPlayniteNativeRadio.IsChecked == true)
+            {
+                draft.GlobalHdrPolicy = GlobalHdrPolicy.UsePlayniteNative;
+            }
             else
             {
                 draft.GlobalHdrPolicy = GlobalHdrPolicy.DoNotManage;
             }
 
             CommitRefreshToDraft();
-            draft.ClearNativeHdrFlags = ClearNativeFlagsCheck.IsChecked == true;
+            draft.ClearNativeHdrFlags = ClearNativeFlagsCheck.IsChecked == true
+                && draft.GlobalHdrPolicy != GlobalHdrPolicy.UsePlayniteNative;
         }
 
         private void CommitRefreshToDraft()
@@ -301,13 +342,23 @@ namespace PlayniteDisplayManager
                 return;
             }
 
-            var exact = RefreshExactPanel.Children
-                .OfType<RadioButton>()
-                .FirstOrDefault(r => r.IsChecked == true);
-            if (exact?.Tag is double rate)
+            if (RefreshExactRadio.IsChecked == true)
             {
                 draft.GlobalRefreshRatePolicy = RefreshRatePolicy.ExactHz;
-                draft.PreferredRefreshRateHz = rate;
+                var item = RefreshExactBox.SelectedItem as WizardRefreshExactItem;
+                if (item == null)
+                {
+                    item = (RefreshExactBox.ItemsSource as IEnumerable<WizardRefreshExactItem>)
+                        ?.FirstOrDefault(i => !i.IsUnavailable)
+                        ?? (RefreshExactBox.ItemsSource as IEnumerable<WizardRefreshExactItem>)
+                        ?.FirstOrDefault();
+                    if (item != null)
+                    {
+                        RefreshExactBox.SelectedItem = item;
+                    }
+                }
+
+                draft.PreferredRefreshRateHz = item?.Hz;
                 return;
             }
 
@@ -320,6 +371,36 @@ namespace PlayniteDisplayManager
             if (syncingRefreshRadios)
             {
                 return;
+            }
+
+            if (RefreshExactBox != null)
+            {
+                var count = (RefreshExactBox.ItemsSource as IEnumerable<WizardRefreshExactItem>)?.Count()
+                    ?? RefreshExactBox.Items.Count;
+                RefreshExactBox.IsEnabled = RefreshExactRadio?.IsChecked == true && count > 0;
+            }
+
+            CommitRefreshToDraft();
+        }
+
+        private void RefreshExactBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (syncingRefreshRadios)
+            {
+                return;
+            }
+
+            if (RefreshExactRadio.IsChecked != true)
+            {
+                syncingRefreshRadios = true;
+                try
+                {
+                    RefreshExactRadio.IsChecked = true;
+                }
+                finally
+                {
+                    syncingRefreshRadios = false;
+                }
             }
 
             CommitRefreshToDraft();
@@ -359,11 +440,13 @@ namespace PlayniteDisplayManager
                     break;
                 case 3:
                     CommitControlsToDraft();
-                    RebuildRefreshRadios();
+                    RebuildRefreshUi();
                     StepTitle.Text = Loc("LOCDisplayManager_SetupWizardRefreshTitle");
                     StepHelp.Text = Loc("LOCDisplayManager_SetupWizardRefreshHelp");
                     break;
                 case 4:
+                    CommitControlsToDraft();
+                    SyncMigrationNativeClearUi();
                     StepTitle.Text = Loc("LOCDisplayManager_SetupWizardMigrationTitle");
                     StepHelp.Text = Loc("LOCDisplayManager_SetupWizardMigrationIntro");
                     break;
@@ -420,6 +503,8 @@ namespace PlayniteDisplayManager
                     return Loc("LOCDisplayManager_OverviewActionAlwaysOnShort");
                 case GlobalHdrPolicy.OnWhenMetadataIndicates:
                     return Loc("LOCDisplayManager_OverviewActionMetadataShort");
+                case GlobalHdrPolicy.UsePlayniteNative:
+                    return Loc("LOCDisplayManager_OverviewActionPlayniteNativeShort");
                 default:
                     return Loc("LOCDisplayManager_OverviewActionDoNotManageShort");
             }

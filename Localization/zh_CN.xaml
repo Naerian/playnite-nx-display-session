@@ -12,6 +12,7 @@
     <sys:String x:Key="LOCDisplayManager_OverviewDisplaysFormat">{0} 已连接 · 主显示器: {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewWhenLaunching">游戏启动时</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionDoNotManage">Windows 继续按当前方式控制 HDR。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewActionPlayniteNative">由 Playnite 自带的“启用 HDR”选项按游戏控制 HDR。</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionAlwaysOn">游戏开始时开启 HDR，关闭时关闭 HDR。</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionMetadata">仅对元数据标记为 HDR 的游戏开启 HDR，并在关闭时关闭。</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewPolicy">HDR</sys:String>
@@ -23,7 +24,7 @@
     <sys:String x:Key="LOCDisplayManager_StatusPrimary">主显示器</sys:String>
     <sys:String x:Key="LOCDisplayManager_IdentityEdid">EDID 标识</sys:String>
     <sys:String x:Key="LOCDisplayManager_IdentityConnector">连接器回退</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplaysHelp">Manage connected displays only: names, identity, and identify actions. Display profiles and missing-display fallback live under General.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplaysHelp">Manage connected displays only: names, identity, and identify actions. Missing-display fallback lives under When a game launches; profiles live under General.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialTitle">显示布局试用</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialHelp">启动游戏时，此显示器会成为主显示器（除非保留 Windows 默认设置）。使用下面的试用按钮预览几秒钟并自动恢复。</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialTarget">游戏用主显示器</sys:String>
@@ -87,6 +88,7 @@
     <sys:String x:Key="LOCDisplayManager_HdrPolicyTitle">全局 HDR 策略</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPolicyHelp">所有游戏的默认值。</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPolicyNone">让 Windows 按配置管理 HDR</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrPolicyPlayniteNative">使用 Playnite 自带的按游戏 HDR 设置</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPolicyAllGames">游戏启动时开启 HDR，关闭时关闭</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPolicyMetadata">启动元数据指示 HDR 的游戏时开启 HDR，关闭时关闭</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrMetadataTitle">HDR 元数据匹配名称</sys:String>
@@ -176,6 +178,9 @@
     <sys:String x:Key="LOCDisplayManager_RefreshPolicyHighest">当前分辨率下可用的最高值</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshPolicyExact">{0:0.###} Hz</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshPolicyExactFormat">{0:0.###} Hz</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RefreshPolicyExactChoice">精确刷新率</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RefreshRefreshModes">刷新频率列表</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RefreshUnavailableHint">所选刷新率在此显示器上已不可用。请另选或刷新列表。在此之前游戏会跳过该更改。</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshRateDetectedFormat">{0}: 当前 {1:0.###} Hz · 此分辨率下可用: {2}</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshRateDetectedNone">未检测到主显示器。</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshRatePrimaryLabel">游戏用主显示器</sys:String>
@@ -237,6 +242,7 @@
     <sys:String x:Key="LOCDisplayManager_DisplaysListHelp">给它们清晰的名称，在桌面上识别它们，并选择游玩时哪个作为主显示器。</sys:String>
     <sys:String x:Key="LOCDisplayManager_ConfirmRemoveProfileTitle">移除游戏配置文件</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionDoNotManageShort">不干预 Windows HDR</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewActionPlayniteNativeShort">Playnite 原生 HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionAlwaysOnShort">所有游戏开启 HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionMetadataShort">元数据指示时开启 HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusEnabled">已启用</sys:String>

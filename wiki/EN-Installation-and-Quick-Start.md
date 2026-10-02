@@ -12,9 +12,10 @@
 1. **Displays** — confirm your TV and secondary screen appear; pick the default target for games.
 2. **HDR** — choose a global policy (see [HDR](EN-HDR)):
    - **1** Always leave HDR alone (do not touch).
-   - **2** Always write HDR on for capable targets when a game starts.
-   - **3** Metadata: turn HDR on only when Features/Tags match (default names: `HDR`, `HDR10`, `Dolby Vision`, `Auto HDR`, `HDR10+`).
-3. **Native EnableSystemHdr** — the setup/Maintenance flow can clear Playnite’s library flag so native restore does not fight NX. See [Native HDR checkbox](EN-Native-HDR-Checkbox).
+   - **2** Use Playnite’s native per-game Enable HDR setting (NX does not write HDR or clear the flag).
+   - **3** Always write HDR on for capable targets when a game starts.
+   - **4** Metadata: turn HDR on only when Features/Tags match (match names appear in Settings only for this policy; defaults: `HDR`, `HDR10`, `Dolby Vision`, `Auto HDR`, `HDR10+`).
+3. **Native EnableSystemHdr** — if you are *not* using policy 2, the setup/Maintenance flow can clear Playnite’s library flag so native restore does not fight NX. See [Native HDR checkbox](EN-Native-HDR-Checkbox).
 4. Launch a short game session, quit, and confirm the desktop topology and SDR return.
 
 ## Per-game HDR override

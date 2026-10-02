@@ -17,7 +17,13 @@ namespace PlayniteDisplayManager.Hdr
         OnForAllGames = 1,
 
         /// <summary>Option 3 — HDR only when game Features/Tags match configured names.</summary>
-        OnWhenMetadataIndicates = 2
+        OnWhenMetadataIndicates = 2,
+
+        /// <summary>
+        /// Option 4 — defer to Playnite's per-game EnableSystemHdr; NX does not write HDR
+        /// and does not clear the native flag.
+        /// </summary>
+        UsePlayniteNative = 3
     }
 
     [DataContract]

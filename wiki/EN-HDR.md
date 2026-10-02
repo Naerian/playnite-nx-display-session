@@ -1,6 +1,6 @@
 # HDR
 
-Display Manager **owns HDR** when installed. It plans an on/off write for the session and restores by writing HDR **off** — it does not trust Windows GET under Automatic Color Management.
+Display Manager **owns HDR** when installed (except when you choose the Playnite-native policy). It plans an on/off write for the session and restores by writing HDR **off** — it does not trust Windows GET under Automatic Color Management.
 
 Deep dive for developers: [docs/HDR-AND-ACM.md](https://github.com/Naerian/playnite-nx-display-session/blob/main/docs/HDR-AND-ACM.md).
 
@@ -9,10 +9,11 @@ Deep dive for developers: [docs/HDR-AND-ACM.md](https://github.com/Naerian/playn
 | Policy | Behavior |
 |--------|----------|
 | **1 — Do not touch** | No HDR write on start; still restores topology. |
-| **2 — Always on** | Write HDR on for capable active targets at game start. |
-| **3 — Metadata** | Write HDR on only when local Features (and optionally Tags) match configured names. No network on launch. |
+| **2 — Playnite native** | Defer to per-game `EnableSystemHdr`. NX does not write HDR or clear the native flag. |
+| **3 — Always on** | Write HDR on for capable active targets at game start. |
+| **4 — Metadata** | Write HDR on only when local Features (and optionally Tags) match configured names. No network on launch. |
 
-Default metadata names: `HDR`, `HDR10`, `Dolby Vision`, `Auto HDR`, `HDR10+`.
+Default metadata names (shown only when Metadata policy is selected): `HDR`, `HDR10`, `Dolby Vision`, `Auto HDR`, `HDR10+`.
 
 ## Per-game override
 

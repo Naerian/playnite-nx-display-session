@@ -204,6 +204,7 @@
                         </Border>
                         <StackPanel x:Name="HdrOptionsPanel">
                             <RadioButton x:Name="HdrNoneRadio" GroupName="WizardHdr" Margin="0,0,0,8"/>
+                            <RadioButton x:Name="HdrPlayniteNativeRadio" GroupName="WizardHdr" Margin="0,0,0,8"/>
                             <RadioButton x:Name="HdrAllRadio" GroupName="WizardHdr" Margin="0,0,0,8"/>
                             <RadioButton x:Name="HdrMetadataRadio" GroupName="WizardHdr" Margin="0,0,0,0"/>
                             <TextBlock x:Name="HdrHelp" Style="{StaticResource WizardHint}"/>
@@ -213,7 +214,14 @@
                     <StackPanel x:Name="StepRefresh" Visibility="Collapsed">
                         <RadioButton x:Name="RefreshNativeRadio" GroupName="WizardRefresh" Margin="0,0,0,8"
                                      Checked="RefreshRadio_OnChecked"/>
-                        <StackPanel x:Name="RefreshExactPanel"/>
+                        <RadioButton x:Name="RefreshExactRadio" GroupName="WizardRefresh" Margin="0,0,0,8"
+                                     Checked="RefreshRadio_OnChecked"/>
+                        <ComboBox x:Name="RefreshExactBox"
+                                  MinHeight="36"
+                                  Margin="24,0,0,8"
+                                  IsSynchronizedWithCurrentItem="False"
+                                  DisplayMemberPath="Label"
+                                  SelectionChanged="RefreshExactBox_OnSelectionChanged"/>
                         <RadioButton x:Name="RefreshHighestRadio" GroupName="WizardRefresh" Margin="0,8,0,0"
                                      Checked="RefreshRadio_OnChecked"/>
                         <TextBlock x:Name="RefreshHelp" Style="{StaticResource WizardHint}"/>

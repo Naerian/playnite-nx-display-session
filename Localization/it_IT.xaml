@@ -12,6 +12,7 @@
     <sys:String x:Key="LOCDisplayManager_OverviewDisplaysFormat">{0} collegati · principale: {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewWhenLaunching">All’avvio di un gioco</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionDoNotManage">Windows continua a gestire HDR come ora.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewActionPlayniteNative">L’opzione nativa Abilita HDR di Playnite controlla l’HDR per ogni gioco.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionAlwaysOn">HDR si attiva all’avvio di un gioco e si disattiva alla chiusura.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionMetadata">HDR si attiva solo per i giochi i cui metadati indicano HDR e si disattiva alla chiusura.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewPolicy">HDR</sys:String>
@@ -23,7 +24,7 @@
     <sys:String x:Key="LOCDisplayManager_StatusPrimary">Principale</sys:String>
     <sys:String x:Key="LOCDisplayManager_IdentityEdid">Identità EDID</sys:String>
     <sys:String x:Key="LOCDisplayManager_IdentityConnector">Fallback connettore</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplaysHelp">Manage connected displays only: names, identity, and identify actions. Display profiles and missing-display fallback live under General.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplaysHelp">Manage connected displays only: names, identity, and identify actions. Missing-display fallback lives under When a game launches; profiles live under General.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialTitle">Prova layout schermo</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialHelp">Questo schermo diventa principale all’avvio di un gioco (a meno che tu mantenga il predefinito di Windows). Usa i pulsanti di prova sotto per vedere l’anteprima per alcuni secondi e ripristinare automaticamente.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialTarget">Schermo principale per i giochi</sys:String>
@@ -87,6 +88,7 @@
     <sys:String x:Key="LOCDisplayManager_HdrPolicyTitle">Criterio HDR globale</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPolicyHelp">Predefinito per ogni gioco.</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPolicyNone">Lascia che Windows gestisca HDR come configurato</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrPolicyPlayniteNative">Usa l’impostazione HDR nativa di Playnite per gioco</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPolicyAllGames">Attiva HDR all’avvio di un gioco e disattivalo alla chiusura</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPolicyMetadata">Attiva HDR all’avvio di un gioco i cui metadati indicano HDR e disattivalo alla chiusura</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrMetadataTitle">Nomi corrispondenza metadati HDR</sys:String>
@@ -176,6 +178,9 @@
     <sys:String x:Key="LOCDisplayManager_RefreshPolicyHighest">Massima disponibile alla risoluzione attuale</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshPolicyExact">{0:0.###} Hz</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshPolicyExactFormat">{0:0.###} Hz</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RefreshPolicyExactChoice">Frequenza esatta</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RefreshRefreshModes">Aggiorna elenco frequenze</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RefreshUnavailableHint">La frequenza selezionata non è più disponibile su questo display. Scegline un’altra o aggiorna l’elenco. I giochi salteranno la modifica fino ad allora.</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshRateDetectedFormat">{0}: attuale {1:0.###} Hz · disponibile a questa risoluzione: {2}</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshRateDetectedNone">Nessuno schermo principale rilevato.</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshRatePrimaryLabel">Schermo principale per i giochi</sys:String>
@@ -237,6 +242,7 @@
     <sys:String x:Key="LOCDisplayManager_DisplaysListHelp">Dai loro un nome chiaro, identificali sul Desktop e scegli quale sarà principale quando giochi.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ConfirmRemoveProfileTitle">Rimuovi profilo gioco</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionDoNotManageShort">Lascia Windows HDR invariato</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewActionPlayniteNativeShort">HDR nativo Playnite</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionAlwaysOnShort">HDR attivo per ogni gioco</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionMetadataShort">HDR se indicato dai metadati</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusEnabled">Attivo</sys:String>

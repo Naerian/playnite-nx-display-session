@@ -2,6 +2,13 @@
 
 
 
+## 1.0.3 — 2026-10-02
+- Added global HDR policy to defer to Playnite’s native per-game Enable HDR setting (NX does not write HDR or clear the flag).
+- Show HDR metadata match names only when the metadata policy is selected.
+- Refresh rate Exact options use a ComboBox (like resolution) instead of a long radio list, in Settings and the setup wizard.
+- Promoted **When a game launches** to a top-level settings tab (next to Displays) so HDR, refresh rate, resolution, and missing-display are easier to reach.
+- Use the same left-side navigation for **When a game launches** sub-pages (HDR, refresh rate, resolution, missing display).
+
 ## 1.0.2 — 2026-09-30
 - When you change the preferred display for games, options that do not work on that screen (exact resolution, refresh rate, or Force HDR) are reset automatically.
 - A clear dialog shows what was changed, with before and after values, on the same screen where Playnite is open.

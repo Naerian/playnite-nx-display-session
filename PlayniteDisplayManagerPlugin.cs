@@ -1197,6 +1197,8 @@ namespace PlayniteDisplayManager
                     return Loc("LOCDisplayManager_OverviewActionAlwaysOn");
                 case GlobalHdrPolicy.OnWhenMetadataIndicates:
                     return Loc("LOCDisplayManager_OverviewActionMetadata");
+                case GlobalHdrPolicy.UsePlayniteNative:
+                    return Loc("LOCDisplayManager_OverviewActionPlayniteNative");
                 default:
                     return Loc("LOCDisplayManager_OverviewActionDoNotManage");
             }
@@ -1217,6 +1219,12 @@ namespace PlayniteDisplayManager
         private void ClearNativeHdrConflictIfNeeded(Game game)
         {
             if (game == null || nativeHdrMigration == null)
+            {
+                return;
+            }
+
+            // Defer to Playnite's EnableSystemHdr — do not strip the native flag.
+            if (settings?.GlobalHdrPolicy == GlobalHdrPolicy.UsePlayniteNative)
             {
                 return;
             }
@@ -1335,6 +1343,8 @@ namespace PlayniteDisplayManager
                     return Loc("LOCDisplayManager_HdrPolicyAllGames");
                 case GlobalHdrPolicy.OnWhenMetadataIndicates:
                     return Loc("LOCDisplayManager_HdrPolicyMetadata");
+                case GlobalHdrPolicy.UsePlayniteNative:
+                    return Loc("LOCDisplayManager_HdrPolicyPlayniteNative");
                 default:
                     return Loc("LOCDisplayManager_HdrPolicyNone");
             }

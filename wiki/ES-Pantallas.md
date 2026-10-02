@@ -2,7 +2,7 @@
 
 Display Manager separa el **inventario de pantallas conectadas** de los **perfiles de pantalla**.
 
-Ajustes -> Pantallas es solo para pantallas conectadas: identidad resuelta, nombres personalizados, visibilidad en Display Manager e Identificar. El comportamiento de perfiles vive en Ajustes -> General.
+Ajustes -> Pantallas es solo para pantallas conectadas: identidad resuelta, nombres personalizados, visibilidad en Display Manager e Identificar. El comportamiento al lanzar (HDR, frecuencia, resolucion, pantalla ausente) vive en Ajustes -> Al lanzar un juego. Los perfiles por juego y plataforma viven en Ajustes -> General.
 
 ## Perfiles de pantalla
 
@@ -17,7 +17,7 @@ Los valores incluidos son **Solo TV** para una sesion solo en TV y **PC / Deskto
 
 ## Pantallas ausentes
 
-Ajustes -> General -> Pantalla ausente decide que ocurre si la pantalla preferida del perfil seleccionado no esta conectada: usar primaria de Windows, usar pantalla de respaldo, o avisar y continuar.
+Ajustes -> Al lanzar un juego -> Pantalla ausente decide que ocurre si la pantalla preferida del perfil seleccionado no esta conectada: usar primaria de Windows, usar pantalla de respaldo, o avisar y continuar.
 
 ## Resolucion y frecuencia
 

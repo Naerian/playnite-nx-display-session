@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -55,6 +56,15 @@ namespace PlayniteDisplayManager
             public int Width => Mode?.Width ?? 0;
 
             public int Height => Mode?.Height ?? 0;
+        }
+
+        private sealed class RefreshExactItem
+        {
+            public bool IsUnavailable { get; set; }
+
+            public string Label { get; set; }
+
+            public double Hz { get; set; }
         }
 
         private sealed class NamedChoice
@@ -1057,11 +1067,16 @@ namespace PlayniteDisplayManager
             {
                 settings.GlobalHdrPolicy = GlobalHdrPolicy.OnWhenMetadataIndicates;
             }
+            else if (HdrPolicyPlayniteNativeRadio?.IsChecked == true)
+            {
+                settings.GlobalHdrPolicy = GlobalHdrPolicy.UsePlayniteNative;
+            }
             else
             {
                 settings.GlobalHdrPolicy = GlobalHdrPolicy.DoNotManage;
             }
 
+            SyncHdrMetadataPanelVisibility();
             UpdateOverview();
         }
 
@@ -1081,10 +1096,28 @@ namespace PlayniteDisplayManager
                 case GlobalHdrPolicy.OnWhenMetadataIndicates:
                     HdrPolicyMetadataRadio.IsChecked = true;
                     break;
+                case GlobalHdrPolicy.UsePlayniteNative:
+                    HdrPolicyPlayniteNativeRadio.IsChecked = true;
+                    break;
                 default:
                     HdrPolicyNoneRadio.IsChecked = true;
                     break;
             }
+
+            SyncHdrMetadataPanelVisibility();
+        }
+
+        private void SyncHdrMetadataPanelVisibility()
+        {
+            if (HdrMetadataPanel == null)
+            {
+                return;
+            }
+
+            var settings = DataContext as DisplayManagerSettings;
+            var show = settings?.GlobalHdrPolicy == GlobalHdrPolicy.OnWhenMetadataIndicates
+                || HdrPolicyMetadataRadio?.IsChecked == true;
+            HdrMetadataPanel.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void SyncHdrMetadataControls()
@@ -1104,6 +1137,8 @@ namespace PlayniteDisplayManager
             {
                 HdrIncludeTagsCheck.IsChecked = settings.IncludeTagsInHdrMetadataMatch;
             }
+
+            SyncHdrMetadataPanelVisibility();
         }
 
         private void HdrMetadataNamesBox_OnLostFocus(object sender, RoutedEventArgs e)
@@ -1246,7 +1281,8 @@ namespace PlayniteDisplayManager
                 if (playHdrSupported)
                 {
                     var hdrValue = GetHdrPolicyBadgeValue(settings);
-                    var managingHdr = settings?.GlobalHdrPolicy != GlobalHdrPolicy.DoNotManage;
+                    var managingHdr = settings?.GlobalHdrPolicy == GlobalHdrPolicy.OnForAllGames
+                        || settings?.GlobalHdrPolicy == GlobalHdrPolicy.OnWhenMetadataIndicates;
                     OverviewPolicyPills.Children.Add(CreateStatusBadge(
                         null,
                         hdrValue,
@@ -1359,6 +1395,9 @@ namespace PlayniteDisplayManager
                 case GlobalHdrPolicy.OnWhenMetadataIndicates:
                     return TryFindResource("LOCDisplayManager_OverviewActionMetadataShort") as string
                         ?? "Metadata";
+                case GlobalHdrPolicy.UsePlayniteNative:
+                    return TryFindResource("LOCDisplayManager_OverviewActionPlayniteNativeShort") as string
+                        ?? "Playnite native";
                 default:
                     return TryFindResource("LOCDisplayManager_OverviewActionDoNotManageShort") as string
                         ?? "Do not manage";
@@ -1426,32 +1465,29 @@ namespace PlayniteDisplayManager
             syncingRefreshRadios = true;
             try
             {
-                if (RefreshRateExactPanel != null)
+                var rates = settings.Plugin?.RefreshRates?.GetAvailableRates(primary) ?? Array.Empty<double>();
+                var preferred = settings.PreferredRefreshRateHz;
+                var items = BuildRefreshExactItems(rates, preferred);
+                if (RefreshExactBox != null)
                 {
-                    RefreshRateExactPanel.Children.Clear();
-                    var rates = settings.Plugin?.RefreshRates?.GetAvailableRates(primary) ?? Array.Empty<double>();
-                    var preferred = settings.PreferredRefreshRateHz;
-                    var exactSelected = settings.GlobalRefreshRatePolicy == RefreshRatePolicy.ExactHz
-                        || settings.GlobalRefreshRatePolicy == RefreshRatePolicy.Prefer60
-                        || settings.GlobalRefreshRatePolicy == RefreshRatePolicy.Prefer120;
-
-                    foreach (var rate in rates)
+                    RefreshExactBox.ItemsSource = items;
+                    RefreshExactItem selected = null;
+                    if (preferred.HasValue)
                     {
-                        var format = TryFindResource("LOCDisplayManager_RefreshPolicyExactFormat") as string
-                            ?? "{0:0.###} Hz";
-                        var radio = new RadioButton
-                        {
-                            GroupName = "RefreshRatePolicy",
-                            Content = string.Format(format, rate),
-                            Tag = rate,
-                            Margin = new Thickness(0, 8, 0, 0),
-                            IsChecked = exactSelected
-                                && preferred.HasValue
-                                && Math.Abs(preferred.Value - rate) < 0.05
-                        };
-                        radio.Checked += RefreshRateRadio_OnChecked;
-                        RefreshRateExactPanel.Children.Add(radio);
+                        selected = items.FirstOrDefault(i =>
+                            Math.Abs(i.Hz - preferred.Value) < 0.05);
                     }
+
+                    if (selected == null
+                        && (settings.GlobalRefreshRatePolicy == RefreshRatePolicy.ExactHz
+                            || settings.GlobalRefreshRatePolicy == RefreshRatePolicy.Prefer60
+                            || settings.GlobalRefreshRatePolicy == RefreshRatePolicy.Prefer120))
+                    {
+                        selected = items.FirstOrDefault(i => !i.IsUnavailable);
+                    }
+
+                    RefreshExactBox.SelectedItem = selected;
+                    UpdateRefreshUnavailableHint(selected);
                 }
 
                 switch (settings.GlobalRefreshRatePolicy)
@@ -1462,8 +1498,11 @@ namespace PlayniteDisplayManager
                     case RefreshRatePolicy.ExactHz:
                     case RefreshRatePolicy.Prefer60:
                     case RefreshRatePolicy.Prefer120:
-                        if (RefreshRateExactPanel == null
-                            || !RefreshRateExactPanel.Children.OfType<RadioButton>().Any(r => r.IsChecked == true))
+                        if (RefreshPolicyExactRadio != null)
+                        {
+                            RefreshPolicyExactRadio.IsChecked = true;
+                        }
+                        else
                         {
                             RefreshPolicyNativeRadio.IsChecked = true;
                         }
@@ -1472,11 +1511,70 @@ namespace PlayniteDisplayManager
                         RefreshPolicyNativeRadio.IsChecked = true;
                         break;
                 }
+
+                if (RefreshExactBox != null)
+                {
+                    RefreshExactBox.IsEnabled =
+                        RefreshPolicyExactRadio?.IsChecked == true && items.Count > 0;
+                }
+
+                if (RefreshExactRefreshButton != null)
+                {
+                    RefreshExactRefreshButton.IsEnabled = true;
+                }
             }
             finally
             {
                 syncingRefreshRadios = false;
             }
+        }
+
+        private List<RefreshExactItem> BuildRefreshExactItems(
+            IReadOnlyList<double> rates,
+            double? preferredHz)
+        {
+            var format = TryFindResource("LOCDisplayManager_RefreshPolicyExactFormat") as string
+                ?? "{0:0.###} Hz";
+            var items = (rates ?? Array.Empty<double>())
+                .Select(rate => new RefreshExactItem
+                {
+                    Hz = rate,
+                    Label = string.Format(CultureInfo.CurrentCulture, format, rate)
+                })
+                .ToList();
+
+            if (preferredHz.HasValue
+                && !items.Any(i => Math.Abs(i.Hz - preferredHz.Value) < 0.05))
+            {
+                items.Insert(0, new RefreshExactItem
+                {
+                    Hz = preferredHz.Value,
+                    IsUnavailable = true,
+                    Label = string.Format(CultureInfo.CurrentCulture, format, preferredHz.Value)
+                        + " · "
+                        + (TryFindResource("LOCDisplayManager_StatusUnknown") as string ?? "Unavailable")
+                });
+            }
+
+            return items;
+        }
+
+        private void UpdateRefreshUnavailableHint(RefreshExactItem selected)
+        {
+            if (RefreshExactMissingHint == null)
+            {
+                return;
+            }
+
+            RefreshExactMissingHint.Visibility =
+                selected != null && selected.IsUnavailable
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+        }
+
+        private void RefreshExactRefreshButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            SyncRefreshRateRadios();
         }
 
         private void BuildRefreshRatePrimaryPanel(DisplayManagerSettings settings, DisplayInfo primary)
@@ -1606,15 +1704,24 @@ namespace PlayniteDisplayManager
                 settings.GlobalRefreshRatePolicy = RefreshRatePolicy.HighestDetected;
                 settings.PreferredRefreshRateHz = null;
             }
-            else if (radio.Tag is double hz)
+            else if (ReferenceEquals(radio, RefreshPolicyExactRadio)
+                || string.Equals(radio.Tag as string, "ExactHz", StringComparison.OrdinalIgnoreCase))
             {
                 settings.GlobalRefreshRatePolicy = RefreshRatePolicy.ExactHz;
-                settings.PreferredRefreshRateHz = hz;
+                ApplySelectedExactRefreshRate(settings);
             }
             else
             {
                 settings.GlobalRefreshRatePolicy = RefreshRatePolicy.Native;
                 settings.PreferredRefreshRateHz = null;
+            }
+
+            if (RefreshExactBox != null)
+            {
+                var count = (RefreshExactBox.ItemsSource as IEnumerable<RefreshExactItem>)?.Count()
+                    ?? RefreshExactBox.Items.Count;
+                RefreshExactBox.IsEnabled =
+                    settings.GlobalRefreshRatePolicy == RefreshRatePolicy.ExactHz && count > 0;
             }
 
             if (OverviewRefreshRateText != null)
@@ -1623,6 +1730,95 @@ namespace PlayniteDisplayManager
                     ?? (TryFindResource("LOCDisplayManager_RefreshPolicyNative") as string
                         ?? "Native (do not change refresh rate)");
             }
+        }
+
+        private void RefreshExactBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (syncingRefreshRadios)
+            {
+                return;
+            }
+
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null)
+            {
+                return;
+            }
+
+            if (RefreshPolicyExactRadio?.IsChecked != true
+                && settings.GlobalRefreshRatePolicy != RefreshRatePolicy.ExactHz
+                && settings.GlobalRefreshRatePolicy != RefreshRatePolicy.Prefer60
+                && settings.GlobalRefreshRatePolicy != RefreshRatePolicy.Prefer120)
+            {
+                return;
+            }
+
+            settings.GlobalRefreshRatePolicy = RefreshRatePolicy.ExactHz;
+            if (RefreshPolicyExactRadio != null && RefreshPolicyExactRadio.IsChecked != true)
+            {
+                syncingRefreshRadios = true;
+                try
+                {
+                    RefreshPolicyExactRadio.IsChecked = true;
+                }
+                finally
+                {
+                    syncingRefreshRadios = false;
+                }
+            }
+
+            ApplySelectedExactRefreshRate(settings);
+            if (RefreshExactBox != null)
+            {
+                RefreshExactBox.IsEnabled = RefreshExactBox.Items.Count > 0;
+            }
+
+            if (OverviewRefreshRateText != null)
+            {
+                OverviewRefreshRateText.Text = settings.Plugin?.GetRefreshRateOverviewText()
+                    ?? (TryFindResource("LOCDisplayManager_RefreshPolicyNative") as string
+                        ?? "Native (do not change refresh rate)");
+            }
+        }
+
+        private void ApplySelectedExactRefreshRate(DisplayManagerSettings settings)
+        {
+            if (settings == null)
+            {
+                return;
+            }
+
+            var item = RefreshExactBox?.SelectedItem as RefreshExactItem;
+            if (item == null && RefreshExactBox?.Items.Count > 0)
+            {
+                syncingRefreshRadios = true;
+                try
+                {
+                    var first = (RefreshExactBox.ItemsSource as IEnumerable<RefreshExactItem>)
+                        ?.FirstOrDefault(i => !i.IsUnavailable)
+                        ?? (RefreshExactBox.ItemsSource as IEnumerable<RefreshExactItem>)
+                        ?.FirstOrDefault();
+                    if (first != null)
+                    {
+                        RefreshExactBox.SelectedItem = first;
+                        item = first;
+                    }
+                }
+                finally
+                {
+                    syncingRefreshRadios = false;
+                }
+            }
+
+            if (item == null)
+            {
+                UpdateRefreshUnavailableHint(null);
+                settings.PreferredRefreshRateHz = null;
+                return;
+            }
+
+            settings.PreferredRefreshRateHz = item.Hz;
+            UpdateRefreshUnavailableHint(item);
         }
 
         private void SyncResolutionRadios()

@@ -12,9 +12,10 @@
 1. **Pantallas** — confirma TV y secundaria; elige el objetivo por defecto para juegos.
 2. **HDR** — elige una política global (ver [HDR](ES-HDR)):
    - **1** No tocar el HDR.
-   - **2** Escribir HDR on en objetivos capaces al iniciar un juego.
-   - **3** Metadatos: HDR on solo si Features/Tags coinciden (nombres por defecto: `HDR`, `HDR10`, `Dolby Vision`, `Auto HDR`, `HDR10+`).
-3. **EnableSystemHdr nativo** — el asistente / Mantenimiento puede limpiar el flag de la biblioteca para que la restauración nativa no pelee con NX. Ver [Checkbox HDR nativo](ES-Checkbox-HDR-nativo).
+   - **2** Usar la configuración nativa de HDR de Playnite por juego (NX no escribe HDR ni limpia el flag).
+   - **3** Escribir HDR on en objetivos capaces al iniciar un juego.
+   - **4** Metadatos: HDR on solo si Features/Tags coinciden (los nombres de coincidencia solo aparecen en Ajustes con esta política; por defecto: `HDR`, `HDR10`, `Dolby Vision`, `Auto HDR`, `HDR10+`).
+3. **EnableSystemHdr nativo** — si *no* usas la política 2, el asistente / Mantenimiento puede limpiar el flag de la biblioteca para que la restauración nativa no pelee con NX. Ver [Checkbox HDR nativo](ES-Checkbox-HDR-nativo).
 4. Lanza una sesión corta, sal y confirma que topología y SDR vuelven.
 
 ## Override HDR por juego

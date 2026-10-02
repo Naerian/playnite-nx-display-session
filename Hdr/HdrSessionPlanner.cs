@@ -100,6 +100,14 @@ namespace PlayniteDisplayManager.Hdr
                         MetadataMatched = false,
                         Reason = "global metadata: no match"
                     };
+                case GlobalHdrPolicy.UsePlayniteNative:
+                    return new HdrSessionPlan
+                    {
+                        Action = HdrSessionAction.None,
+                        EffectiveOverride = GameHdrOverride.Inherit,
+                        MetadataMatched = metadataMatched,
+                        Reason = "global use Playnite native EnableSystemHdr"
+                    };
                 default:
                     return new HdrSessionPlan
                     {

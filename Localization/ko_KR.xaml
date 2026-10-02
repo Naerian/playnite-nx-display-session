@@ -12,6 +12,7 @@
     <sys:String x:Key="LOCDisplayManager_OverviewDisplaysFormat">{0}개 연결됨 · 기본: {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewWhenLaunching">게임 실행 시</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionDoNotManage">Windows가 현재 방식대로 HDR을 계속 제어합니다.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewActionPlayniteNative">Playnite의 기본 HDR 사용 옵션이 게임별 HDR을 제어합니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionAlwaysOn">게임이 시작되면 HDR을 켜고 종료되면 끕니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionMetadata">메타데이터가 HDR이라고 표시한 게임에서만 HDR을 켜고 종료되면 끕니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewPolicy">HDR</sys:String>
@@ -23,7 +24,7 @@
     <sys:String x:Key="LOCDisplayManager_StatusPrimary">기본</sys:String>
     <sys:String x:Key="LOCDisplayManager_IdentityEdid">EDID ID</sys:String>
     <sys:String x:Key="LOCDisplayManager_IdentityConnector">커넥터 대체</sys:String>
-    <sys:String x:Key="LOCDisplayManager_DisplaysHelp">Manage connected displays only: names, identity, and identify actions. Display profiles and missing-display fallback live under General.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplaysHelp">Manage connected displays only: names, identity, and identify actions. Missing-display fallback lives under When a game launches; profiles live under General.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialTitle">디스플레이 레이아웃 시험</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialHelp">게임 실행 시 이 디스플레이가 기본이 됩니다(Windows 기본값을 유지하지 않는 경우). 아래 시험 버튼으로 몇 초 동안 미리 보고 자동으로 복원할 수 있습니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialTarget">게임용 기본 디스플레이</sys:String>
@@ -87,6 +88,7 @@
     <sys:String x:Key="LOCDisplayManager_HdrPolicyTitle">전역 HDR 정책</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPolicyHelp">모든 게임의 기본값입니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPolicyNone">구성된 대로 Windows가 HDR을 관리하도록 둠</sys:String>
+    <sys:String x:Key="LOCDisplayManager_HdrPolicyPlayniteNative">Playnite 기본 게임별 HDR 설정 사용</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPolicyAllGames">게임 실행 시 HDR을 켜고 종료 시 끄기</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPolicyMetadata">메타데이터가 HDR을 나타내는 게임 실행 시 HDR을 켜고 종료 시 끄기</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrMetadataTitle">HDR 메타데이터 일치 이름</sys:String>
@@ -176,6 +178,9 @@
     <sys:String x:Key="LOCDisplayManager_RefreshPolicyHighest">현재 해상도에서 사용 가능한 최고값</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshPolicyExact">{0:0.###} Hz</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshPolicyExactFormat">{0:0.###} Hz</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RefreshPolicyExactChoice">정확한 새로 고침 빈도</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RefreshRefreshModes">새로 고침 빈도 목록 새로고침</sys:String>
+    <sys:String x:Key="LOCDisplayManager_RefreshUnavailableHint">선택한 새로 고침 빈도를 이 디스플레이에서 더 이상 사용할 수 없습니다. 다른 값을 고르거나 목록을 새로고침하세요. 그전까지 게임은 변경을 건너뜁니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshRateDetectedFormat">{0}: 현재 {1:0.###} Hz · 이 해상도에서 사용 가능: {2}</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshRateDetectedNone">기본 디스플레이가 감지되지 않았습니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_RefreshRatePrimaryLabel">게임용 기본 디스플레이</sys:String>
@@ -237,6 +242,7 @@
     <sys:String x:Key="LOCDisplayManager_DisplaysListHelp">알기 쉬운 이름을 지정하고, 데스크톱에서 식별하고, 플레이할 때 어떤 디스플레이를 기본으로 할지 선택합니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ConfirmRemoveProfileTitle">게임 프로필 제거</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionDoNotManageShort">Windows HDR 그대로 두기</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewActionPlayniteNativeShort">Playnite 기본 HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionAlwaysOnShort">모든 게임에서 HDR 켜기</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewActionMetadataShort">메타데이터가 표시할 때 HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusEnabled">활성화됨</sys:String>

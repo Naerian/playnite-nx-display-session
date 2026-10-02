@@ -11,9 +11,9 @@ En Windows 11 (sobre todo 24H2) con **Administrar el color de las aplicaciones a
 1. **Al iniciar un juego**: resuelve el plan (política global + override por juego + Features/Tags opcionales), captura snapshot, arma RestoreHost y **escribe** HDR on u off según el plan.
 2. **Al salir / cancelar / cerrar Playnite**: **escribe HDR off** en esos destinos (y restaura topología). El snapshot guarda la intención de escritura (`enable: false`) — no pregunta a Windows «cómo está» el HDR.
 3. El Resumen muestra HDR como **Desconocido** si ACM puede interferir. Es honestidad deliberada.
-4. **Política 3 (metadatos)**: empareja `Game.Features` locales (y opcionalmente `Tags`) con nombres configurables — por defecto `HDR`, `HDR10`, `Dolby Vision`, `Auto HDR`, `HDR10+`. Sin red en el lanzamiento.
+4. **Política 4 (metadatos)**: empareja `Game.Features` locales (y opcionalmente `Tags`) con nombres configurables — por defecto `HDR`, `HDR10`, `Dolby Vision`, `Auto HDR`, `HDR10+`. Sin red en el lanzamiento. La UI de nombres solo se muestra con esta política.
 5. **Override por juego** (menú contextual → Display Manager → HDR): Heredar / Forzar on / Forzar off (SDR) / No tocar. El override siempre gana.
-6. **EnableSystemHdr nativo**: el asistente (y Mantenimiento) puede limpiar el flag en toda la biblioteca (con backup reversible). En cada lanzamiento, si el flag vuelve a estar on, NX lo limpia y notifica una vez — para no apilar restores. El checkbox nativo puede seguir visible; no hay API pública del SDK para ocultarlo.
+6. **EnableSystemHdr nativo**: el asistente (y Mantenimiento) puede limpiar el flag en toda la biblioteca (con backup reversible). En cada lanzamiento, si el flag vuelve a estar on, NX lo limpia y notifica una vez — para no apilar restores — **salvo** si la política global es **Usar HDR nativo de Playnite**, en cuyo caso NX no escribe HDR ni limpia el flag. El checkbox nativo puede seguir visible; no hay API pública del SDK para ocultarlo.
 
 ## Diagnóstico
 

@@ -2,7 +2,7 @@
 
 Display Manager separates **connected display inventory** from **display profiles**.
 
-Settings -> Displays is for connected displays only: resolved identity, custom names, visibility in Display Manager, and Identify actions. Profile behavior lives under Settings -> General.
+Settings -> Displays is for connected displays only: resolved identity, custom names, visibility in Display Manager, and Identify actions. Launch behavior (HDR, refresh rate, resolution, missing display) lives under Settings -> When a game launches. Game and platform profiles live under Settings -> General.
 
 ## Display profiles
 
@@ -17,7 +17,7 @@ The built-in defaults are **Solo TV** for a TV-only game session and **PC / Desk
 
 ## Missing displays
 
-Settings -> General -> Missing display decides what happens if the preferred play display in the selected display profile is not connected: use Windows primary, use a fallback display, or notify and continue.
+Settings -> When a game launches -> Missing display decides what happens if the preferred play display in the selected display profile is not connected: use Windows primary, use a fallback display, or notify and continue.
 
 ## Resolution and refresh rate
 
