@@ -99,6 +99,7 @@ namespace PlayniteDisplayManager
             HdrMetadataMatchNames = HdrMetadataMatcher.NormalizeMatchNames(HdrMetadataMatchNames).ToList();
             MigrateRefreshRateLegacy();
             MigrateDisplayProfiles();
+            SyncLegacyFieldsFromDefaultDisplayProfile();
             SettingsSchemaVersion = CurrentSettingsSchemaVersion;
             RefreshDisplays();
         }
@@ -579,8 +580,6 @@ namespace PlayniteDisplayManager
             {
                 DefaultDisplayProfileId = DisplayProfiles[0].Id;
             }
-
-            SyncLegacyFieldsFromDefaultDisplayProfile();
         }
 
         public DisplayProfile GetDefaultDisplayProfile()

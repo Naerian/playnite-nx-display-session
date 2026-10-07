@@ -717,11 +717,13 @@ namespace PlayniteDisplayManager
                 return;
             }
 
+            var preferredId = settings.PreferredPlayDisplayId;
+            var turnOffOthers = settings.TurnOffOtherDisplaysOnLaunch;
             var defaults = settings.GetDefaultDisplayProfile();
             if (defaults != null)
             {
-                defaults.PreferredPlayDisplayId = settings.PreferredPlayDisplayId;
-                defaults.TurnOffOtherDisplays = settings.TurnOffOtherDisplaysOnLaunch;
+                defaults.PreferredPlayDisplayId = preferredId;
+                defaults.TurnOffOtherDisplays = turnOffOthers;
             }
         }
 
@@ -752,8 +754,12 @@ namespace PlayniteDisplayManager
             }
 
             var selectedId = TopologyTargetBox?.SelectedValue as string;
-            if (string.IsNullOrWhiteSpace(selectedId)
-                || string.Equals(selectedId, WindowsPlayDisplayChoiceId, StringComparison.Ordinal))
+            if (string.IsNullOrWhiteSpace(selectedId))
+            {
+                return;
+            }
+
+            if (string.Equals(selectedId, WindowsPlayDisplayChoiceId, StringComparison.Ordinal))
             {
                 settings.PreferredPlayDisplayId = null;
             }
@@ -853,10 +859,14 @@ namespace PlayniteDisplayManager
             }
 
             var selectedId = MissingDisplayFallbackBox?.SelectedValue as string;
+            if (string.IsNullOrWhiteSpace(selectedId))
+            {
+                return;
+            }
+
             PersistDefaultDisplayProfile(profile =>
             {
-                if (string.IsNullOrWhiteSpace(selectedId)
-                    || string.Equals(selectedId, WindowsPlayDisplayChoiceId, StringComparison.Ordinal))
+                if (string.Equals(selectedId, WindowsPlayDisplayChoiceId, StringComparison.Ordinal))
                 {
                     profile.FallbackDisplayId = null;
                 }

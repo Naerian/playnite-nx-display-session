@@ -2,6 +2,9 @@
 
 
 
+## 1.0.6 — 2026-10-07
+- Fixed the primary display for games resetting to Keep Windows default after you pick a monitor in Settings.
+
 ## 1.0.5 — 2026-10-07
 - Game context menu Display list now shows custom display names (aliases), matching Settings.
 - Per-game **Other displays** context menu: inherit global, turn off other displays, or keep them on (issue #1).
