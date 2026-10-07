@@ -219,6 +219,24 @@ namespace PlayniteDisplayManager.Profiles
             }
         }
 
+        /// <summary>
+        /// null = inherit global/display profile; true/false = force for this game.
+        /// </summary>
+        public void SetTurnOffOtherDisplaysOverride(Game game, bool? turnOffOtherDisplays)
+        {
+            if (game == null)
+            {
+                return;
+            }
+
+            lock (syncRoot)
+            {
+                var profile = GetOrCreateUnlocked(game.Id);
+                profile.TurnOffOtherDisplaysOverride = turnOffOtherDisplays;
+                PersistUnlocked(game.Id, profile);
+            }
+        }
+
         public void SetTopologyProfileId(Game game, Guid? topologyProfileId)
         {
             SetDisplayProfileId(game, topologyProfileId);

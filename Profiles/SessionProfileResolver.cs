@@ -120,6 +120,11 @@ namespace PlayniteDisplayManager.Profiles
                 resolved.PreferredResolutionHeight = layer.PreferredResolutionHeight;
             }
 
+            if (layer.TurnOffOtherDisplaysOverride.HasValue)
+            {
+                resolved.TurnOffOtherDisplays = layer.TurnOffOtherDisplaysOverride.Value;
+            }
+
             return resolved;
         }
     }

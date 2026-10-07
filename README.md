@@ -9,9 +9,10 @@ It is built for living-room gaming — a PC on the sofa connected to a TV, or se
 - Enumerate active displays with EDID-based identity that stays stable across cable or GPU path changes when Windows exposes enough data.
 - Choose a primary display for games, or keep the Windows default primary untouched.
 - Optionally turn off other displays when a game launches, with a short display layout trial and automatic restore.
-- Rename displays for Playnite and identify each monitor with an on-screen label.
+- Optionally apply that same layout when entering Playnite fullscreen and restore it when returning to desktop, so games do not flip monitors between sessions.
+- Rename displays for Playnite and identify each monitor with an on-screen label. Custom names appear in the game context menu.
 - Own HDR for game sessions with global policies: leave Windows alone, always on, or Features/Tags metadata matching.
-- Override display profile, HDR, resolution, refresh rate, and play display per game from the game context menu.
+- Override display profile, HDR, resolution, refresh rate, play display, and turn-off-others per game from the game context menu.
 - Change resolution and refresh rate on the play-primary path when configured, then wait the configured settle delay before continuing.
 - Restore display layout, resolution/refresh changes, and HDR write-off when the game stops, is cancelled, or Playnite exits.
 - Arm RestoreHost so restore survives an unexpected Playnite exit.
@@ -92,7 +93,7 @@ The repository and release package include a commented example at [`Examples/Ful
 
 ## Localization
 
-The plugin uses Playnite localization resource dictionaries under `Localization/`. Unsupported locales fall back to English. Community translation contributions are welcome.
+The plugin uses Playnite localization resource dictionaries under `Localization/` (en, es, de, fr, it, pt-BR, pl, ru, ja, ko, zh-CN). Unsupported locales fall back to English. Community translation contributions are welcome.
 
 ## Support
 

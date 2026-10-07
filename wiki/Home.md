@@ -2,7 +2,7 @@
 
 Display Manager applies Windows display settings (layout, resolution, refresh rate, and HDR) when a game starts and restores the previous desktop state when the game stops.
 
-It is built for living-room gaming — a PC on the sofa connected to a TV, or setups that switch between a TV and another screen. Choose the primary display, set launch defaults, override per game when needed, then bring the desktop back.
+It is built for living-room gaming — a PC on the sofa connected to a TV, or setups that switch between a TV and another screen. Choose the primary display, set launch defaults, optionally apply that layout when entering fullscreen, override per game when needed, then bring the desktop back.
 
 ## Choose your language
 

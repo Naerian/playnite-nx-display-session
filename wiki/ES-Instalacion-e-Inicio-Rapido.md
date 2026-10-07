@@ -18,9 +18,15 @@
 3. **EnableSystemHdr nativo** — si *no* usas la política 2, el asistente / Mantenimiento puede limpiar el flag de la biblioteca para que la restauración nativa no pelee con NX. Ver [Checkbox HDR nativo](ES-Checkbox-HDR-nativo).
 4. Lanza una sesión corta, sal y confirma que topología y SDR vuelven.
 
-## Override HDR por juego
+## Overrides por juego
 
-Menú contextual de la biblioteca → **Display Manager → HDR**: Heredar / Forzar on / Forzar off (SDR) / No tocar. El override siempre gana a la política global.
+Menú contextual de la biblioteca → **Display Manager**:
+
+- **HDR**: Heredar / Forzar on / Forzar off (SDR) / No tocar.
+- **Pantalla**: heredar, Windows, o una pantalla con nombre (nombres personalizados de Ajustes).
+- **Otras pantallas**: heredar, apagar otras, o dejarlas encendidas.
+
+El override siempre gana a la política global. **Mantener configuración global** lo quita.
 
 ## Verificar restauración
 

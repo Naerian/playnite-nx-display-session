@@ -38,6 +38,7 @@ namespace PlayniteDisplayManager
         private DisplayRestoreClient restoreClient;
         private DispatcherTimer restoreHeartbeatTimer;
         private DisplaySnapshot gameSessionSnapshot;
+        private DisplaySnapshot modeSessionSnapshot;
         private Guid? activeGameId;
         private string activeGameName;
         private TopPanelItem desktopTopPanelItem;
@@ -62,6 +63,8 @@ namespace PlayniteDisplayManager
         public DisplayManagerThemeApi Theme { get; }
 
         public bool IsSessionActive => activeGameId.HasValue;
+
+        public bool IsModeSessionActive => modeSessionSnapshot != null;
 
         public string ActiveGameName => activeGameName;
 
@@ -391,11 +394,13 @@ namespace PlayniteDisplayManager
             logger.Info("Display Manager application started (verbose=" +
                         (settings?.EnableVerboseLogging == true) + ").");
             TryOfferFirstRunSetupWizard();
+            BeginModeSession();
         }
 
         public override void OnApplicationStopped(OnApplicationStoppedEventArgs args)
         {
             EndGameSession("app-stopped");
+            EndModeSession("app-stopped");
             StopRestoreHeartbeat();
             if (restoreClient != null)
             {
@@ -676,7 +681,8 @@ namespace PlayniteDisplayManager
                 args,
                 string.Empty);
 
-            foreach (var display in Displays.GetDisplays().Where(d => d.IsConnected))
+            foreach (var display in Displays.GetVisibleDisplays(settings?.DisplayAliases)
+                .Where(d => d.IsConnected))
             {
                 var displayId = display.Id;
                 var selected = displayProfiles.Count > 0 && displayProfiles.All(p =>
@@ -689,6 +695,29 @@ namespace PlayniteDisplayManager
                     args,
                     displayId);
             }
+
+            var turnOffSection = "Display Manager|" + Loc("LOCDisplayManager_GameMenuTurnOffSection");
+            var turnOffCurrent = displayProfiles
+                .Select(p => p?.TurnOffOtherDisplaysOverride)
+                .ToList();
+            yield return CreateTurnOffOthersMenuItem(
+                turnOffSection,
+                CheckedMenuLabel(turnOffCurrent.All(o => o == null),
+                    Loc("LOCDisplayManager_GameTurnOffInherit")),
+                args,
+                null);
+            yield return CreateTurnOffOthersMenuItem(
+                turnOffSection,
+                CheckedMenuLabel(turnOffCurrent.Count > 0 && turnOffCurrent.All(o => o == true),
+                    Loc("LOCDisplayManager_GameTurnOffOn")),
+                args,
+                true);
+            yield return CreateTurnOffOthersMenuItem(
+                turnOffSection,
+                CheckedMenuLabel(turnOffCurrent.Count > 0 && turnOffCurrent.All(o => o == false),
+                    Loc("LOCDisplayManager_GameTurnOffOff")),
+                args,
+                false);
         }
 
         /// <summary>
@@ -740,6 +769,158 @@ namespace PlayniteDisplayManager
             EndGameSession("startup-cancelled");
         }
 
+        private void BeginModeSession()
+        {
+            if (settings?.ApplyTopologyOnFullscreenMode != true)
+            {
+                return;
+            }
+
+            if (PlayniteApi.ApplicationInfo.Mode != ApplicationMode.Fullscreen)
+            {
+                return;
+            }
+
+            if (IsModeSessionActive)
+            {
+                return;
+            }
+
+            try
+            {
+                var resolved = ResolveSessionProfile(null);
+                var livePreview = Displays.GetDisplays().ToList();
+                var currentPrimary = livePreview.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
+                    ?? livePreview.FirstOrDefault(d => d.IsConnected);
+
+                var preferredId = resolved.PreferredPlayDisplayId;
+                var preferredExists = !string.IsNullOrWhiteSpace(preferredId)
+                    && livePreview.Any(d => d.IsConnected
+                        && string.Equals(d.Id, preferredId, StringComparison.OrdinalIgnoreCase));
+
+                if (!preferredExists && !string.IsNullOrWhiteSpace(preferredId))
+                {
+                    preferredExists = WaitForPreferredDisplay(preferredId, out livePreview);
+                    currentPrimary = livePreview.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
+                        ?? livePreview.FirstOrDefault(d => d.IsConnected);
+                }
+
+                var missingPreferred = !string.IsNullOrWhiteSpace(preferredId) && !preferredExists;
+                if (missingPreferred)
+                {
+                    NotifyMissingDisplay(null, preferredId, resolved);
+                    preferredId = ResolveMissingDisplayFallback(resolved, livePreview, currentPrimary);
+                    preferredExists = !string.IsNullOrWhiteSpace(preferredId)
+                        && livePreview.Any(d => d.IsConnected
+                            && string.Equals(d.Id, preferredId, StringComparison.OrdinalIgnoreCase));
+                }
+
+                var wantsMakePrimary = preferredExists
+                    && (currentPrimary == null
+                        || !string.Equals(currentPrimary.Id, preferredId, StringComparison.OrdinalIgnoreCase));
+                var topologyTargetId = preferredExists
+                    ? preferredId
+                    : currentPrimary?.Id;
+                var wantsTurnOffOthers = resolved.TurnOffOtherDisplays
+                    && !string.IsNullOrWhiteSpace(topologyTargetId);
+                var wantsTopology = wantsMakePrimary || wantsTurnOffOthers;
+                if (!wantsTopology)
+                {
+                    fileLogger.InfoTopic(
+                        "mode.skip",
+                        "topology=none preferred=" + (preferredId ?? "(windows-primary)"));
+                    return;
+                }
+
+                var topologyPlan =
+                    (wantsMakePrimary ? "makePrimary" : string.Empty) +
+                    (wantsMakePrimary && wantsTurnOffOthers ? "+" : string.Empty) +
+                    (wantsTurnOffOthers ? "turnOffOthers" : string.Empty);
+
+                var snapshot = Topology.CaptureSnapshot();
+                modeSessionSnapshot = snapshot;
+                Theme?.Refresh();
+
+                EnsureRestoreClient();
+                restoreClient.Arm(snapshot);
+                StartRestoreHeartbeat();
+                fileLogger.InfoTopic(
+                    "mode.begin",
+                    "preferred=" + (topologyTargetId ?? "(windows-primary)") +
+                    " missingPreferred=" + missingPreferred +
+                    " topology=" + topologyPlan);
+
+                var topologyApply = Topology.TryApplyRequest(new DisplayTopologyRequest
+                {
+                    TargetDisplayId = topologyTargetId,
+                    MakePrimary = wantsMakePrimary,
+                    TurnOffOtherDisplays = wantsTurnOffOthers
+                });
+                if (!topologyApply.Success)
+                {
+                    fileLogger.WarnTopic(
+                        "mode.topology",
+                        "failed target=" + (topologyTargetId ?? string.Empty) +
+                        " plan=" + topologyPlan,
+                        topologyApply.Error);
+                    modeSessionSnapshot = null;
+                    DisarmRestoreLease();
+                    Theme?.Refresh();
+                    return;
+                }
+
+                fileLogger.InfoTopic(
+                    "mode.topology",
+                    "ok target=" + (topologyTargetId ?? string.Empty) +
+                    " plan=" + topologyPlan +
+                    " message=" + (topologyApply.Message ?? string.Empty));
+                SettleAfterDisplayChange(true);
+                NotifyDisplaysChanged();
+                Theme?.Refresh();
+            }
+            catch (Exception ex)
+            {
+                fileLogger.ErrorTopic("mode.begin", "Failed to begin Fullscreen mode display session.", ex);
+                modeSessionSnapshot = null;
+            }
+        }
+
+        private void EndModeSession(string reason)
+        {
+            if (modeSessionSnapshot == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var snapshot = modeSessionSnapshot;
+                modeSessionSnapshot = null;
+                Theme?.Refresh();
+
+                if (!Topology.TryRestoreSnapshot(snapshot, out var error))
+                {
+                    fileLogger.WarnTopic(
+                        "mode.restore",
+                        "failed reason=" + reason,
+                        error);
+                }
+                else
+                {
+                    fileLogger.InfoTopic("mode.restore", "ok reason=" + reason);
+                }
+
+                NotifyDisplaysChanged();
+            }
+            catch (Exception ex)
+            {
+                fileLogger.ErrorTopic(
+                    "mode.end",
+                    "Failed to end Fullscreen mode display session (" + reason + ").",
+                    ex);
+            }
+        }
+
         private void BeginGameSession(Game game)
         {
             if (game == null || settings == null)
@@ -785,8 +966,15 @@ namespace PlayniteDisplayManager
             var topologyTargetId = preferredExists
                 ? preferredId
                 : currentPrimary?.Id;
-            var wantsTurnOffOthers = resolved.TurnOffOtherDisplays
+            var modeOwnsTopology = IsModeSessionActive;
+            var wantsTurnOffOthers = !modeOwnsTopology
+                && resolved.TurnOffOtherDisplays
                 && !string.IsNullOrWhiteSpace(topologyTargetId);
+            if (modeOwnsTopology)
+            {
+                wantsMakePrimary = false;
+            }
+
             var wantsTopology = wantsMakePrimary || wantsTurnOffOthers;
             var plannedTarget = !string.IsNullOrWhiteSpace(topologyTargetId)
                 ? livePreview.FirstOrDefault(d => string.Equals(d.Id, topologyTargetId, StringComparison.OrdinalIgnoreCase))
@@ -874,10 +1062,23 @@ namespace PlayniteDisplayManager
                 Theme?.Refresh();
 
                 EnsureRestoreClient();
-                restoreClient.Arm(snapshot);
-                StartRestoreHeartbeat();
-                fileLogger.InfoTopic("restore.arm", "lease armed snapshotTargets=" +
-                    (snapshot.HdrRestoreWrites == null ? 0 : snapshot.HdrRestoreWrites.Count));
+                if (modeOwnsTopology)
+                {
+                    // Keep the Fullscreen mode lease (desktop layout) armed for crash restore.
+                    restoreClient.Arm(modeSessionSnapshot);
+                    StartRestoreHeartbeat();
+                    fileLogger.InfoTopic(
+                        "restore.arm",
+                        "mode-lease kept for game session snapshotTargets=" +
+                        (snapshot.HdrRestoreWrites == null ? 0 : snapshot.HdrRestoreWrites.Count));
+                }
+                else
+                {
+                    restoreClient.Arm(snapshot);
+                    StartRestoreHeartbeat();
+                    fileLogger.InfoTopic("restore.arm", "lease armed snapshotTargets=" +
+                        (snapshot.HdrRestoreWrites == null ? 0 : snapshot.HdrRestoreWrites.Count));
+                }
                 var appliedAny = false;
 
                 if (wantsTopology)
@@ -1118,7 +1319,18 @@ namespace PlayniteDisplayManager
                     fileLogger.SessionEnd(true, reason);
                 }
 
-                DisarmRestoreLease();
+                if (IsModeSessionActive)
+                {
+                    EnsureRestoreClient();
+                    restoreClient.Arm(modeSessionSnapshot);
+                    StartRestoreHeartbeat();
+                    fileLogger.InfoTopic("restore.arm", "mode-lease re-armed after game session");
+                }
+                else
+                {
+                    DisarmRestoreLease();
+                }
+
                 NotifyDisplaysChanged();
             }
             catch (Exception ex)
@@ -1140,7 +1352,7 @@ namespace PlayniteDisplayManager
         /// </summary>
         private DisplayInfo ResolveMenuTargetDisplay(IList<Game> games)
         {
-            var live = Displays.GetDisplays()
+            var live = Displays.GetVisibleDisplays(settings?.DisplayAliases)
                 .Where(d => d.IsConnected)
                 .ToList();
             if (live.Count == 0)
@@ -1223,7 +1435,7 @@ namespace PlayniteDisplayManager
                 ?.EffectiveName ?? missingId;
             var text = string.Format(
                 Loc("LOCDisplayManager_MissingDisplayNotifyFormat"),
-                game?.Name ?? "?",
+                game?.Name ?? Loc("LOCDisplayManager_FullscreenRelocateTitle"),
                 name);
             try
             {
@@ -1655,7 +1867,8 @@ namespace PlayniteDisplayManager
                         PreferredResolutionWidth = item.Value.PreferredResolutionWidth,
                         PreferredResolutionHeight = item.Value.PreferredResolutionHeight,
                         PreferredPlayDisplayId = item.Value.PreferredPlayDisplayId,
-                        DisplayProfileId = item.Value.DisplayProfileId
+                        DisplayProfileId = item.Value.DisplayProfileId,
+                        TurnOffOtherDisplaysOverride = item.Value.TurnOffOtherDisplaysOverride
                     };
                 })
                 .OrderBy(e => e.GameName, StringComparer.CurrentCultureIgnoreCase)
@@ -1696,7 +1909,8 @@ namespace PlayniteDisplayManager
                         PreferredResolutionWidth = item.Value.PreferredResolutionWidth,
                         PreferredResolutionHeight = item.Value.PreferredResolutionHeight,
                         PreferredPlayDisplayId = item.Value.PreferredPlayDisplayId,
-                        DisplayProfileId = item.Value.DisplayProfileId
+                        DisplayProfileId = item.Value.DisplayProfileId,
+                        TurnOffOtherDisplaysOverride = item.Value.TurnOffOtherDisplaysOverride
                     };
                 })
                 .OrderBy(e => e.PlatformName, StringComparer.CurrentCultureIgnoreCase)
@@ -1920,6 +2134,32 @@ namespace PlayniteDisplayManager
                     if (aggregate.Changed)
                     {
                         ShowOverrideResetMessage(aggregate);
+                    }
+                }
+            };
+        }
+
+        private GameMenuItem CreateTurnOffOthersMenuItem(
+            string menuSection,
+            string description,
+            GetGameMenuItemsArgs request,
+            bool? turnOffOtherDisplays)
+        {
+            return new GameMenuItem
+            {
+                MenuSection = menuSection,
+                Description = description,
+                Action = actionArgs =>
+                {
+                    var games = actionArgs?.Games ?? request.Games;
+                    if (games == null)
+                    {
+                        return;
+                    }
+
+                    foreach (var game in games)
+                    {
+                        gameProfiles.SetTurnOffOtherDisplaysOverride(game, turnOffOtherDisplays);
                     }
                 }
             };

@@ -755,6 +755,14 @@
                             </DockPanel>
                             <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTurnOffOthersWarning}"
                                        Style="{StaticResource IndentedHintText}" />
+                            <CheckBox x:Name="FullscreenModeTopologyCheck"
+                                      Content="{DynamicResource LOCDisplayManager_FullscreenModeTopology}"
+                                      Margin="0,16,0,0"
+                                      VerticalAlignment="Center"
+                                      Checked="FullscreenModeTopologyCheck_OnChanged"
+                                      Unchecked="FullscreenModeTopologyCheck_OnChanged" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_FullscreenModeTopologyHelp}"
+                                       Style="{StaticResource IndentedHintText}" />
                             <TextBlock x:Name="TopologyTrialStatusText"
                                        Style="{StaticResource HintText}"
                                        Margin="0,12,0,0" />

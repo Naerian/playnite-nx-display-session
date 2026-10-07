@@ -7,7 +7,7 @@ Pensado para jugar en el salon: un PC conectado a la TV, o equipos que alternan 
 ## Que hace
 
 - Enumera pantallas activas con identidad basada en EDID cuando Windows expone datos suficientes.
-- Permite elegir la **pantalla principal para juegos**. Los valores incluidos son **Solo TV** para jugar en la TV y **PC / Desktop** para mantener el escritorio normal.
+- Permite elegir la **pantalla principal para juegos**. Los valores incluidos son **Solo TV** para jugar en la TV y **PC / Desktop** para mantener el escritorio normal. Opcionalmente aplica ese layout al entrar en **pantalla completa** (y lo restaura al volver al escritorio) para que los juegos no cambien de monitor entre sesiones.
 - Gestiona pantallas ausentes con la principal de Windows, pantalla de respaldo, o avisar y continuar.
 - Gestiona **HDR** con politica global, valores por perfil de pantalla y overrides por juego/plataforma.
 - Opcionalmente aplica **resolucion** y **frecuencia** tras el perfil de pantalla, y espera el **retardo de asentamiento** configurado antes de continuar.

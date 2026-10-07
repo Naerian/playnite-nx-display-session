@@ -49,6 +49,7 @@ namespace PlayniteDisplayManager
         private List<DisplayProfile> displayProfiles = new List<DisplayProfile>();
         private Guid? defaultDisplayProfileId;
         private bool relocatePlayniteFullscreenAfterRestore;
+        private bool applyTopologyOnFullscreenMode;
         private bool enableVerboseLogging;
         private List<GameDisplayProfileEntry> availableGameProfiles = new List<GameDisplayProfileEntry>();
         private List<PlatformProfileEntry> availablePlatformProfiles = new List<PlatformProfileEntry>();
@@ -90,6 +91,7 @@ namespace PlayniteDisplayManager
                 DisplayProfiles = savedSettings.DisplayProfiles ?? new List<DisplayProfile>();
                 DefaultDisplayProfileId = savedSettings.DefaultDisplayProfileId;
                 RelocatePlayniteFullscreenAfterRestore = savedSettings.RelocatePlayniteFullscreenAfterRestore;
+                ApplyTopologyOnFullscreenMode = savedSettings.ApplyTopologyOnFullscreenMode;
                 EnableVerboseLogging = savedSettings.EnableVerboseLogging;
             }
 
@@ -254,6 +256,16 @@ namespace PlayniteDisplayManager
         {
             get => relocatePlayniteFullscreenAfterRestore;
             set => SetValue(ref relocatePlayniteFullscreenAfterRestore, value);
+        }
+
+        /// <summary>
+        /// When true in Playnite Fullscreen, apply primary/turn-off topology on mode start
+        /// and restore on mode exit (games do not thrash the layout between sessions).
+        /// </summary>
+        public bool ApplyTopologyOnFullscreenMode
+        {
+            get => applyTopologyOnFullscreenMode;
+            set => SetValue(ref applyTopologyOnFullscreenMode, value);
         }
 
         /// <summary>When true, Debug/Trace lines are also written to the support log file.</summary>
@@ -470,6 +482,7 @@ namespace PlayniteDisplayManager
             DisplayProfiles = editingClone.DisplayProfiles ?? new List<DisplayProfile>();
             DefaultDisplayProfileId = editingClone.DefaultDisplayProfileId;
             RelocatePlayniteFullscreenAfterRestore = editingClone.RelocatePlayniteFullscreenAfterRestore;
+            ApplyTopologyOnFullscreenMode = editingClone.ApplyTopologyOnFullscreenMode;
             EnableVerboseLogging = editingClone.EnableVerboseLogging;
             editingClone = null;
             AvailableGameProfiles = plugin?.GetGameProfileEntries() ?? new List<GameDisplayProfileEntry>();

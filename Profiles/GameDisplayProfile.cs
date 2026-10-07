@@ -56,6 +56,12 @@ namespace PlayniteDisplayManager.Profiles
         [DataMember(Name = "topologyProfileId")]
         public Guid? DisplayProfileId { get; set; }
 
+        /// <summary>
+        /// null = inherit display profile/global; true/false = force turn-off-others for this game.
+        /// </summary>
+        [DataMember(Name = "turnOffOtherDisplaysOverride")]
+        public bool? TurnOffOtherDisplaysOverride { get; set; }
+
         /// <summary>True when PreferredPlayDisplayId is set (including empty = Windows primary).</summary>
         public bool HasPlayDisplayOverride => PreferredPlayDisplayId != null;
 
@@ -64,7 +70,8 @@ namespace PlayniteDisplayManager.Profiles
             RefreshRateOverride == GameRefreshRateOverride.Inherit &&
             ResolutionOverride == GameResolutionOverride.Inherit &&
             PreferredPlayDisplayId == null &&
-            DisplayProfileId == null;
+            DisplayProfileId == null &&
+            TurnOffOtherDisplaysOverride == null;
 
         public GameDisplayProfile Clone()
         {
@@ -77,7 +84,8 @@ namespace PlayniteDisplayManager.Profiles
                 PreferredResolutionWidth = PreferredResolutionWidth,
                 PreferredResolutionHeight = PreferredResolutionHeight,
                 PreferredPlayDisplayId = PreferredPlayDisplayId,
-                DisplayProfileId = DisplayProfileId
+                DisplayProfileId = DisplayProfileId,
+                TurnOffOtherDisplaysOverride = TurnOffOtherDisplaysOverride
             };
         }
     }

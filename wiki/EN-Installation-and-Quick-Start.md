@@ -18,9 +18,15 @@
 3. **Native EnableSystemHdr** — if you are *not* using policy 2, the setup/Maintenance flow can clear Playnite’s library flag so native restore does not fight NX. See [Native HDR checkbox](EN-Native-HDR-Checkbox).
 4. Launch a short game session, quit, and confirm the desktop topology and SDR return.
 
-## Per-game HDR override
+## Per-game overrides
 
-Library context menu → **Display Manager → HDR**: Inherit / Force on / Force off (SDR) / Do not touch. Override always wins over the global policy.
+Library context menu → **Display Manager**:
+
+- **HDR**: Inherit / Force on / Force off (SDR) / Do not touch.
+- **Display**: inherit, Windows default, or a named screen (custom names from Settings).
+- **Other displays**: inherit, turn off other displays, or keep them on.
+
+Overrides always win over the global policy. **Keep global settings** clears that override.
 
 ## Verify restore
 

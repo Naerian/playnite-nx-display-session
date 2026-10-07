@@ -2,7 +2,7 @@
 
 Display Manager separates **connected display inventory** from **display profiles**.
 
-Settings -> Displays is for connected displays only: resolved identity, custom names, visibility in Display Manager, and Identify actions. Launch behavior (HDR, refresh rate, resolution, missing display) lives under Settings -> When a game launches. Game and platform profiles live under Settings -> General.
+Settings -> Displays is for connected displays only: resolved identity, custom names, visibility in Display Manager, Identify actions, and the optional fullscreen layout. Launch behavior (HDR, refresh rate, resolution, missing display) lives under Settings -> When a game launches. Game and platform profiles live under Settings -> General.
 
 ## Display profiles
 
@@ -14,6 +14,19 @@ In Settings -> General -> Display profiles, each profile can define:
 - HDR, refresh rate, and resolution defaults.
 
 The built-in defaults are **Solo TV** for a TV-only game session and **PC / Desktop** for the normal desktop layout. One profile is the **launch default** unless a game or platform profile overrides it.
+
+## Fullscreen layout
+
+On Displays, **Apply primary display layout when entering fullscreen** is off by default. When enabled, Playnite fullscreen uses the same primary display, turn-off-others, and missing-display fallback as a game launch. The layout stays for the whole fullscreen session so games do not switch monitors back and forth. Returning to desktop restores the previous layout.
+
+Typical living-room setup: TV as primary for games, turn other displays off, desk monitor as fallback if the TV is unplugged or asleep.
+
+## Game context menu
+
+Library context menu → **Display Manager**:
+
+- **Display** — inherit, keep Windows default, or pick a connected display. Custom names from Settings appear here.
+- **Other displays** — inherit, turn off other displays, or keep them on for that game.
 
 ## Missing displays
 

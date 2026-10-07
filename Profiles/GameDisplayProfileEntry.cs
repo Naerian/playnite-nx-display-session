@@ -29,6 +29,8 @@ namespace PlayniteDisplayManager.Profiles
 
         public Guid? DisplayProfileId { get; set; }
 
+        public bool? TurnOffOtherDisplaysOverride { get; set; }
+
         public GameDisplayProfile ToProfile()
         {
             return new GameDisplayProfile
@@ -40,7 +42,8 @@ namespace PlayniteDisplayManager.Profiles
                 PreferredResolutionWidth = PreferredResolutionWidth,
                 PreferredResolutionHeight = PreferredResolutionHeight,
                 PreferredPlayDisplayId = PreferredPlayDisplayId,
-                DisplayProfileId = DisplayProfileId
+                DisplayProfileId = DisplayProfileId,
+                TurnOffOtherDisplaysOverride = TurnOffOtherDisplaysOverride
             };
         }
     }
@@ -67,6 +70,8 @@ namespace PlayniteDisplayManager.Profiles
 
         public Guid? DisplayProfileId { get; set; }
 
+        public bool? TurnOffOtherDisplaysOverride { get; set; }
+
         public GameDisplayProfile ToProfile()
         {
             return new GameDisplayProfile
@@ -78,7 +83,8 @@ namespace PlayniteDisplayManager.Profiles
                 PreferredResolutionWidth = PreferredResolutionWidth,
                 PreferredResolutionHeight = PreferredResolutionHeight,
                 PreferredPlayDisplayId = PreferredPlayDisplayId,
-                DisplayProfileId = DisplayProfileId
+                DisplayProfileId = DisplayProfileId,
+                TurnOffOtherDisplaysOverride = TurnOffOtherDisplaysOverride
             };
         }
     }

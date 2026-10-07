@@ -100,6 +100,7 @@ namespace PlayniteDisplayManager
                 SyncResolutionRadios();
                 SyncDesktopAccessControls();
                 SyncFullscreenRelocateControl();
+                SyncFullscreenModeTopologyControl();
                 SyncLoggingControls();
                 UpdateOverview();
             };
@@ -127,6 +128,7 @@ namespace PlayniteDisplayManager
             SyncResolutionRadios();
             SyncDesktopAccessControls();
             SyncFullscreenRelocateControl();
+            SyncFullscreenModeTopologyControl();
             SyncLoggingControls();
             UpdateOverview();
         }
@@ -885,6 +887,28 @@ namespace PlayniteDisplayManager
             }
 
             RelocateFullscreenCheck.IsChecked = settings.RelocatePlayniteFullscreenAfterRestore;
+        }
+
+        private void FullscreenModeTopologyCheck_OnChanged(object sender, RoutedEventArgs e)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null || FullscreenModeTopologyCheck == null)
+            {
+                return;
+            }
+
+            settings.ApplyTopologyOnFullscreenMode = FullscreenModeTopologyCheck.IsChecked == true;
+        }
+
+        private void SyncFullscreenModeTopologyControl()
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null || FullscreenModeTopologyCheck == null)
+            {
+                return;
+            }
+
+            FullscreenModeTopologyCheck.IsChecked = settings.ApplyTopologyOnFullscreenMode;
         }
 
         private void SyncLoggingControls()

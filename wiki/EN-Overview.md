@@ -7,7 +7,7 @@ Built for living-room gaming: a PC on the sofa connected to a TV, or setups that
 ## What it does
 
 - Lists active displays with EDID-based identity when Windows exposes enough data.
-- Lets you choose a **primary display for games**. The built-in profile defaults are **Solo TV** for TV play and **PC / Desktop** for keeping the normal desktop layout.
+- Lets you choose a **primary display for games**. The built-in profile defaults are **Solo TV** for TV play and **PC / Desktop** for keeping the normal desktop layout. Optionally apply that layout when entering **fullscreen** (and restore it when you return to desktop) so games do not flip monitors between sessions.
 - Handles missing displays with Windows primary, fallback display, or notify-and-continue behavior.
 - Owns **HDR** with global policy, display-profile defaults, and per-game/per-platform overrides.
 - Optionally applies **resolution** and **refresh rate** after the display profile, then waits the configured **settle delay** before continuing.

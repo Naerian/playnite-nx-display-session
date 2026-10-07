@@ -2,6 +2,13 @@
 
 
 
+## 1.0.5 — 2026-10-07
+- Game context menu Display list now shows custom display names (aliases), matching Settings.
+- Per-game **Other displays** context menu: inherit global, turn off other displays, or keep them on (issue #1).
+- Optional **Apply primary display layout when entering fullscreen**: switches to the preferred play display (and turn-off-others / missing-display fallback) when fullscreen starts, keeps that layout across games, and restores the desktop layout when returning to desktop mode.
+- Relocate-Playnite copy uses fullscreen/desktop wording instead of the English product names.
+- Russian (`ru_RU`) localization is included with the other community languages.
+
 ## 1.0.4 — 2026-10-02
 - Added a dedicated support log file under plugin user data so users can share diagnostics when something fails.
 - Structured the support log like a readable session diary: `SESSION begin/end`, fixed topics (`session.plan`, `topology.apply`, `hdr.apply`, …), levels, and detail dumps on warn/error (or verbose).
