@@ -9,7 +9,6 @@ Packages:
       - 'Per-game Other displays context menu: inherit, turn off other displays, or keep them on.'
       - 'Optional setting to apply the primary display layout when entering fullscreen and restore it when returning to desktop, without switching between games.'
       - 'Relocate-Playnite wording uses fullscreen and desktop instead of English product names.'
-      - 'Russian localization (ru_RU) is included.'
   - Version: 1.0.4
     RequiredApiVersion: 6.16.0
     ReleaseDate: 2026-10-02
