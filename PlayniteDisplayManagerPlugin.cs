@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
@@ -41,6 +42,8 @@ namespace PlayniteDisplayManager
         private DisplaySnapshot modeSessionSnapshot;
         private Guid? activeGameId;
         private string activeGameName;
+        private Guid? deferredDisplaySessionGameId;
+        private int deferredDisplaySessionGeneration;
         private TopPanelItem desktopTopPanelItem;
         private bool openingStandaloneSettings;
 
@@ -770,17 +773,87 @@ namespace PlayniteDisplayManager
 
         public override void OnGameStarting(OnGameStartingEventArgs args)
         {
-            BeginGameSession(args?.Game);
+            var game = args?.Game;
+            CancelDeferredDisplaySession();
+
+            // Playnite minimizes only after the game reports started. Sleeping here blocks
+            // that minimize — so when a pre-delay is set, defer apply until OnGameStarted
+            // and run it off-thread after the delay.
+            if (game != null && (settings?.PreDisplayChangeDelayMs ?? 0) > 0)
+            {
+                deferredDisplaySessionGameId = game.Id;
+                fileLogger.InfoTopic(
+                    "session.defer",
+                    "pre-delay=" + settings.PreDisplayChangeDelayMs +
+                    "ms game=" + (game.Name ?? string.Empty) +
+                    " id=" + PluginFileLogger.ShortId(game.Id));
+                return;
+            }
+
+            BeginGameSession(game);
+        }
+
+        public override void OnGameStarted(OnGameStartedEventArgs args)
+        {
+            var game = args?.Game;
+            if (game == null
+                || !deferredDisplaySessionGameId.HasValue
+                || deferredDisplaySessionGameId.Value != game.Id)
+            {
+                return;
+            }
+
+            deferredDisplaySessionGameId = null;
+            var delayMs = settings?.PreDisplayChangeDelayMs ?? 0;
+            var generation = Interlocked.Increment(ref deferredDisplaySessionGeneration);
+            var gameId = game.Id;
+            var gameName = game.Name;
+
+            // Return immediately so Playnite can minimize; apply after the delay.
+            Task.Run(() =>
+            {
+                try
+                {
+                    if (delayMs > 0)
+                    {
+                        fileLogger.InfoTopic("session.predelay", "ms=" + delayMs);
+                        Thread.Sleep(delayMs);
+                    }
+
+                    if (Volatile.Read(ref deferredDisplaySessionGeneration) != generation)
+                    {
+                        return;
+                    }
+
+                    var live = PlayniteApi.Database?.Games?.FirstOrDefault(g => g.Id == gameId) ?? game;
+                    BeginGameSession(live);
+                }
+                catch (Exception ex)
+                {
+                    fileLogger.ErrorTopic(
+                        "session.defer",
+                        "Deferred display apply failed for " + (gameName ?? string.Empty) + ".",
+                        ex);
+                }
+            });
         }
 
         public override void OnGameStopped(OnGameStoppedEventArgs args)
         {
+            CancelDeferredDisplaySession();
             EndGameSession("game-stopped");
         }
 
         public override void OnGameStartupCancelled(OnGameStartupCancelledEventArgs args)
         {
+            CancelDeferredDisplaySession();
             EndGameSession("startup-cancelled");
+        }
+
+        private void CancelDeferredDisplaySession()
+        {
+            deferredDisplaySessionGameId = null;
+            Interlocked.Increment(ref deferredDisplaySessionGeneration);
         }
 
         private void BeginModeSession()
@@ -1016,8 +1089,7 @@ namespace PlayniteDisplayManager
                 fileLogger.SessionBegin(game.Id, game.Name);
 
                 var live = Displays.GetDisplays().ToList();
-                var primary = live.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
-                    ?? live.FirstOrDefault(d => d.IsConnected);
+                var primary = ResolveApplyTargetDisplay(live, topologyTargetId);
 
                 List<HdrWriteTarget> applyWrites = new List<HdrWriteTarget>();
                 List<HdrWriteTarget> offWrites = new List<HdrWriteTarget>();
@@ -1116,9 +1188,10 @@ namespace PlayniteDisplayManager
                             "ok target=" + (topologyTargetId ?? string.Empty) +
                             " plan=" + topologyPlan +
                             " message=" + (topologyApply.Message ?? string.Empty));
-                        live = Displays.GetDisplays().ToList();
-                        primary = live.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
-                            ?? live.FirstOrDefault(d => d.IsConnected);
+                        // SetDisplayConfig then immediate CDS often targets the old primary or
+                        // skips as "already at target". Wait for the preferred id to become
+                        // primary (uses settle delay) before resolution/refresh.
+                        primary = WaitForApplyTargetAfterTopology(topologyTargetId, out live);
                         if (hdrPlan.Action == HdrSessionAction.Enable)
                         {
                             applyWrites = hdr.BuildEnableWritesForPrimary(live);
@@ -1128,6 +1201,8 @@ namespace PlayniteDisplayManager
                     }
                 }
 
+                resolutions.ClearCache();
+                refreshRates.ClearCache();
                 resolutionPlan = PlanResolutionSession(game, resolved, primary);
                 if (resolutionPlan.ShouldApply
                     && resolutionPlan.TargetWidth.HasValue
@@ -1143,17 +1218,24 @@ namespace PlayniteDisplayManager
                             " display=" + (primary.Id ?? string.Empty) +
                             " (" + resolutionPlan.Reason + ")");
                         live = Displays.GetDisplays().ToList();
-                        primary = live.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
-                            ?? live.FirstOrDefault(d => d.IsConnected);
+                        primary = ResolveApplyTargetDisplay(live, topologyTargetId);
                     }
                     else
                     {
                         fileLogger.WarnTopic(
                             "resolution.apply",
                             "failed " + resolutionPlan.TargetWidth.Value + "x" + resolutionPlan.TargetHeight.Value +
+                            " display=" + (primary.Id ?? string.Empty) +
                             " (" + resolutionPlan.Reason + ")",
                             resolutionError);
                     }
+                }
+                else if (resolutionPlan != null)
+                {
+                    fileLogger.InfoTopic(
+                        "resolution.apply",
+                        "skip display=" + (primary?.Id ?? string.Empty) +
+                        " (" + resolutionPlan.Reason + ")");
                 }
 
                 hzPlan = PlanRefreshRateSession(game, resolved, primary);
@@ -1173,6 +1255,7 @@ namespace PlayniteDisplayManager
                         fileLogger.WarnTopic(
                             "hz.apply",
                             "failed " + hzPlan.TargetHz.Value.ToString("0.###") + " Hz" +
+                            " display=" + (primary.Id ?? string.Empty) +
                             " (" + hzPlan.Reason + ")",
                             hzError);
                     }
@@ -1556,6 +1639,87 @@ namespace PlayniteDisplayManager
             }
 
             Thread.Sleep(delay);
+        }
+
+        /// <summary>
+        /// Prefer the stable display id (preferred play display), not whichever Screen.Primary
+        /// reports immediately after SetDisplayConfig.
+        /// </summary>
+        private static DisplayInfo ResolveApplyTargetDisplay(
+            IList<DisplayInfo> live,
+            string preferredId)
+        {
+            if (live == null || live.Count == 0)
+            {
+                return null;
+            }
+
+            if (!string.IsNullOrWhiteSpace(preferredId))
+            {
+                var match = live.FirstOrDefault(d =>
+                    d.IsConnected
+                    && string.Equals(d.Id, preferredId, StringComparison.OrdinalIgnoreCase));
+                if (match != null)
+                {
+                    return match;
+                }
+            }
+
+            return live.FirstOrDefault(d => d.IsPrimary && d.IsConnected)
+                ?? live.FirstOrDefault(d => d.IsConnected);
+        }
+
+        /// <summary>
+        /// After topology, poll until <paramref name="targetId"/> is primary (or the settle
+        /// budget elapses), then spend any remaining settle time so CDS can succeed.
+        /// </summary>
+        private DisplayInfo WaitForApplyTargetAfterTopology(
+            string targetId,
+            out List<DisplayInfo> live)
+        {
+            resolutions.ClearCache();
+            refreshRates.ClearCache();
+
+            var settleMs = settings?.PostChangeSettleDelayMs ?? 1000;
+            var budgetMs = Math.Max(settleMs, 500);
+            var deadline = DateTime.UtcNow.AddMilliseconds(budgetMs);
+            const int pollMs = 100;
+            DisplayInfo target = null;
+
+            while (true)
+            {
+                live = Displays.GetDisplays().ToList();
+                target = ResolveApplyTargetDisplay(live, targetId);
+                if (target != null
+                    && (string.IsNullOrWhiteSpace(targetId) || target.IsPrimary))
+                {
+                    break;
+                }
+
+                var remaining = (int)(deadline - DateTime.UtcNow).TotalMilliseconds;
+                if (remaining <= 0)
+                {
+                    break;
+                }
+
+                Thread.Sleep(Math.Min(pollMs, remaining));
+            }
+
+            var leftover = (int)(deadline - DateTime.UtcNow).TotalMilliseconds;
+            if (leftover > 0)
+            {
+                Thread.Sleep(leftover);
+            }
+
+            live = Displays.GetDisplays().ToList();
+            target = ResolveApplyTargetDisplay(live, targetId);
+            fileLogger.InfoTopic(
+                "topology.settle",
+                "target=" + (targetId ?? string.Empty) +
+                " primary=" + (target?.IsPrimary == true ? "yes" : "no") +
+                " display=" + (target?.Id ?? string.Empty) +
+                " budgetMs=" + budgetMs);
+            return target;
         }
 
         /// <summary>

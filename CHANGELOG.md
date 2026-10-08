@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.9 — 2026-10-09
+- When switching primary and resolution together, wait for the new primary to settle before applying resolution/refresh (the settle delay now actually covers that gap).
+- Apply resolution/refresh to the preferred display by stable id, not a possibly-stale Windows primary.
+- New **Delay before display changes**: applies after the game has started (off the UI thread) so Playnite can minimize first; 0 keeps the old “apply before launch” behavior.
+- Fullscreen relocate after restore targets the real Windows primary monitor (not the monitor the window already sits on).
+
 ## 1.0.8 — 2026-10-08
 - Settings open is much faster: coalesce refresh work, stop re-running Win32 mode/HDR probes from Overview updates, and cache display mode/HDR queries for the settings session.
 - Fixed a regression where Desktop/Fullscreen mode tabs bubbled `SelectionChanged` and rebuilt every per-game/platform profile editor (very slow with many game overrides). Those editors now load only when their tab is open.

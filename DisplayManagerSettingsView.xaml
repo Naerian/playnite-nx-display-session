@@ -1447,6 +1447,20 @@
                                     </StackPanel>
                                     <StackPanel Style="{StaticResource PageSection}" Margin="0,8,0,0">
                                         <Border Style="{StaticResource PageHeader}">
+                                            <TextBlock Text="{DynamicResource LOCDisplayManager_PreDisplayChangeDelay}" Style="{StaticResource SectionHeaderText}" />
+                                        </Border>
+                                        <TextBlock Text="{DynamicResource LOCDisplayManager_PreDisplayChangeDelayHelp}" Style="{StaticResource SectionSubtitleText}" />
+                                        <ComboBox ItemsSource="{Binding PreDisplayChangeDelayOptions}"
+                                                  DisplayMemberPath="DisplayName"
+                                                  SelectedValuePath="Value"
+                                                  SelectedValue="{Binding PreDisplayChangeDelayMsValue, Mode=TwoWay}"
+                                                  MinHeight="36"
+                                                  Margin="0,8,0,0"
+                                                  HorizontalAlignment="Left"
+                                                  MinWidth="200" />
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource PageSection}" Margin="0,8,0,0">
+                                        <Border Style="{StaticResource PageHeader}">
                                             <TextBlock Text="{DynamicResource LOCDisplayManager_PostChangeSettleDelay}" Style="{StaticResource SectionHeaderText}" />
                                         </Border>
                                         <TextBlock Text="{DynamicResource LOCDisplayManager_PostChangeSettleDelayHelp}" Style="{StaticResource SectionSubtitleText}" />

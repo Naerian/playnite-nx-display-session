@@ -1,5 +1,14 @@
 AddonId: PlayniteDisplayManager_9c2e4a71-b8d3-4f6a-a1c5-0e7d92f3b846
 Packages:
+  - Version: 1.0.9
+    RequiredApiVersion: 6.16.0
+    ReleaseDate: 2026-10-09
+    PackageUrl: https://github.com/Naerian/playnite-nx-display-session/releases/download/v1.0.9/PlayniteDisplayManager_9c2e4a71-b8d3-4f6a-a1c5-0e7d92f3b846_1_0_9.pext
+    Changelog:
+      - 'When switching primary and resolution together, wait for the new primary to settle before applying resolution/refresh (the settle delay now actually covers that gap).'
+      - 'Apply resolution/refresh to the preferred display by stable id, not a possibly-stale Windows primary.'
+      - 'New Delay before display changes: applies after the game has started (off the UI thread) so Playnite can minimize first; 0 keeps the old apply-before-launch behavior.'
+      - 'Fullscreen relocate after restore targets the real Windows primary monitor (not the monitor the window already sits on).'
   - Version: 1.0.8
     RequiredApiVersion: 6.16.0
     ReleaseDate: 2026-10-08

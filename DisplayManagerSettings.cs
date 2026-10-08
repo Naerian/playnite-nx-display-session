@@ -45,6 +45,7 @@ namespace PlayniteDisplayManager
         private int? preferredResolutionWidthFullscreen;
         private int? preferredResolutionHeightFullscreen;
         private int postChangeSettleDelayMs = 1000;
+        private int preDisplayChangeDelayMs;
         private int preferredDisplayWaitMs;
         private bool showDesktopTopPanel = true;
         private DesktopTopPanelDisplayMode desktopTopPanelDisplayMode = DesktopTopPanelDisplayMode.Icon;
@@ -106,6 +107,7 @@ namespace PlayniteDisplayManager
                     ? savedSettings.PreferredResolutionHeightFullscreen
                     : savedSettings.PreferredResolutionHeight;
                 PostChangeSettleDelayMs = savedSettings.PostChangeSettleDelayMs;
+                PreDisplayChangeDelayMs = savedSettings.PreDisplayChangeDelayMs;
                 PreferredDisplayWaitMs = savedSettings.PreferredDisplayWaitMs;
                 ShowDesktopTopPanel = savedSettings.ShowDesktopTopPanel;
                 DesktopTopPanelDisplayMode = savedSettings.DesktopTopPanelDisplayMode;
@@ -365,6 +367,15 @@ namespace PlayniteDisplayManager
         }
 
         /// <summary>
+        /// Wait before applying topology/resolution/HDR so Playnite can finish minimizing first.
+        /// </summary>
+        public int PreDisplayChangeDelayMs
+        {
+            get => preDisplayChangeDelayMs;
+            set => SetValue(ref preDisplayChangeDelayMs, Math.Max(0, value));
+        }
+
+        /// <summary>
         /// How long to wait/retry for the preferred play display before applying missing-display policy.
         /// </summary>
         public int PreferredDisplayWaitMs
@@ -569,6 +580,30 @@ namespace PlayniteDisplayManager
         }
 
         [DontSerialize]
+        public List<AppearancePresetOption> PreDisplayChangeDelayOptions => new List<AppearancePresetOption>
+        {
+            new AppearancePresetOption { Value = "0", DisplayName = "0 ms" },
+            new AppearancePresetOption { Value = "500", DisplayName = "500 ms" },
+            new AppearancePresetOption { Value = "1000", DisplayName = "1000 ms" },
+            new AppearancePresetOption { Value = "2000", DisplayName = "2000 ms" },
+            new AppearancePresetOption { Value = "3000", DisplayName = "3000 ms" },
+            new AppearancePresetOption { Value = "5000", DisplayName = "5000 ms" }
+        };
+
+        [DontSerialize]
+        public string PreDisplayChangeDelayMsValue
+        {
+            get => PreDisplayChangeDelayMs.ToString();
+            set
+            {
+                if (int.TryParse(value, out var ms))
+                {
+                    PreDisplayChangeDelayMs = ms;
+                }
+            }
+        }
+
+        [DontSerialize]
         public List<AppearancePresetOption> PreferredDisplayWaitOptions => new List<AppearancePresetOption>
         {
             new AppearancePresetOption { Value = "0", DisplayName = "0 s" },
@@ -662,6 +697,7 @@ namespace PlayniteDisplayManager
             PreferredResolutionWidthFullscreen = editingClone.PreferredResolutionWidthFullscreen;
             PreferredResolutionHeightFullscreen = editingClone.PreferredResolutionHeightFullscreen;
             PostChangeSettleDelayMs = editingClone.PostChangeSettleDelayMs;
+            PreDisplayChangeDelayMs = editingClone.PreDisplayChangeDelayMs;
             PreferredDisplayWaitMs = editingClone.PreferredDisplayWaitMs;
             ShowDesktopTopPanel = editingClone.ShowDesktopTopPanel;
             DesktopTopPanelDisplayMode = editingClone.DesktopTopPanelDisplayMode;
@@ -682,6 +718,7 @@ namespace PlayniteDisplayManager
             OnPropertyChanged(nameof(HdrMetadataMatchNamesText));
             OnPropertyChanged(nameof(DesktopTopPanelDisplayModeValue));
             OnPropertyChanged(nameof(PostChangeSettleDelayMsValue));
+            OnPropertyChanged(nameof(PreDisplayChangeDelayMsValue));
             OnPropertyChanged(nameof(PreferredDisplayWaitMsValue));
         }
 

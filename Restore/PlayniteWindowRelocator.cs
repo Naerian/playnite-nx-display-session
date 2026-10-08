@@ -30,7 +30,10 @@ namespace PlayniteDisplayManager.Restore
                     return false;
                 }
 
-                var monitor = MonitorFromWindow(handle, MonitorDefaultToPrimary);
+                // MonitorFromWindow(..., DEFAULTTOPRIMARY) still returns the monitor the
+                // window intersects; only the default flag applies when it intersects none.
+                // Prefer the real Windows primary (origin is typically 0,0).
+                var monitor = MonitorFromPoint(new POINT { X = 0, Y = 0 }, MonitorDefaultToPrimary);
                 if (monitor == IntPtr.Zero)
                 {
                     monitor = MonitorFromWindow(IntPtr.Zero, MonitorDefaultToPrimary);
@@ -154,8 +157,18 @@ namespace PlayniteDisplayManager.Restore
         [DllImport("user32.dll")]
         private static extern IntPtr MonitorFromWindow(IntPtr hwnd, int dwFlags);
 
+        [DllImport("user32.dll")]
+        private static extern IntPtr MonitorFromPoint(POINT pt, int dwFlags);
+
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct POINT
+        {
+            public int X;
+            public int Y;
+        }
 
         [DllImport("user32.dll")]
         private static extern bool SetWindowPos(

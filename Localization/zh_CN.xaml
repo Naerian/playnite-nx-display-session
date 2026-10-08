@@ -333,8 +333,10 @@
     <sys:String x:Key="LOCDisplayManager_GameResolutionNative">原生：不更改分辨率</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameResolutionLowest">可用最低</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameResolutionHighest">可用最高</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PreDisplayChangeDelay">Delay before display changes</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PreDisplayChangeDelayHelp">After the game has started (so Playnite can minimize first), wait this long before switching primary, resolution, refresh rate, or HDR. Set to 0 to apply before the game launches instead.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelay">显示更改后的等待</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelayHelp">在应用布局、分辨率、刷新率或 HDR 之后，等待这么久再继续游戏。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelayHelp">After switching primary, wait this long before applying resolution/refresh (Windows needs time). Also waits again after all display changes before the game continues.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSource">启动默认</sys:String>
     <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceDesktop">桌面启动默认</sys:String>
     <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceFullscreen">全屏启动默认</sys:String>

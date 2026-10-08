@@ -334,8 +334,10 @@
     <sys:String x:Key="LOCDisplayManager_GameResolutionNative">Nativo: no cambiar resolución</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameResolutionLowest">La más baja disponible</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameResolutionHighest">La más alta disponible</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PreDisplayChangeDelay">Espera antes de cambios de pantalla</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PreDisplayChangeDelayHelp">Cuando el juego ya ha arrancado (para que Playnite pueda minimizarse primero), espera este tiempo antes de cambiar primaria, resolución, frecuencia o HDR. Pon 0 para aplicar los cambios antes de lanzar el juego.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelay">Espera tras cambios de pantalla</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelayHelp">Tiempo de espera tras aplicar distribución, resolución, frecuencia o HDR antes de continuar con el juego.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelayHelp">Tras cambiar la primaria, espera este tiempo antes de aplicar resolución/frecuencia (Windows lo necesita). También espera de nuevo tras todos los cambios antes de que el juego continúe.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSource">Predeterminado al lanzar</sys:String>
     <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceDesktop">Predeterminado Desktop</sys:String>
     <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceFullscreen">Predeterminado Fullscreen</sys:String>
