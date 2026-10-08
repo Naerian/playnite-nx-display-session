@@ -7,7 +7,7 @@ Pensado para jugar en el salon: un PC conectado a la TV, o equipos que alternan 
 ## Que hace
 
 - Enumera pantallas activas con identidad basada en EDID cuando Windows expone datos suficientes.
-- Permite elegir **pantallas principales distintas para Desktop y Fullscreen**, y editar los ajustes de lanzamiento de cada modo (HDR, frecuencia, resolucion, apagado de otras, pantalla ausente). Los perfiles **Solo TV** / **PC / Desktop** siguen para overrides. Opcionalmente aplica la principal Fullscreen al entrar en **pantalla completa** (y la restaura al volver al escritorio) para que los juegos no cambien de monitor entre sesiones.
+- Permite elegir **pantallas principales distintas para Desktop y Fullscreen**, y editar los ajustes de lanzamiento de cada modo (HDR, frecuencia, resolucion, apagado de otras, pantalla ausente). Los perfiles **Solo TV** / **PC / Desktop** siguen para overrides. Al entrar en **pantalla completa** aplica la principal Fullscreen y la mantiene durante la sesion (se restaura al volver al escritorio).
 - Gestiona pantallas ausentes con la principal de Windows, pantalla de respaldo, o avisar y continuar.
 - Gestiona **HDR** con politica global, valores por perfil de pantalla y overrides por juego/plataforma.
 - Opcionalmente aplica **resolucion** y **frecuencia** tras el perfil de pantalla, y espera el **retardo de asentamiento** configurado antes de continuar.

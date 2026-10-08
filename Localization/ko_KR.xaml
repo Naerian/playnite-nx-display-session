@@ -35,7 +35,7 @@
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktop">데스크톱용 기본 디스플레이</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktopHint">Playnite 데스크톱에서 게임을 실행할 때 사용합니다. Playnite 창은 어느 모니터에 있어도 됩니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreen">전체 화면용 기본 디스플레이</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreenHint">Playnite 전체 화면에서 게임을 실행할 때와, 전체 화면 진입 시 레이아웃을 적용할 때 사용합니다.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreenHint">Playnite 전체 화면을 열 때와 전체 화면에서 게임을 실행할 때 사용합니다. 전체 화면을 종료하면 이전 레이아웃이 복원됩니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialDesktopHint">시험은 위의 데스크톱용 기본 디스플레이를 사용합니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchTitle">실행 설정 구성 대상</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchHelp">데스크톱과 전체 화면을 전환해 해당 모드의 HDR, 주사율, 해상도, 다른 디스플레이 끄기, 누락 디스플레이를 편집합니다.</sys:String>
@@ -65,8 +65,6 @@
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">디스플레이 복원 시 Playnite를 기본 디스플레이로 이동</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHint">게임이 끝난 뒤 Playnite가 보조 모니터나 꺼진 모니터에 남는 경우.</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRestoreTab">Playnite 다시 배치</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">전체 화면에 들어갈 때 전체 화면용 기본 디스플레이로 전환</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">위의 전체 화면용 기본 디스플레이(및 해당 모드의 다른 디스플레이 끄기/누락 디스플레이)를 사용합니다. 전체 화면을 끝내면 이전 레이아웃을 복원합니다. 게임은 전체 화면 세션 동안 그 레이아웃을 유지합니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsTab">게임 실행 시</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsHelp">게임 시작 시 기본 디스플레이 동작입니다. 디스플레이·플랫폼·게임 프로필이 재정의하지 않는 한 적용됩니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTab">플랫폼 프로필</sys:String>
@@ -150,9 +148,9 @@
     <sys:String x:Key="LOCDisplayManager_SetupWizardFinish">구성 저장</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeTitle">환영합니다</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeHelp">플레이할 디스플레이, HDR, 새로 고침 빈도를 위한 짧은 설정입니다.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeBody">Display Manager는 게임 시작 시 Windows 디스플레이 프로필을 적용하고 중지 시 데스크톱을 복원합니다. 나중에 설정에서 모두 변경할 수 있습니다.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeBody">Display Manager는 게임 시작 시 Windows 디스플레이 프로필을 적용하고 종료 시 이전 레이아웃을 복원합니다. 데스크톱/전체 화면 기본 디스플레이는 나중에 설정에서 나눌 수 있습니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardDisplayTitle">게임용 기본 디스플레이</sys:String>
-    <sys:String x:Key="LOCDisplayManager_SetupWizardDisplayHelp">게임 실행 시 어떤 모니터를 기본으로 만들지 선택하거나 현재 Windows 기본값을 유지합니다.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_SetupWizardDisplayHelp">게임 실행 시 기본이 될 모니터를 고르거나 Windows 기본값을 유지합니다. 지금은 데스크톱과 전체 화면에 모두 적용되며, 설정 → 디스플레이에서 나눌 수 있습니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardHdrTitle">HDR 정책</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardHdrHelp">모든 게임의 기본값입니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardRefreshTitle">새로 고침 빈도</sys:String>
@@ -296,6 +294,7 @@
     <sys:String x:Key="LOCDisplayManager_SetupPageHelp">첫 실행 도우미를 다시 실행하여 기본 디스플레이, HDR, 새로 고침 빈도, 네이티브 HDR 마이그레이션을 선택합니다.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewHdrOnLaunch">게임 실행 시 HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewDisplaysConnectedFormat">연결된 디스플레이 {0}개</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewPlayPrimaryFormat">{0}: {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusHdrSupported">HDR 지원됨</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusHdrNotSupported">HDR 없음</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPrimaryNoSupport">선택한 게임용 기본 디스플레이가 HDR을 지원하지 않습니다. 지원되는 디스플레이를 선택할 때까지 HDR 옵션을 사용할 수 없습니다.</sys:String>

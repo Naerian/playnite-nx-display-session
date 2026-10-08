@@ -1,10 +1,11 @@
 # Changelog
 
-## 1.0.7
+## 1.0.7 — 2026-10-08
 - Separate **primary display** pickers for Playnite Desktop and Fullscreen (from your connected displays).
 - **When a game launches** can switch between Desktop and Fullscreen to edit each mode’s HDR, refresh rate, resolution, turn-off-others, and missing-display settings.
-- Fullscreen “apply layout on enter” uses the Fullscreen primary display and that mode’s topology settings.
-- Clearer label for switching to the Fullscreen primary when entering fullscreen.
+- Entering Playnite Fullscreen always applies the Fullscreen primary (and that mode’s topology) and keeps it for the session; the old opt-in checkbox was removed.
+- Connected-display cards and Overview **Displays** show **Desktop** / **Fullscreen** play primaries.
+- Setup wizard applies the chosen play display to both modes (split later in Settings) and copies HDR/refresh to both.
 
 ## 1.0.6 — 2026-10-07
 - Fixed the primary display for games resetting to Keep Windows default after you pick a monitor in Settings.

@@ -493,12 +493,22 @@ namespace PlayniteDisplayManager
 
             settings.SetupWizardCompleted = true;
             settings.GlobalHdrPolicy = draft.GlobalHdrPolicy;
+            settings.GlobalHdrPolicyFullscreen = draft.GlobalHdrPolicy;
             settings.GlobalRefreshRatePolicy = draft.GlobalRefreshRatePolicy;
+            settings.GlobalRefreshRatePolicyFullscreen = draft.GlobalRefreshRatePolicy;
             settings.PreferredRefreshRateHz = draft.PreferredRefreshRateHz;
+            settings.PreferredRefreshRateHzFullscreen = draft.PreferredRefreshRateHz;
 
-            var topology = settings.GetDefaultDisplayProfile();
-            if (topology != null)
+            // First-run: same play display / turn-off for Desktop and Fullscreen.
+            // Users can split them later in Settings → Displays.
+            foreach (var mode in new[] { ApplicationMode.Desktop, ApplicationMode.Fullscreen })
             {
+                var topology = settings.GetDefaultDisplayProfileForMode(mode);
+                if (topology == null)
+                {
+                    continue;
+                }
+
                 topology.PreferredPlayDisplayId = draft.PreferredPlayDisplayId;
                 topology.TurnOffOtherDisplays = draft.TurnOffOtherDisplays;
             }
@@ -773,11 +783,8 @@ namespace PlayniteDisplayManager
 
         private void BeginModeSession()
         {
-            if (settings?.ApplyTopologyOnFullscreenMode != true)
-            {
-                return;
-            }
-
+            // Always apply the Fullscreen primary (and that mode's topology) when entering
+            // Playnite Fullscreen; keep it for the mode session so games do not thrash.
             if (PlayniteApi.ApplicationInfo.Mode != ApplicationMode.Fullscreen)
             {
                 return;

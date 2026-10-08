@@ -35,7 +35,7 @@
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktop">Primary display for Desktop</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktopHint">Used when you launch games from Playnite Desktop. Playnite itself can stay on any monitor.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreen">Primary display for Fullscreen</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreenHint">Used when you launch games from Playnite Fullscreen, and when applying the layout on entering fullscreen.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreenHint">Used when you open Playnite Fullscreen and when you launch games from Fullscreen. Leaving fullscreen restores the previous layout.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialDesktopHint">The trial uses the Desktop primary display above.</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchTitle">Configure launch settings for</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchHelp">Switch between Desktop and Fullscreen to edit HDR, refresh rate, resolution, turn-off-others, and missing-display for that mode.</sys:String>
@@ -65,8 +65,6 @@
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">Move Playnite to the primary display when restoring displays</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHint">If Playnite stays on a secondary or powered-off monitor after a game.</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRestoreTab">Relocate Playnite</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">When entering fullscreen, switch to the Fullscreen primary display</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">Uses the Fullscreen primary above (and that mode’s turn-off / missing-display settings). Restores your previous layout when you leave fullscreen. Games keep that layout for the whole fullscreen session.</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsTab">When a game launches</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsHelp">Default display behavior applied when a game starts, unless a display, platform, or game profile overrides it.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTab">Platform profiles</sys:String>
@@ -150,9 +148,9 @@
     <sys:String x:Key="LOCDisplayManager_SetupWizardFinish">Save configuration</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeTitle">Welcome</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeHelp">A short setup for the display you play on, HDR, and refresh rate.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeBody">Display Manager applies a Windows display profile when a game starts and restores the desktop when it stops. You can change everything later in Settings.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeBody">Display Manager applies a Windows display profile when a game starts and restores the previous layout when it stops. You can set different Desktop and Fullscreen primaries later in Settings.</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardDisplayTitle">Primary display for games</sys:String>
-    <sys:String x:Key="LOCDisplayManager_SetupWizardDisplayHelp">Choose which monitor should become primary when you launch a game, or keep the current Windows default.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_SetupWizardDisplayHelp">Choose which monitor should become primary when you launch a game, or keep the current Windows default. This applies to both Desktop and Fullscreen for now; you can split them in Settings → Displays.</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardHdrTitle">HDR policy</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardHdrHelp">Default for every game.</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardRefreshTitle">Refresh rate</sys:String>
@@ -296,6 +294,7 @@
     <sys:String x:Key="LOCDisplayManager_SetupPageHelp">Re-run the first-time assistant to choose the primary display, HDR, refresh rate, and native HDR migration.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewHdrOnLaunch">HDR when a game launches</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewDisplaysConnectedFormat">{0} connected display(s)</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewPlayPrimaryFormat">{0}: {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusHdrSupported">HDR supported</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusHdrNotSupported">No HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPrimaryNoSupport">The selected primary display for games does not support HDR. HDR options are unavailable until you choose a capable display.</sys:String>

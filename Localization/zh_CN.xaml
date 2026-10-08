@@ -35,7 +35,7 @@
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktop">桌面模式主显示器</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktopHint">从 Playnite 桌面启动游戏时使用。Playnite 窗口可以留在任意显示器上。</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreen">全屏模式主显示器</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreenHint">从 Playnite 全屏启动游戏时使用，以及进入全屏时应用布局时使用。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreenHint">打开 Playnite 全屏以及从全屏启动游戏时使用。离开全屏会恢复之前的布局。</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialDesktopHint">试用使用上方的桌面模式主显示器。</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchTitle">配置启动设置对象</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchHelp">在桌面与全屏之间切换，以编辑该模式的 HDR、刷新率、分辨率、关闭其他显示器和缺失显示器。</sys:String>
@@ -65,8 +65,6 @@
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">还原显示器时将 Playnite 移到主显示器</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHint">如果游戏结束后 Playnite 仍停在副显示器或已关闭的显示器上。</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRestoreTab">重新放置 Playnite</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">进入全屏时切换到全屏模式主显示器</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">使用上方的全屏模式主显示器（以及该模式的关闭其他/缺失显示器设置）。离开全屏时恢复之前的布局。游戏在整个全屏会话中保持该布局。</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsTab">启动游戏时</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsHelp">游戏开始时的默认显示行为，除非被显示、平台或游戏配置文件覆盖。</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTab">平台配置文件</sys:String>
@@ -150,9 +148,9 @@
     <sys:String x:Key="LOCDisplayManager_SetupWizardFinish">保存配置</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeTitle">欢迎</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeHelp">为你游玩的显示器、HDR 和刷新率进行简短设置。</sys:String>
-    <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeBody">Display Manager 会在游戏开始时应用 Windows 显示器配置文件，并在游戏停止时恢复桌面。你可以稍后在设置中更改所有内容。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeBody">Display Manager 会在游戏开始时应用 Windows 显示配置，并在结束时恢复之前的布局。之后可在设置中分别为桌面和全屏选择主显示器。</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardDisplayTitle">游戏用主显示器</sys:String>
-    <sys:String x:Key="LOCDisplayManager_SetupWizardDisplayHelp">选择启动游戏时哪个显示器应成为主显示器，或保留当前 Windows 默认设置。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_SetupWizardDisplayHelp">选择启动游戏时作为主显示器的屏幕，或保持 Windows 默认。目前同时用于桌面与全屏；可在设置 → 显示器中分开。</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardHdrTitle">HDR 策略</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardHdrHelp">所有游戏的默认值。</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardRefreshTitle">刷新率</sys:String>
@@ -296,6 +294,7 @@
     <sys:String x:Key="LOCDisplayManager_SetupPageHelp">重新运行首次助手，以选择主显示器、HDR、刷新率和原生 HDR 迁移。</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewHdrOnLaunch">游戏启动时的 HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewDisplaysConnectedFormat">{0} 个已连接显示器</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewPlayPrimaryFormat">{0}: {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusHdrSupported">支持 HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusHdrNotSupported">无 HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPrimaryNoSupport">所选游戏用主显示器不支持 HDR。在选择支持 HDR 的显示器之前，HDR 选项不可用。</sys:String>

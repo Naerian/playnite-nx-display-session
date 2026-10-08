@@ -7,7 +7,7 @@ Built for living-room gaming: a PC on the sofa connected to a TV, or setups that
 ## What it does
 
 - Lists active displays with EDID-based identity when Windows exposes enough data.
-- Lets you choose separate **primary displays for Desktop and Fullscreen**, and edit each mode’s launch settings (HDR, refresh, resolution, turn-off-others, missing display). Built-in profiles **Solo TV** / **PC / Desktop** remain for overrides. Optionally apply the Fullscreen primary when entering **fullscreen** (and restore when you return to desktop) so games do not flip monitors between sessions.
+- Lets you choose separate **primary displays for Desktop and Fullscreen**, and edit each mode’s launch settings (HDR, refresh, resolution, turn-off-others, missing display). Built-in profiles **Solo TV** / **PC / Desktop** remain for overrides. Entering **fullscreen** applies the Fullscreen primary and keeps that layout for the session (restored when you return to desktop).
 - Handles missing displays with Windows primary, fallback display, or notify-and-continue behavior.
 - Owns **HDR** with global policy, display-profile defaults, and per-game/per-platform overrides.
 - Optionally applies **resolution** and **refresh rate** after the display profile, then waits the configured **settle delay** before continuing.

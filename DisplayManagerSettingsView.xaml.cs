@@ -103,7 +103,6 @@ namespace PlayniteDisplayManager
                 SyncResolutionRadios();
                 SyncDesktopAccessControls();
                 SyncFullscreenRelocateControl();
-                SyncFullscreenModeTopologyControl();
                 SyncLoggingControls();
                 UpdateOverview();
             };
@@ -131,7 +130,6 @@ namespace PlayniteDisplayManager
             SyncResolutionRadios();
             SyncDesktopAccessControls();
             SyncFullscreenRelocateControl();
-            SyncFullscreenModeTopologyControl();
             SyncLoggingControls();
             UpdateOverview();
         }
@@ -1023,28 +1021,6 @@ namespace PlayniteDisplayManager
             RelocateFullscreenCheck.IsChecked = settings.RelocatePlayniteFullscreenAfterRestore;
         }
 
-        private void FullscreenModeTopologyCheck_OnChanged(object sender, RoutedEventArgs e)
-        {
-            var settings = DataContext as DisplayManagerSettings;
-            if (settings == null || FullscreenModeTopologyCheck == null)
-            {
-                return;
-            }
-
-            settings.ApplyTopologyOnFullscreenMode = FullscreenModeTopologyCheck.IsChecked == true;
-        }
-
-        private void SyncFullscreenModeTopologyControl()
-        {
-            var settings = DataContext as DisplayManagerSettings;
-            if (settings == null || FullscreenModeTopologyCheck == null)
-            {
-                return;
-            }
-
-            FullscreenModeTopologyCheck.IsChecked = settings.ApplyTopologyOnFullscreenMode;
-        }
-
         private void SyncLoggingControls()
         {
             var settings = DataContext as DisplayManagerSettings;
@@ -1436,7 +1412,8 @@ namespace PlayniteDisplayManager
             var displays = settings?.AvailableDisplays;
             var connected = displays?.Where(d => d.IsConnected).ToList()
                 ?? new System.Collections.Generic.List<DisplayInfo>();
-            var primary = connected.FirstOrDefault(d => d.IsPrimary) ?? connected.FirstOrDefault();
+            var desktopPlay = ResolvePreferredPlayDisplayForMode(settings, connected, ApplicationMode.Desktop);
+            var fullscreenPlay = ResolvePreferredPlayDisplayForMode(settings, connected, ApplicationMode.Fullscreen);
             var playDisplay = ResolvePreferredPlayDisplay(settings, connected);
 
             if (OverviewDisplaysText != null)
@@ -1457,43 +1434,18 @@ namespace PlayniteDisplayManager
             if (OverviewDisplayPills != null)
             {
                 OverviewDisplayPills.Children.Clear();
-                if (primary != null)
-                {
-                    OverviewDisplayPills.Children.Add(CreateStatusBadge(
-                        null,
-                        primary.EffectiveName,
-                        "PositiveRatingBrush"));
-                    OverviewDisplayPills.Children.Add(CreateStatusBadge(
-                        null,
-                        TryFindResource("LOCDisplayManager_StatusPrimary") as string ?? "Primary",
-                        "PositiveRatingBrush"));
-                    if (primary.Width > 0 && primary.Height > 0)
-                    {
-                        OverviewDisplayPills.Children.Add(CreateStatusBadge(
-                            null,
-                            primary.Width + "×" + primary.Height,
-                            "GlyphBrush",
-                            0.95));
-                    }
-
-                    if (primary.RefreshRateHz > 0)
-                    {
-                        OverviewDisplayPills.Children.Add(CreateStatusBadge(
-                            null,
-                            primary.RefreshRateHz.ToString("0.###") + " Hz",
-                            "GlyphBrush",
-                            0.95));
-                    }
-
-                    var primaryHdr = ProbeDisplayHdrSupported(settings, primary);
-                    OverviewDisplayPills.Children.Add(CreateStatusBadge(
-                        null,
-                        primaryHdr
-                            ? (TryFindResource("LOCDisplayManager_StatusHdrSupported") as string ?? "HDR supported")
-                            : (TryFindResource("LOCDisplayManager_StatusHdrNotSupported") as string ?? "No HDR"),
-                        primaryHdr ? "PositiveRatingBrush" : "GlyphBrush",
-                        primaryHdr ? 1.0 : 0.9));
-                }
+                AddOverviewPlayPrimaryPills(
+                    OverviewDisplayPills,
+                    settings,
+                    connected,
+                    ApplicationMode.Desktop,
+                    desktopPlay);
+                AddOverviewPlayPrimaryPills(
+                    OverviewDisplayPills,
+                    settings,
+                    connected,
+                    ApplicationMode.Fullscreen,
+                    fullscreenPlay);
             }
 
             var playHdrSupported = ProbeDisplayHdrSupported(settings, playDisplay);
@@ -1595,6 +1547,37 @@ namespace PlayniteDisplayManager
             }
 
             return connected.FirstOrDefault(d => d.IsPrimary) ?? connected[0];
+        }
+
+        private void AddOverviewPlayPrimaryPills(
+            WrapPanel pills,
+            DisplayManagerSettings settings,
+            IList<DisplayInfo> connected,
+            ApplicationMode mode,
+            DisplayInfo playDisplay)
+        {
+            if (pills == null || connected == null || connected.Count == 0)
+            {
+                return;
+            }
+
+            var modeLabel = mode == ApplicationMode.Fullscreen
+                ? (TryFindResource("LOCDisplayManager_LaunchModeFullscreen") as string ?? "Fullscreen")
+                : (TryFindResource("LOCDisplayManager_LaunchModeDesktop") as string ?? "Desktop");
+
+            var preferredId = settings?.GetDefaultDisplayProfileForMode(mode)?.PreferredPlayDisplayId;
+            var name = !string.IsNullOrWhiteSpace(preferredId)
+                ? (playDisplay?.EffectiveName
+                    ?? (TryFindResource("LOCDisplayManager_StatusUnknown") as string ?? "Unknown"))
+                : (TryFindResource("LOCDisplayManager_PlayDisplayWindowsDefault") as string
+                    ?? "Keep Windows default");
+
+            var format = TryFindResource("LOCDisplayManager_OverviewPlayPrimaryFormat") as string
+                ?? "{0}: {1}";
+            pills.Children.Add(CreateStatusBadge(
+                null,
+                string.Format(format, modeLabel, name),
+                "PositiveRatingBrush"));
         }
 
         private static bool ProbeDisplayHdrSupported(DisplayManagerSettings settings, DisplayInfo display)
@@ -1912,20 +1895,23 @@ namespace PlayniteDisplayManager
             RefreshRatePrimaryPanel.Children.Add(ratePills);
         }
 
-        private static bool IsConfiguredPlayPrimary(DisplayInfo display, DisplayManagerSettings settings)
+        private static bool IsConfiguredPlayPrimaryForMode(
+            DisplayInfo display,
+            DisplayManagerSettings settings,
+            ApplicationMode mode)
         {
             if (display == null || settings == null)
             {
                 return false;
             }
 
-            var defaults = settings.GetDefaultDisplayProfile();
-            var preferredId = defaults?.PreferredPlayDisplayId ?? settings.PreferredPlayDisplayId;
+            var preferredId = settings.GetDefaultDisplayProfileForMode(mode)?.PreferredPlayDisplayId;
             if (!string.IsNullOrWhiteSpace(preferredId))
             {
                 return string.Equals(display.Id, preferredId, StringComparison.OrdinalIgnoreCase);
             }
 
+            // Keep Windows default → badge the current Windows primary.
             return display.IsPrimary;
         }
 
@@ -2730,11 +2716,20 @@ namespace PlayniteDisplayManager
                     0.9));
             }
 
-            if (IsConfiguredPlayPrimary(display, DataContext as DisplayManagerSettings))
+            var settingsForBadges = DataContext as DisplayManagerSettings;
+            if (IsConfiguredPlayPrimaryForMode(display, settingsForBadges, ApplicationMode.Desktop))
             {
                 pills.Children.Add(CreateStatusBadge(
                     null,
-                    TryFindResource("LOCDisplayManager_StatusPrimary") as string ?? "Primary",
+                    TryFindResource("LOCDisplayManager_LaunchModeDesktop") as string ?? "Desktop",
+                    "PositiveRatingBrush"));
+            }
+
+            if (IsConfiguredPlayPrimaryForMode(display, settingsForBadges, ApplicationMode.Fullscreen))
+            {
+                pills.Children.Add(CreateStatusBadge(
+                    null,
+                    TryFindResource("LOCDisplayManager_LaunchModeFullscreen") as string ?? "Fullscreen",
                     "PositiveRatingBrush"));
             }
 

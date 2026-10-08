@@ -35,7 +35,7 @@
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktop">Primäre Anzeige für Desktop</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktopHint">Wird verwendet, wenn du Spiele aus Playnite Desktop startest. Playnite selbst kann auf jedem Monitor bleiben.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreen">Primäre Anzeige für Vollbild</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreenHint">Wird verwendet, wenn du Spiele aus Playnite-Vollbild startest, und beim Anwenden des Layouts beim Wechsel in den Vollbildmodus.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreenHint">Wird verwendet, wenn du Playnite-Vollbild öffnest und Spiele aus dem Vollbild startest. Beim Verlassen des Vollbildmodus wird das vorherige Layout wiederhergestellt.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialDesktopHint">Der Test verwendet die Desktop-Primäranzeige oben.</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchTitle">Start-Einstellungen konfigurieren für</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchHelp">Zwischen Desktop und Vollbild wechseln, um HDR, Bildwiederholrate, Auflösung, andere Anzeigen ausschalten und fehlende Anzeige für diesen Modus zu bearbeiten.</sys:String>
@@ -65,8 +65,6 @@
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">Playnite beim Wiederherstellen der Anzeigen auf die primäre Anzeige verschieben</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHint">Falls Playnite nach einem Spiel auf einem sekundären oder ausgeschalteten Monitor bleibt.</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRestoreTab">Playnite neu platzieren</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">Beim Wechsel in den Vollbildmodus zur Vollbild-Primäranzeige wechseln</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">Verwendet die Vollbild-Primäranzeige oben (sowie Ausschalten anderer / fehlende Anzeige dieses Modus). Stellt beim Verlassen des Vollbildmodus das vorherige Layout wieder her. Spiele behalten dieses Layout für die gesamte Vollbildsitzung.</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsTab">Beim Spielstart</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsHelp">Standardverhalten der Anzeige beim Spielstart, sofern kein Anzeige-, Plattform- oder Spielprofil es überschreibt.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTab">Plattformprofile</sys:String>
@@ -150,9 +148,9 @@
     <sys:String x:Key="LOCDisplayManager_SetupWizardFinish">Konfiguration speichern</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeTitle">Willkommen</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeHelp">Kurze Einrichtung für die Anzeige, auf der Sie spielen, HDR und Bildwiederholrate.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeBody">Display Manager wendet beim Start eines Spiels ein Windows-Anzeigeprofil an und stellt den Desktop beim Beenden wieder her. Sie können später alles in den Einstellungen ändern.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeBody">Display Manager wendet beim Spielstart ein Windows-Anzeigeprofil an und stellt danach das vorherige Layout wieder her. Unterschiedliche Desktop- und Vollbild-Primäranzeigen kannst du später in den Einstellungen festlegen.</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardDisplayTitle">Primäre Anzeige für Spiele</sys:String>
-    <sys:String x:Key="LOCDisplayManager_SetupWizardDisplayHelp">Wählen Sie, welcher Monitor beim Start eines Spiels primär werden soll, oder behalten Sie den aktuellen Windows-Standard.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_SetupWizardDisplayHelp">Wähle, welcher Monitor beim Spielstart primär werden soll, oder behalte die Windows-Vorgabe. Das gilt vorerst für Desktop und Vollbild; du kannst sie unter Einstellungen → Anzeigen trennen.</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardHdrTitle">HDR-Richtlinie</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardHdrHelp">Standard für jedes Spiel.</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardRefreshTitle">Bildwiederholrate</sys:String>
@@ -296,6 +294,7 @@
     <sys:String x:Key="LOCDisplayManager_SetupPageHelp">Führen Sie den Ersteinrichtungsassistenten erneut aus, um primäre Anzeige, HDR, Bildwiederholrate und native HDR-Migration auszuwählen.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewHdrOnLaunch">HDR beim Start eines Spiels</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewDisplaysConnectedFormat">{0} verbundene Anzeige(n)</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewPlayPrimaryFormat">{0}: {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusHdrSupported">HDR unterstützt</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusHdrNotSupported">Kein HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPrimaryNoSupport">Die ausgewählte primäre Anzeige für Spiele unterstützt HDR nicht. HDR-Optionen sind nicht verfügbar, bis Sie eine fähige Anzeige auswählen.</sys:String>

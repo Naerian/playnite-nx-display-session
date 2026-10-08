@@ -57,7 +57,7 @@ namespace PlayniteDisplayManager
             SkipButton.Content = Loc("LOCDisplayManager_SetupWizardSkip");
             BackButton.Content = Loc("LOCDisplayManager_SetupWizardBack");
             WelcomeBody.Text = Loc("LOCDisplayManager_SetupWizardWelcomeBody");
-            DisplayTargetLabel.Text = Loc("LOCDisplayManager_TopologyTrialTarget");
+            DisplayTargetLabel.Text = Loc("LOCDisplayManager_SetupWizardDisplayTitle");
             IdentifyDisplayButton.Content = Loc("LOCDisplayManager_IdentifyDisplay");
             IdentifyDisplayHint.Text = Loc("LOCDisplayManager_IdentifyDisplayHint");
             TurnOffOthersCheck.Content = Loc("LOCDisplayManager_TopologyTurnOffOthers");

@@ -17,7 +17,7 @@ En Ajustes → Pantallas eliges una **pantalla principal para escritorio** y otr
 
 ## Layout en pantalla completa
 
-En Pantallas, **Al entrar en pantalla completa, usar la pantalla principal de pantalla completa** esta desactivado por defecto. Si lo activas, Playnite en pantalla completa usa la principal de **pantalla completa** (y el apagado de otras / pantalla ausente de ese modo en **Al lanzar un juego**). El layout se mantiene durante toda la sesion de pantalla completa para que los juegos no cambien de monitor entre uno y otro. Al volver al escritorio se restaura el layout anterior.
+Al abrir Playnite en **pantalla completa**, Display Manager aplica la principal de **pantalla completa** (y el apagado de otras / pantalla ausente de ese modo en **Al lanzar un juego**). El layout se mantiene durante toda la sesion de pantalla completa para que los juegos no cambien de monitor entre uno y otro. Al volver al escritorio se restaura el layout anterior.
 
 Uso tipico en el salon: principal Desktop = monitor (o Windows); principal Fullscreen = TV; apagar otras en los ajustes de lanzamiento Fullscreen; monitor del PC como respaldo si la TV esta apagada o desconectada.
 

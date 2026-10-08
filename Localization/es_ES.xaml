@@ -35,7 +35,7 @@
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktop">Pantalla principal para escritorio</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktopHint">Se usa al lanzar juegos desde Playnite en escritorio. Playnite puede seguir en cualquier monitor.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreen">Pantalla principal para pantalla completa</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreenHint">Se usa al lanzar juegos desde Playnite en pantalla completa, y al aplicar el layout al entrar en pantalla completa.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreenHint">Se usa al abrir Playnite en pantalla completa y al lanzar juegos desde pantalla completa. Al salir se restaura el layout anterior.</sys:String>
     <sys:String x:Key="LOCDisplayManager_TopologyTrialDesktopHint">La prueba usa la pantalla principal de escritorio de arriba.</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchTitle">Configurar el lanzamiento para</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchHelp">Cambia entre Escritorio y Pantalla completa para editar HDR, frecuencia, resolución, apagado de otras y pantalla ausente de ese modo.</sys:String>
@@ -65,8 +65,6 @@
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">Mover Playnite a la pantalla principal al restaurar las pantallas</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHint">Si al salir de un juego Playnite se queda en un monitor secundario o apagado.</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRestoreTab">Reubicar Playnite</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">Al entrar en pantalla completa, usar la pantalla principal de pantalla completa</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">Usa la pantalla principal de pantalla completa de arriba (y el apagado / pantalla ausente de ese modo). Al salir de pantalla completa restaura el layout anterior. Los juegos mantienen ese layout durante toda la sesión.</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsTab">Al lanzar un juego</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsHelp">Comportamiento de pantalla por defecto al iniciar un juego, salvo que un perfil de pantalla, plataforma o juego lo anule.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTab">Perfiles por plataforma</sys:String>
@@ -150,9 +148,9 @@
     <sys:String x:Key="LOCDisplayManager_SetupWizardFinish">Guardar configuración</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeTitle">Bienvenida</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeHelp">Una configuración breve de la pantalla de juego, el HDR y la frecuencia.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeBody">Display Manager aplica un perfil de pantalla de Windows al iniciar un juego y restaura el escritorio al salir. Puedes cambiarlo todo más tarde en Ajustes.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_SetupWizardWelcomeBody">Display Manager aplica un perfil de pantalla de Windows al iniciar un juego y restaura el layout anterior al salir. Más tarde puedes elegir principales distintas para Escritorio y Pantalla completa en Ajustes.</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardDisplayTitle">Pantalla principal para juegos</sys:String>
-    <sys:String x:Key="LOCDisplayManager_SetupWizardDisplayHelp">Elige qué monitor debe ser el principal al lanzar un juego, o mantén la predeterminada de Windows.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_SetupWizardDisplayHelp">Elige qué monitor debe ser el principal al lanzar un juego, o mantén la predeterminada de Windows. Por ahora se aplica a Escritorio y Pantalla completa; puedes separarlos en Ajustes → Pantallas.</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardHdrTitle">Política HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardHdrHelp">Valor por defecto para todos los juegos.</sys:String>
     <sys:String x:Key="LOCDisplayManager_SetupWizardRefreshTitle">Frecuencia de actualización</sys:String>
@@ -296,6 +294,7 @@
     <sys:String x:Key="LOCDisplayManager_SetupPageHelp">Vuelve a ejecutar el asistente de primera configuración para elegir pantalla principal, HDR, frecuencia y la migración del HDR nativo.</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewHdrOnLaunch">HDR al lanzar un juego</sys:String>
     <sys:String x:Key="LOCDisplayManager_OverviewDisplaysConnectedFormat">{0} pantallas conectadas</sys:String>
+    <sys:String x:Key="LOCDisplayManager_OverviewPlayPrimaryFormat">{0}: {1}</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusHdrSupported">Soporta HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_StatusHdrNotSupported">Sin HDR</sys:String>
     <sys:String x:Key="LOCDisplayManager_HdrPrimaryNoSupport">La pantalla principal seleccionada para juegos no soporta HDR. Las opciones HDR no están disponibles hasta que elijas una pantalla compatible.</sys:String>

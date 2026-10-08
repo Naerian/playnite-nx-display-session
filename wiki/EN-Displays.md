@@ -17,7 +17,7 @@ On Settings → Displays you choose a **primary display for Desktop** and a **pr
 
 ## Fullscreen layout
 
-On Displays, **When entering fullscreen, switch to the Fullscreen primary display** is off by default. When enabled, Playnite fullscreen uses the **Fullscreen** primary (and that mode’s turn-off-others / missing-display settings from **When a game launches**). The layout stays for the whole fullscreen session so games do not switch monitors back and forth. Returning to desktop restores the previous layout.
+When you open Playnite **Fullscreen**, Display Manager applies the **Fullscreen** primary (and that mode’s turn-off-others / missing-display settings from **When a game launches**). The layout stays for the whole fullscreen session so games do not switch monitors back and forth. Returning to desktop restores the previous layout.
 
 Typical living-room setup: Desktop primary = desk monitor (or Windows default); Fullscreen primary = TV; turn other displays off under Fullscreen launch settings; desk monitor as fallback if the TV is unplugged or asleep.
 

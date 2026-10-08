@@ -445,8 +445,8 @@ namespace PlayniteDisplayManager
         }
 
         /// <summary>
-        /// When true in Playnite Fullscreen, apply the Fullscreen launch profile topology on mode start
-        /// and restore on mode exit (games do not thrash the layout between sessions).
+        /// Legacy setting (ignored). Fullscreen mode always applies the Fullscreen primary
+        /// on enter and keeps that layout for the mode session.
         /// </summary>
         public bool ApplyTopologyOnFullscreenMode
         {
