@@ -31,7 +31,17 @@
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayGameMenuHint">You can choose a different display for a specific game from that game&apos;s context menu.</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuOverrideTitle">Game context menu</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayTitle">Primary display</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">This display becomes the primary display when a game launches (unless you keep the Windows default). Use the trial buttons below to preview for a few seconds and restore automatically.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">Pick where games should go when you launch them from Playnite Desktop or Fullscreen. Game and platform overrides still win.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktop">Primary display for Desktop</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktopHint">Used when you launch games from Playnite Desktop. Playnite itself can stay on any monitor.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreen">Primary display for Fullscreen</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreenHint">Used when you launch games from Playnite Fullscreen, and when applying the layout on entering fullscreen.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_TopologyTrialDesktopHint">The trial uses the Desktop primary display above.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchTitle">Configure launch settings for</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchHelp">Switch between Desktop and Fullscreen to edit HDR, refresh rate, resolution, turn-off-others, and missing-display for that mode.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeDesktop">Desktop</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeFullscreen">Fullscreen</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplayProfileFullscreenLaunchName">Fullscreen launch</sys:String>
     <sys:String x:Key="LOCDisplayManager_PreferredDisplayWait">Wait for primary display</sys:String>
     <sys:String x:Key="LOCDisplayManager_PreferredDisplayWaitHelp">If the primary display is not connected yet (for example a TV waking over HDMI), wait and retry before using the missing-display policy.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlayDisplayWindowsDefault">Keep Windows default</sys:String>
@@ -55,14 +65,14 @@
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">Move Playnite to the primary display when restoring displays</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHint">If Playnite stays on a secondary or powered-off monitor after a game.</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRestoreTab">Relocate Playnite</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">Apply primary display layout when entering fullscreen</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">Same primary display, same turn-off-others, and same fallback as when a game launches. Applied when you enter fullscreen; restored when you go back to desktop. While fullscreen is open, games will not keep switching displays between sessions.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">When entering fullscreen, switch to the Fullscreen primary display</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">Uses the Fullscreen primary above (and that mode’s turn-off / missing-display settings). Restores your previous layout when you leave fullscreen. Games keep that layout for the whole fullscreen session.</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsTab">When a game launches</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsHelp">Default display behavior applied when a game starts, unless a display, platform, or game profile overrides it.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTab">Platform profiles</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTitle">Platform profiles</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesHelp">Defaults for every game on a platform when that game has no per-game override.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PlatformProfilesPriorityHint">Priority: game profile → platform profile → default display profile / global settings.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PlatformProfilesPriorityHint">Priority: game profile → platform profile → launch default for the current Playnite mode (Desktop or Fullscreen) / global settings.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfileAdd">Add platform</sys:String>
     <sys:String x:Key="LOCDisplayManager_NoConfiguredPlatformProfiles">No platform profiles yet.</sys:String>
     <sys:String x:Key="LOCDisplayManager_UnknownPlatform">Unknown platform</sys:String>
@@ -328,4 +338,6 @@
     <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelay">Settle delay after display changes</sys:String>
     <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelayHelp">Wait this long after applying display layout, resolution, refresh rate, or HDR changes before the game continues.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSource">Launch default</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceDesktop">Desktop launch default</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceFullscreen">Fullscreen launch default</sys:String>
 </ResourceDictionary>

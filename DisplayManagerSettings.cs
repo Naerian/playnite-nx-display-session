@@ -29,15 +29,21 @@ namespace PlayniteDisplayManager
         private List<DisplayDeviceAlias> displayAliases = new List<DisplayDeviceAlias>();
         private List<DisplayInfo> availableDisplays = new List<DisplayInfo>();
         private GlobalHdrPolicy globalHdrPolicy = GlobalHdrPolicy.DoNotManage;
+        private GlobalHdrPolicy globalHdrPolicyFullscreen = GlobalHdrPolicy.DoNotManage;
         private List<string> hdrMetadataMatchNames = HdrMetadataMatcher.DefaultMatchNames.ToList();
         private bool includeTagsInHdrMetadataMatch;
         private bool nativeHdrMigrationCompleted;
         private bool nativeHdrConflictNotified;
         private RefreshRatePolicy globalRefreshRatePolicy = RefreshRatePolicy.Native;
+        private RefreshRatePolicy globalRefreshRatePolicyFullscreen = RefreshRatePolicy.Native;
         private double? preferredRefreshRateHz;
+        private double? preferredRefreshRateHzFullscreen;
         private ResolutionPolicy globalResolutionPolicy = ResolutionPolicy.Native;
+        private ResolutionPolicy globalResolutionPolicyFullscreen = ResolutionPolicy.Native;
         private int? preferredResolutionWidth;
         private int? preferredResolutionHeight;
+        private int? preferredResolutionWidthFullscreen;
+        private int? preferredResolutionHeightFullscreen;
         private int postChangeSettleDelayMs = 1000;
         private int preferredDisplayWaitMs;
         private bool showDesktopTopPanel = true;
@@ -48,13 +54,14 @@ namespace PlayniteDisplayManager
         private bool turnOffOtherDisplaysOnLaunch;
         private List<DisplayProfile> displayProfiles = new List<DisplayProfile>();
         private Guid? defaultDisplayProfileId;
+        private Guid? defaultDisplayProfileIdFullscreen;
         private bool relocatePlayniteFullscreenAfterRestore;
         private bool applyTopologyOnFullscreenMode;
         private bool enableVerboseLogging;
         private List<GameDisplayProfileEntry> availableGameProfiles = new List<GameDisplayProfileEntry>();
         private List<PlatformProfileEntry> availablePlatformProfiles = new List<PlatformProfileEntry>();
 
-        public const int CurrentSettingsSchemaVersion = 5;
+        public const int CurrentSettingsSchemaVersion = 7;
 
         public DisplayManagerSettings()
         {
@@ -71,15 +78,33 @@ namespace PlayniteDisplayManager
                 SettingsSchemaVersion = savedSettings.SettingsSchemaVersion;
                 DisplayAliases = savedSettings.DisplayAliases ?? new List<DisplayDeviceAlias>();
                 GlobalHdrPolicy = savedSettings.GlobalHdrPolicy;
+                GlobalHdrPolicyFullscreen = savedSettings.SettingsSchemaVersion >= 7
+                    ? savedSettings.GlobalHdrPolicyFullscreen
+                    : savedSettings.GlobalHdrPolicy;
                 HdrMetadataMatchNames = savedSettings.HdrMetadataMatchNames;
                 IncludeTagsInHdrMetadataMatch = savedSettings.IncludeTagsInHdrMetadataMatch;
                 NativeHdrMigrationCompleted = savedSettings.NativeHdrMigrationCompleted;
                 NativeHdrConflictNotified = savedSettings.NativeHdrConflictNotified;
                 GlobalRefreshRatePolicy = savedSettings.GlobalRefreshRatePolicy;
+                GlobalRefreshRatePolicyFullscreen = savedSettings.SettingsSchemaVersion >= 7
+                    ? savedSettings.GlobalRefreshRatePolicyFullscreen
+                    : savedSettings.GlobalRefreshRatePolicy;
                 PreferredRefreshRateHz = savedSettings.PreferredRefreshRateHz;
+                PreferredRefreshRateHzFullscreen = savedSettings.SettingsSchemaVersion >= 7
+                    ? savedSettings.PreferredRefreshRateHzFullscreen
+                    : savedSettings.PreferredRefreshRateHz;
                 GlobalResolutionPolicy = savedSettings.GlobalResolutionPolicy;
+                GlobalResolutionPolicyFullscreen = savedSettings.SettingsSchemaVersion >= 7
+                    ? savedSettings.GlobalResolutionPolicyFullscreen
+                    : savedSettings.GlobalResolutionPolicy;
                 PreferredResolutionWidth = savedSettings.PreferredResolutionWidth;
                 PreferredResolutionHeight = savedSettings.PreferredResolutionHeight;
+                PreferredResolutionWidthFullscreen = savedSettings.SettingsSchemaVersion >= 7
+                    ? savedSettings.PreferredResolutionWidthFullscreen
+                    : savedSettings.PreferredResolutionWidth;
+                PreferredResolutionHeightFullscreen = savedSettings.SettingsSchemaVersion >= 7
+                    ? savedSettings.PreferredResolutionHeightFullscreen
+                    : savedSettings.PreferredResolutionHeight;
                 PostChangeSettleDelayMs = savedSettings.PostChangeSettleDelayMs;
                 PreferredDisplayWaitMs = savedSettings.PreferredDisplayWaitMs;
                 ShowDesktopTopPanel = savedSettings.ShowDesktopTopPanel;
@@ -90,6 +115,7 @@ namespace PlayniteDisplayManager
                 TurnOffOtherDisplaysOnLaunch = savedSettings.TurnOffOtherDisplaysOnLaunch;
                 DisplayProfiles = savedSettings.DisplayProfiles ?? new List<DisplayProfile>();
                 DefaultDisplayProfileId = savedSettings.DefaultDisplayProfileId;
+                DefaultDisplayProfileIdFullscreen = savedSettings.DefaultDisplayProfileIdFullscreen;
                 RelocatePlayniteFullscreenAfterRestore = savedSettings.RelocatePlayniteFullscreenAfterRestore;
                 ApplyTopologyOnFullscreenMode = savedSettings.ApplyTopologyOnFullscreenMode;
                 EnableVerboseLogging = savedSettings.EnableVerboseLogging;
@@ -125,10 +151,18 @@ namespace PlayniteDisplayManager
             set => SetValue(ref settingsSchemaVersion, value);
         }
 
+        /// <summary>HDR policy when launching from Playnite Desktop.</summary>
         public GlobalHdrPolicy GlobalHdrPolicy
         {
             get => globalHdrPolicy;
             set => SetValue(ref globalHdrPolicy, value);
+        }
+
+        /// <summary>HDR policy when launching from Playnite Fullscreen.</summary>
+        public GlobalHdrPolicy GlobalHdrPolicyFullscreen
+        {
+            get => globalHdrPolicyFullscreen;
+            set => SetValue(ref globalHdrPolicyFullscreen, value);
         }
 
         public List<string> HdrMetadataMatchNames
@@ -156,23 +190,46 @@ namespace PlayniteDisplayManager
             set => SetValue(ref nativeHdrConflictNotified, value);
         }
 
+        /// <summary>Refresh policy when launching from Playnite Desktop.</summary>
         public RefreshRatePolicy GlobalRefreshRatePolicy
         {
             get => globalRefreshRatePolicy;
             set => SetValue(ref globalRefreshRatePolicy, value);
         }
 
-        /// <summary>Target Hz when GlobalRefreshRatePolicy is ExactHz.</summary>
+        /// <summary>Refresh policy when launching from Playnite Fullscreen.</summary>
+        public RefreshRatePolicy GlobalRefreshRatePolicyFullscreen
+        {
+            get => globalRefreshRatePolicyFullscreen;
+            set => SetValue(ref globalRefreshRatePolicyFullscreen, value);
+        }
+
+        /// <summary>Target Hz when Desktop GlobalRefreshRatePolicy is ExactHz.</summary>
         public double? PreferredRefreshRateHz
         {
             get => preferredRefreshRateHz;
             set => SetValue(ref preferredRefreshRateHz, value);
         }
 
+        /// <summary>Target Hz when Fullscreen GlobalRefreshRatePolicyFullscreen is ExactHz.</summary>
+        public double? PreferredRefreshRateHzFullscreen
+        {
+            get => preferredRefreshRateHzFullscreen;
+            set => SetValue(ref preferredRefreshRateHzFullscreen, value);
+        }
+
+        /// <summary>Resolution policy when launching from Playnite Desktop.</summary>
         public ResolutionPolicy GlobalResolutionPolicy
         {
             get => globalResolutionPolicy;
             set => SetValue(ref globalResolutionPolicy, value);
+        }
+
+        /// <summary>Resolution policy when launching from Playnite Fullscreen.</summary>
+        public ResolutionPolicy GlobalResolutionPolicyFullscreen
+        {
+            get => globalResolutionPolicyFullscreen;
+            set => SetValue(ref globalResolutionPolicyFullscreen, value);
         }
 
         public int? PreferredResolutionWidth
@@ -185,6 +242,120 @@ namespace PlayniteDisplayManager
         {
             get => preferredResolutionHeight;
             set => SetValue(ref preferredResolutionHeight, value);
+        }
+
+        public int? PreferredResolutionWidthFullscreen
+        {
+            get => preferredResolutionWidthFullscreen;
+            set => SetValue(ref preferredResolutionWidthFullscreen, value);
+        }
+
+        public int? PreferredResolutionHeightFullscreen
+        {
+            get => preferredResolutionHeightFullscreen;
+            set => SetValue(ref preferredResolutionHeightFullscreen, value);
+        }
+
+        public GlobalHdrPolicy GetHdrPolicyForMode(ApplicationMode mode)
+        {
+            return mode == ApplicationMode.Fullscreen ? GlobalHdrPolicyFullscreen : GlobalHdrPolicy;
+        }
+
+        public void SetHdrPolicyForMode(ApplicationMode mode, GlobalHdrPolicy policy)
+        {
+            if (mode == ApplicationMode.Fullscreen)
+            {
+                GlobalHdrPolicyFullscreen = policy;
+            }
+            else
+            {
+                GlobalHdrPolicy = policy;
+            }
+        }
+
+        public RefreshRatePolicy GetRefreshRatePolicyForMode(ApplicationMode mode)
+        {
+            return mode == ApplicationMode.Fullscreen
+                ? GlobalRefreshRatePolicyFullscreen
+                : GlobalRefreshRatePolicy;
+        }
+
+        public void SetRefreshRatePolicyForMode(ApplicationMode mode, RefreshRatePolicy policy)
+        {
+            if (mode == ApplicationMode.Fullscreen)
+            {
+                GlobalRefreshRatePolicyFullscreen = policy;
+            }
+            else
+            {
+                GlobalRefreshRatePolicy = policy;
+            }
+        }
+
+        public double? GetPreferredRefreshRateHzForMode(ApplicationMode mode)
+        {
+            return mode == ApplicationMode.Fullscreen
+                ? PreferredRefreshRateHzFullscreen
+                : PreferredRefreshRateHz;
+        }
+
+        public void SetPreferredRefreshRateHzForMode(ApplicationMode mode, double? hz)
+        {
+            if (mode == ApplicationMode.Fullscreen)
+            {
+                PreferredRefreshRateHzFullscreen = hz;
+            }
+            else
+            {
+                PreferredRefreshRateHz = hz;
+            }
+        }
+
+        public ResolutionPolicy GetResolutionPolicyForMode(ApplicationMode mode)
+        {
+            return mode == ApplicationMode.Fullscreen
+                ? GlobalResolutionPolicyFullscreen
+                : GlobalResolutionPolicy;
+        }
+
+        public void SetResolutionPolicyForMode(ApplicationMode mode, ResolutionPolicy policy)
+        {
+            if (mode == ApplicationMode.Fullscreen)
+            {
+                GlobalResolutionPolicyFullscreen = policy;
+            }
+            else
+            {
+                GlobalResolutionPolicy = policy;
+            }
+        }
+
+        public void GetPreferredResolutionForMode(ApplicationMode mode, out int? width, out int? height)
+        {
+            if (mode == ApplicationMode.Fullscreen)
+            {
+                width = PreferredResolutionWidthFullscreen;
+                height = PreferredResolutionHeightFullscreen;
+            }
+            else
+            {
+                width = PreferredResolutionWidth;
+                height = PreferredResolutionHeight;
+            }
+        }
+
+        public void SetPreferredResolutionForMode(ApplicationMode mode, int? width, int? height)
+        {
+            if (mode == ApplicationMode.Fullscreen)
+            {
+                PreferredResolutionWidthFullscreen = width;
+                PreferredResolutionHeightFullscreen = height;
+            }
+            else
+            {
+                PreferredResolutionWidth = width;
+                PreferredResolutionHeight = height;
+            }
         }
 
         public int PostChangeSettleDelayMs
@@ -246,11 +417,25 @@ namespace PlayniteDisplayManager
             set => SetValue(ref displayProfiles, value ?? new List<DisplayProfile>());
         }
 
+        /// <summary>
+        /// Launch default display profile for Playnite Desktop mode (and legacy single-default JSON).
+        /// </summary>
         [DataMember(Name = "defaultTopologyProfileId")]
         public Guid? DefaultDisplayProfileId
         {
             get => defaultDisplayProfileId;
             set => SetValue(ref defaultDisplayProfileId, value);
+        }
+
+        /// <summary>
+        /// Launch default display profile for Playnite Fullscreen mode.
+        /// Migrates to <see cref="DefaultDisplayProfileId"/> when missing or invalid.
+        /// </summary>
+        [DataMember(Name = "defaultTopologyProfileIdFullscreen")]
+        public Guid? DefaultDisplayProfileIdFullscreen
+        {
+            get => defaultDisplayProfileIdFullscreen;
+            set => SetValue(ref defaultDisplayProfileIdFullscreen, value);
         }
 
         public bool RelocatePlayniteFullscreenAfterRestore
@@ -260,7 +445,7 @@ namespace PlayniteDisplayManager
         }
 
         /// <summary>
-        /// When true in Playnite Fullscreen, apply primary/turn-off topology on mode start
+        /// When true in Playnite Fullscreen, apply the Fullscreen launch profile topology on mode start
         /// and restore on mode exit (games do not thrash the layout between sessions).
         /// </summary>
         public bool ApplyTopologyOnFullscreenMode
@@ -463,15 +648,21 @@ namespace PlayniteDisplayManager
             SettingsSchemaVersion = editingClone.SettingsSchemaVersion;
             DisplayAliases = editingClone.DisplayAliases ?? new List<DisplayDeviceAlias>();
             GlobalHdrPolicy = editingClone.GlobalHdrPolicy;
+            GlobalHdrPolicyFullscreen = editingClone.GlobalHdrPolicyFullscreen;
             HdrMetadataMatchNames = editingClone.HdrMetadataMatchNames;
             IncludeTagsInHdrMetadataMatch = editingClone.IncludeTagsInHdrMetadataMatch;
             NativeHdrMigrationCompleted = editingClone.NativeHdrMigrationCompleted;
             NativeHdrConflictNotified = editingClone.NativeHdrConflictNotified;
             GlobalRefreshRatePolicy = editingClone.GlobalRefreshRatePolicy;
+            GlobalRefreshRatePolicyFullscreen = editingClone.GlobalRefreshRatePolicyFullscreen;
             PreferredRefreshRateHz = editingClone.PreferredRefreshRateHz;
+            PreferredRefreshRateHzFullscreen = editingClone.PreferredRefreshRateHzFullscreen;
             GlobalResolutionPolicy = editingClone.GlobalResolutionPolicy;
+            GlobalResolutionPolicyFullscreen = editingClone.GlobalResolutionPolicyFullscreen;
             PreferredResolutionWidth = editingClone.PreferredResolutionWidth;
             PreferredResolutionHeight = editingClone.PreferredResolutionHeight;
+            PreferredResolutionWidthFullscreen = editingClone.PreferredResolutionWidthFullscreen;
+            PreferredResolutionHeightFullscreen = editingClone.PreferredResolutionHeightFullscreen;
             PostChangeSettleDelayMs = editingClone.PostChangeSettleDelayMs;
             PreferredDisplayWaitMs = editingClone.PreferredDisplayWaitMs;
             ShowDesktopTopPanel = editingClone.ShowDesktopTopPanel;
@@ -482,6 +673,7 @@ namespace PlayniteDisplayManager
             TurnOffOtherDisplaysOnLaunch = editingClone.TurnOffOtherDisplaysOnLaunch;
             DisplayProfiles = editingClone.DisplayProfiles ?? new List<DisplayProfile>();
             DefaultDisplayProfileId = editingClone.DefaultDisplayProfileId;
+            DefaultDisplayProfileIdFullscreen = editingClone.DefaultDisplayProfileIdFullscreen;
             RelocatePlayniteFullscreenAfterRestore = editingClone.RelocatePlayniteFullscreenAfterRestore;
             ApplyTopologyOnFullscreenMode = editingClone.ApplyTopologyOnFullscreenMode;
             EnableVerboseLogging = editingClone.EnableVerboseLogging;
@@ -522,6 +714,11 @@ namespace PlayniteDisplayManager
             var hz = PreferredRefreshRateHz;
             GlobalRefreshRatePolicy = RefreshRateService.NormalizeLegacyPolicy(GlobalRefreshRatePolicy, ref hz);
             PreferredRefreshRateHz = hz;
+
+            var hzFs = PreferredRefreshRateHzFullscreen;
+            GlobalRefreshRatePolicyFullscreen =
+                RefreshRateService.NormalizeLegacyPolicy(GlobalRefreshRatePolicyFullscreen, ref hzFs);
+            PreferredRefreshRateHzFullscreen = hzFs;
         }
 
         public void MigrateDisplayProfilesPublic()
@@ -580,12 +777,57 @@ namespace PlayniteDisplayManager
             {
                 DefaultDisplayProfileId = DisplayProfiles[0].Id;
             }
+
+            if (!DefaultDisplayProfileIdFullscreen.HasValue
+                || DisplayProfiles.All(p => p.Id != DefaultDisplayProfileIdFullscreen.Value))
+            {
+                DefaultDisplayProfileIdFullscreen = DefaultDisplayProfileId;
+            }
+
+            EnsureDistinctFullscreenLaunchProfile();
         }
 
+        /// <summary>
+        /// Desktop and Fullscreen launch defaults must be separate profiles so preferred
+        /// display and topology can diverge without sharing the same object.
+        /// </summary>
+        private void EnsureDistinctFullscreenLaunchProfile()
+        {
+            if (!DefaultDisplayProfileId.HasValue
+                || !DefaultDisplayProfileIdFullscreen.HasValue
+                || DefaultDisplayProfileId.Value != DefaultDisplayProfileIdFullscreen.Value)
+            {
+                return;
+            }
+
+            var source = DisplayProfiles.FirstOrDefault(p => p.Id == DefaultDisplayProfileId.Value);
+            if (source == null)
+            {
+                return;
+            }
+
+            var clone = source.Clone();
+            clone.Id = Guid.NewGuid();
+            clone.Name = plugin?.Loc("LOCDisplayManager_DisplayProfileFullscreenLaunchName")
+                ?? "Fullscreen launch";
+            DisplayProfiles.Add(clone);
+            DefaultDisplayProfileIdFullscreen = clone.Id;
+        }
+
+        /// <summary>Desktop launch default (legacy name).</summary>
         public DisplayProfile GetDefaultDisplayProfile()
         {
+            return GetDefaultDisplayProfileForMode(ApplicationMode.Desktop);
+        }
+
+        public DisplayProfile GetDefaultDisplayProfileForMode(ApplicationMode mode)
+        {
             MigrateDisplayProfiles();
-            return DisplayProfiles.FirstOrDefault(p => p.Id == DefaultDisplayProfileId)
+            var id = mode == ApplicationMode.Fullscreen
+                ? DefaultDisplayProfileIdFullscreen
+                : DefaultDisplayProfileId;
+            return DisplayProfiles.FirstOrDefault(p => id.HasValue && p.Id == id.Value)
+                ?? DisplayProfiles.FirstOrDefault(p => p.Id == DefaultDisplayProfileId)
                 ?? DisplayProfiles.FirstOrDefault();
         }
 

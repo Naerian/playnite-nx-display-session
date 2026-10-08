@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
+using Playnite.SDK;
 using PlayniteDisplayManager.Displays;
 
 namespace PlayniteDisplayManager.Theme
@@ -176,9 +177,12 @@ namespace PlayniteDisplayManager.Theme
                     plugin.Loc("LOCDisplayManager_OverviewDisplaysFormat"),
                     ConnectedDisplayCount,
                     PrimaryDisplayAlias);
-                var activeProfile = settings?.GetDefaultDisplayProfile();
+                var mode = plugin.PlayniteApi.ApplicationInfo.Mode;
+                var activeProfile = settings?.GetDefaultDisplayProfileForMode(mode);
                 ActiveDisplayProfileName = activeProfile?.Name ?? plugin.Loc("LOCDisplayManager_StatusUnknown");
-                ActiveProfileSourceLabel = plugin.Loc("LOCDisplayManager_ActiveProfileDefaultSource");
+                ActiveProfileSourceLabel = mode == ApplicationMode.Fullscreen
+                    ? plugin.Loc("LOCDisplayManager_ActiveProfileDefaultSourceFullscreen")
+                    : plugin.Loc("LOCDisplayManager_ActiveProfileDefaultSourceDesktop");
                 SessionActive = plugin.IsSessionActive;
                 SessionGameName = plugin.ActiveGameName ?? string.Empty;
 

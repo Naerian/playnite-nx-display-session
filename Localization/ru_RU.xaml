@@ -31,7 +31,17 @@
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayTitle">Основной экран</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayGameMenuHint">Для конкретной игры можно выбрать другой экран в контекстном меню этой игры.</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuOverrideTitle">Контекстное меню игры</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">Этот экран станет основным при запуске игры (если вы не оставляете значение Windows по умолчанию). Кнопки ниже позволяют сделать пробный просмотр на несколько секунд с автоматическим восстановлением.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">Выберите, на каком экране запускать игры из Playnite Desktop или полноэкранного режима. Переопределения игры и платформы по-прежнему имеют приоритет.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktop">Основной экран для рабочего стола</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktopHint">Используется при запуске игр из Playnite Desktop. Само окно Playnite может оставаться на любом мониторе.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreen">Основной экран для полноэкранного режима</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreenHint">Используется при запуске игр из полноэкранного Playnite и при применении раскладки при входе в полноэкранный режим.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_TopologyTrialDesktopHint">Проба использует основной экран рабочего стола выше.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchTitle">Настроить параметры запуска для</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchHelp">Переключайтесь между рабочим столом и полноэкранным режимом, чтобы править HDR, частоту, разрешение, отключение других экранов и отсутствующий экран для этого режима.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeDesktop">Рабочий стол</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeFullscreen">Полный экран</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplayProfileFullscreenLaunchName">Запуск в полном экране</sys:String>
     <sys:String x:Key="LOCDisplayManager_PreferredDisplayWait">Ждать основной экран</sys:String>
     <sys:String x:Key="LOCDisplayManager_PreferredDisplayWaitHelp">Если основной экран ещё не подключён (например, ТВ просыпается по HDMI), подождите и повторите попытку до политики отсутствующего экрана.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlayDisplayWindowsDefault">Оставить стандартный Windows</sys:String>
@@ -55,14 +65,14 @@
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">Переносить Playnite на основной дисплей при восстановлении дисплеев</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHint">Если Playnite остаётся на вторичном или выключенном мониторе после игры.</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRestoreTab">Переместить Playnite</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">Применять раскладку дисплеев при входе в полноэкранный режим</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">Тот же основной дисплей, то же отключение остальных и тот же запасной вариант, что и при запуске игры. Применяется при входе в полноэкранный режим; восстанавливается при возврате на рабочий стол. Пока открыт полноэкранный режим, игры не будут переключать дисплеи между сессиями.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">При входе в полный экран переключаться на основной экран полного экрана</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">Использует основной экран полного экрана выше (и отключение других / отсутствующий экран этого режима). Восстанавливает предыдущую раскладку при выходе из полного экрана. Игры сохраняют эту раскладку на всю сессию.</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsTab">При запуске игры</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsHelp">Поведение дисплея по умолчанию при запуске игры, если его не переопределяет профиль дисплея, платформы или игры.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTab">Профили платформ</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTitle">Профили платформ</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesHelp">Стандартные настройки для каждой игры на платформе, если у игры нет собственного переопределения.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PlatformProfilesPriorityHint">Priority: game profile -> platform profile -> default display profile / global settings.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PlatformProfilesPriorityHint">Приоритет: профиль игры → профиль платформы → стандарт запуска текущего режима Playnite (рабочий стол или полный экран) / глобальные настройки.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfileAdd">Добавить платформу</sys:String>
     <sys:String x:Key="LOCDisplayManager_NoConfiguredPlatformProfiles">Профилей платформ пока нет.</sys:String>
     <sys:String x:Key="LOCDisplayManager_UnknownPlatform">Неизвестная платформа</sys:String>
@@ -327,4 +337,6 @@
     <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelay">Пауза после изменений дисплея</sys:String>
     <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelayHelp">Подождать столько после применения раскладки, разрешения, частоты или HDR, прежде чем игра продолжится.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSource">По умолчанию при запуске</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceDesktop">Стандарт запуска рабочего стола</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceFullscreen">Стандарт запуска полного экрана</sys:String>
 </ResourceDictionary>

@@ -31,7 +31,17 @@
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayTitle">主显示器</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayGameMenuHint">可为特定游戏在其上下文菜单中选择不同的显示器。</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuOverrideTitle">游戏上下文菜单</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">启动游戏时，此显示器将成为主显示器（除非保留 Windows 默认设置）。可使用下方试用按钮预览几秒并自动还原。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">选择从 Playnite 桌面或全屏启动游戏时使用的显示器。游戏与平台覆盖仍然优先。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktop">桌面模式主显示器</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktopHint">从 Playnite 桌面启动游戏时使用。Playnite 窗口可以留在任意显示器上。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreen">全屏模式主显示器</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreenHint">从 Playnite 全屏启动游戏时使用，以及进入全屏时应用布局时使用。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_TopologyTrialDesktopHint">试用使用上方的桌面模式主显示器。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchTitle">配置启动设置对象</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchHelp">在桌面与全屏之间切换，以编辑该模式的 HDR、刷新率、分辨率、关闭其他显示器和缺失显示器。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeDesktop">桌面</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeFullscreen">全屏</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplayProfileFullscreenLaunchName">全屏启动</sys:String>
     <sys:String x:Key="LOCDisplayManager_PreferredDisplayWait">等待主显示器</sys:String>
     <sys:String x:Key="LOCDisplayManager_PreferredDisplayWaitHelp">如果主显示器尚未连接（例如通过 HDMI 唤醒的电视），在应用缺失显示器策略之前会等待并重试。</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlayDisplayWindowsDefault">保留 Windows 默认设置</sys:String>
@@ -55,14 +65,14 @@
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">还原显示器时将 Playnite 移到主显示器</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHint">如果游戏结束后 Playnite 仍停在副显示器或已关闭的显示器上。</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRestoreTab">重新放置 Playnite</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">进入全屏时应用显示器布局</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">与启动游戏时相同的主显示器、关闭其他显示器和回退。进入全屏时应用，返回桌面时还原。全屏开启期间，游戏之间不会来回切换显示器。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">进入全屏时切换到全屏模式主显示器</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">使用上方的全屏模式主显示器（以及该模式的关闭其他/缺失显示器设置）。离开全屏时恢复之前的布局。游戏在整个全屏会话中保持该布局。</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsTab">启动游戏时</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsHelp">游戏开始时的默认显示行为，除非被显示、平台或游戏配置文件覆盖。</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTab">平台配置文件</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTitle">平台配置文件</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesHelp">当游戏没有单独覆盖时，应用于该平台上每个游戏的默认值。</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PlatformProfilesPriorityHint">Priority: game profile -> platform profile -> default display profile / global settings.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PlatformProfilesPriorityHint">优先级：游戏配置 → 平台配置 → 当前 Playnite 模式（桌面或全屏）的启动默认 / 全局设置。</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfileAdd">添加平台</sys:String>
     <sys:String x:Key="LOCDisplayManager_NoConfiguredPlatformProfiles">还没有平台配置文件。</sys:String>
     <sys:String x:Key="LOCDisplayManager_UnknownPlatform">未知平台</sys:String>
@@ -327,4 +337,6 @@
     <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelay">显示更改后的等待</sys:String>
     <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelayHelp">在应用布局、分辨率、刷新率或 HDR 之后，等待这么久再继续游戏。</sys:String>
     <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSource">启动默认</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceDesktop">桌面启动默认</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceFullscreen">全屏启动默认</sys:String>
 </ResourceDictionary>

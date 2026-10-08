@@ -721,13 +721,15 @@ namespace PlayniteDisplayManager
         }
 
         /// <summary>
-        /// Resolves Game > Platform > Default display profile + globals.
+        /// Resolves Game > Platform > mode launch default display profile + globals.
+        /// Desktop and Fullscreen can use different launch defaults.
         /// </summary>
         public ResolvedSessionProfile ResolveSessionProfile(Game game)
         {
             var gameProfile = gameProfiles?.GetProfile(game);
             var platformProfile = GetPlatformProfileForGame(game);
-            var defaultTopology = settings?.GetDefaultDisplayProfile();
+            var mode = PlayniteApi.ApplicationInfo.Mode;
+            var defaultTopology = settings?.GetDefaultDisplayProfileForMode(mode);
             return SessionProfileResolver.Resolve(
                 gameProfile,
                 platformProfile,
@@ -1461,9 +1463,10 @@ namespace PlayniteDisplayManager
             {
                 HdrOverride = resolved?.HdrOverride ?? GameHdrOverride.Inherit
             };
+            var mode = PlayniteApi.ApplicationInfo.Mode;
             return HdrSessionPlanner.Plan(
                 game,
-                settings?.GlobalHdrPolicy ?? GlobalHdrPolicy.DoNotManage,
+                settings?.GetHdrPolicyForMode(mode) ?? GlobalHdrPolicy.DoNotManage,
                 synthetic,
                 settings?.HdrMetadataMatchNames,
                 settings?.IncludeTagsInHdrMetadataMatch ?? false);
@@ -1484,8 +1487,9 @@ namespace PlayniteDisplayManager
 
         public RefreshRatePlan PlanRefreshRateSession(Game game, ResolvedSessionProfile resolved, DisplayInfo primary)
         {
+            var mode = PlayniteApi.ApplicationInfo.Mode;
             var gameOverride = resolved?.RefreshRateOverride ?? GameRefreshRateOverride.Inherit;
-            double? preferredHz = settings?.PreferredRefreshRateHz;
+            double? preferredHz = settings?.GetPreferredRefreshRateHzForMode(mode);
             if (gameOverride == GameRefreshRateOverride.ExactHz
                 || gameOverride == GameRefreshRateOverride.Prefer60
                 || gameOverride == GameRefreshRateOverride.Prefer120)
@@ -1494,7 +1498,7 @@ namespace PlayniteDisplayManager
             }
 
             return refreshRates.Plan(
-                settings?.GlobalRefreshRatePolicy ?? RefreshRatePolicy.Native,
+                settings?.GetRefreshRatePolicyForMode(mode) ?? RefreshRatePolicy.Native,
                 gameOverride,
                 primary,
                 preferredHz);
@@ -1515,9 +1519,11 @@ namespace PlayniteDisplayManager
 
         public ResolutionPlan PlanResolutionSession(Game game, ResolvedSessionProfile resolved, DisplayInfo primary)
         {
+            var mode = PlayniteApi.ApplicationInfo.Mode;
             var gameOverride = resolved?.ResolutionOverride ?? GameResolutionOverride.Inherit;
-            var preferredWidth = settings?.PreferredResolutionWidth;
-            var preferredHeight = settings?.PreferredResolutionHeight;
+            int? preferredWidth = null;
+            int? preferredHeight = null;
+            settings?.GetPreferredResolutionForMode(mode, out preferredWidth, out preferredHeight);
             if (gameOverride == GameResolutionOverride.Exact)
             {
                 preferredWidth = resolved?.PreferredResolutionWidth ?? preferredWidth;
@@ -1525,7 +1531,7 @@ namespace PlayniteDisplayManager
             }
 
             return resolutions.Plan(
-                settings?.GlobalResolutionPolicy ?? ResolutionPolicy.Native,
+                settings?.GetResolutionPolicyForMode(mode) ?? ResolutionPolicy.Native,
                 gameOverride,
                 primary,
                 preferredWidth,
@@ -1633,16 +1639,18 @@ namespace PlayniteDisplayManager
 
         public string GetRefreshRateOverviewText()
         {
-            switch (settings?.GlobalRefreshRatePolicy ?? RefreshRatePolicy.Native)
+            var mode = PlayniteApi.ApplicationInfo.Mode;
+            switch (settings?.GetRefreshRatePolicyForMode(mode) ?? RefreshRatePolicy.Native)
             {
                 case RefreshRatePolicy.ExactHz:
                 case RefreshRatePolicy.Prefer60:
                 case RefreshRatePolicy.Prefer120:
-                    if (settings?.PreferredRefreshRateHz > 0)
+                    var hz = settings?.GetPreferredRefreshRateHzForMode(mode);
+                    if (hz > 0)
                     {
                         return string.Format(
                             Loc("LOCDisplayManager_RefreshPolicyExactFormat"),
-                            settings.PreferredRefreshRateHz.Value);
+                            hz.Value);
                     }
                     return Loc("LOCDisplayManager_RefreshPolicyExact");
                 case RefreshRatePolicy.HighestDetected:
@@ -1654,7 +1662,8 @@ namespace PlayniteDisplayManager
 
         public string GetHdrActionOverviewText()
         {
-            switch (settings?.GlobalHdrPolicy ?? GlobalHdrPolicy.DoNotManage)
+            var mode = PlayniteApi.ApplicationInfo.Mode;
+            switch (settings?.GetHdrPolicyForMode(mode) ?? GlobalHdrPolicy.DoNotManage)
             {
                 case GlobalHdrPolicy.OnForAllGames:
                     return Loc("LOCDisplayManager_OverviewActionAlwaysOn");
@@ -1687,7 +1696,8 @@ namespace PlayniteDisplayManager
             }
 
             // Defer to Playnite's EnableSystemHdr — do not strip the native flag.
-            if (settings?.GlobalHdrPolicy == GlobalHdrPolicy.UsePlayniteNative)
+            if (settings?.GetHdrPolicyForMode(ApplicationMode.Desktop) == GlobalHdrPolicy.UsePlayniteNative
+                || settings?.GetHdrPolicyForMode(ApplicationMode.Fullscreen) == GlobalHdrPolicy.UsePlayniteNative)
             {
                 return;
             }

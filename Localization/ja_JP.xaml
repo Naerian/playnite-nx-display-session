@@ -31,7 +31,17 @@
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayTitle">プライマリディスプレイ</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayGameMenuHint">特定のゲームでは、そのゲームのコンテキストメニューから別のディスプレイを選べます。</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuOverrideTitle">ゲームのコンテキストメニュー</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">ゲーム起動時にこのディスプレイをプライマリにします (Windows の既定を維持する場合を除く)。下の試行ボタンで数秒間プレビューし、自動的に復元できます。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">Playnite のデスクトップまたは全画面から起動したときにゲームをどのディスプレイに出すか選びます。ゲーム／プラットフォームの上書きが優先されます。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktop">デスクトップ用のプライマリディスプレイ</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktopHint">Playnite デスクトップからゲームを起動するときに使います。Playnite 自体はどのモニターにあっても構いません。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreen">全画面用のプライマリディスプレイ</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreenHint">Playnite 全画面からゲームを起動するとき、および全画面に入るときのレイアウト適用に使います。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_TopologyTrialDesktopHint">テストは上のデスクトップ用プライマリディスプレイを使います。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchTitle">起動設定の対象</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchHelp">デスクトップと全画面を切り替えて、そのモードの HDR・リフレッシュレート・解像度・他ディスプレイのオフ・欠落ディスプレイを編集します。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeDesktop">デスクトップ</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeFullscreen">全画面</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplayProfileFullscreenLaunchName">全画面起動</sys:String>
     <sys:String x:Key="LOCDisplayManager_PreferredDisplayWait">プライマリディスプレイを待つ</sys:String>
     <sys:String x:Key="LOCDisplayManager_PreferredDisplayWaitHelp">プライマリディスプレイがまだ接続されていない場合 (HDMI で起動するテレビなど)、欠落時のポリシーを適用する前に待機して再試行します。</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlayDisplayWindowsDefault">Windows の既定を維持</sys:String>
@@ -55,14 +65,14 @@
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">ディスプレイ復元時に Playnite をプライマリディスプレイへ移動する</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHint">ゲーム終了後に Playnite がセカンダリまたは電源オフのモニターに残る場合。</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRestoreTab">Playnite を再配置</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">全画面表示に入るときにディスプレイ配置を適用する</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">ゲーム起動時と同じプライマリ、他ディスプレイのオフ、フォールバックです。全画面表示に入ると適用し、デスクトップに戻ると復元します。全画面表示のあいだ、ゲームごとにディスプレイを切り替えません。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">全画面に入るとき、全画面用プライマリディスプレイに切り替える</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">上の全画面用プライマリ（とそのモードの他ディスプレイオフ／欠落ディスプレイ）を使います。全画面を終了すると以前のレイアウトに戻します。ゲームはその全画面セッション中このレイアウトを維持します。</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsTab">ゲーム起動時</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsHelp">ゲーム開始時の既定のディスプレイ動作。ディスプレイ／プラットフォーム／ゲームのプロファイルで上書きされていない場合に適用されます。</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTab">プラットフォームプロファイル</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTitle">プラットフォームプロファイル</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesHelp">ゲームに個別の上書きがない場合に、そのプラットフォーム上のすべてのゲームへ適用する既定値です。</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PlatformProfilesPriorityHint">Priority: game profile -> platform profile -> default display profile / global settings.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PlatformProfilesPriorityHint">優先度: ゲームプロファイル → プラットフォームプロファイル → 現在の Playnite モード（デスクトップまたは全画面）の起動既定 / グローバル設定。</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfileAdd">プラットフォームを追加</sys:String>
     <sys:String x:Key="LOCDisplayManager_NoConfiguredPlatformProfiles">プラットフォームプロファイルはまだありません。</sys:String>
     <sys:String x:Key="LOCDisplayManager_UnknownPlatform">不明なプラットフォーム</sys:String>
@@ -327,4 +337,6 @@
     <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelay">ディスプレイ変更後の待機</sys:String>
     <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelayHelp">レイアウト、解像度、リフレッシュレート、または HDR を適用したあと、ゲームを続ける前にこの時間待機します。</sys:String>
     <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSource">起動時の既定</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceDesktop">デスクトップ起動の既定</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceFullscreen">全画面起動の既定</sys:String>
 </ResourceDictionary>

@@ -511,6 +511,21 @@
                     </Setter.Value>
                 </Setter>
             </Style>
+            <!-- Header strip only: mode switcher inside launch subsections (shared content below). -->
+            <Style x:Key="SubTopTabsHeaderOnly" TargetType="TabControl" BasedOn="{StaticResource SubTopTabs}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TabControl">
+                            <Border Background="{DynamicResource ControlBackgroundBrush}" CornerRadius="4"
+                                    Padding="6" ClipToBounds="False"
+                                    BorderThickness="0"
+                                    HorizontalAlignment="Stretch" VerticalAlignment="Top">
+                                <WrapPanel x:Name="HeaderPanel" IsItemsHost="True" />
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
             <Style x:Key="SettingsNavigationTabItem" TargetType="TabItem">
                 <Setter Property="OverridesDefaultStyle" Value="True" />
                 <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
@@ -711,14 +726,34 @@
                                 <TextBlock Text="{DynamicResource LOCDisplayManager_PrimaryDisplayTitle}" Style="{StaticResource SectionHeaderText}" />
                             </Border>
                             <TextBlock Text="{DynamicResource LOCDisplayManager_PrimaryDisplayHelp}" Style="{StaticResource SectionSubtitleText}" />
-                            <ComboBox x:Name="TopologyTargetBox"
+
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_PrimaryDisplayDesktop}"
+                                       Style="{StaticResource FieldLabel}"
+                                       Margin="0,0,0,4" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_PrimaryDisplayDesktopHint}"
+                                       Style="{StaticResource HintText}"
+                                       Margin="0,0,0,4" />
+                            <ComboBox x:Name="DesktopPlayDisplayBox"
                                       MinHeight="36"
                                       DisplayMemberPath="EffectiveName"
                                       SelectedValuePath="Id"
-                                      SelectionChanged="TopologyTargetBox_OnSelectionChanged" />
+                                      SelectionChanged="DesktopPlayDisplayBox_OnSelectionChanged" />
+
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_PrimaryDisplayFullscreen}"
+                                       Style="{StaticResource FieldLabel}"
+                                       Margin="0,16,0,4" />
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_PrimaryDisplayFullscreenHint}"
+                                       Style="{StaticResource HintText}"
+                                       Margin="0,0,0,4" />
+                            <ComboBox x:Name="FullscreenPlayDisplayBox"
+                                      MinHeight="36"
+                                      DisplayMemberPath="EffectiveName"
+                                      SelectedValuePath="Id"
+                                      SelectionChanged="FullscreenPlayDisplayBox_OnSelectionChanged" />
+
                             <TextBlock Text="{DynamicResource LOCDisplayManager_PreferredDisplayWait}"
                                        Style="{StaticResource FieldLabel}"
-                                       Margin="0,12,0,4" />
+                                       Margin="0,16,0,4" />
                             <TextBlock Text="{DynamicResource LOCDisplayManager_PreferredDisplayWaitHelp}"
                                        Style="{StaticResource HintText}"
                                        Margin="0,0,0,4" />
@@ -729,32 +764,23 @@
                                       MinHeight="36"
                                       HorizontalAlignment="Left"
                                       MinWidth="220" />
-                            <DockPanel Margin="0,12,0,0" LastChildFill="True">
-                                <StackPanel DockPanel.Dock="Right"
-                                            Orientation="Horizontal"
-                                            VerticalAlignment="Center"
-                                            Margin="12,0,0,0">
-                                    <Button x:Name="TopologyTrialApplyButton"
-                                            Content="{DynamicResource LOCDisplayManager_TopologyTrialApply}"
-                                            Style="{StaticResource NarianPrimaryButton}"
-                                            MinWidth="160"
-                                            Margin="0,0,8,0"
-                                            Click="TopologyTrialApply_OnClick" />
-                                    <Button x:Name="TopologyTrialCancelButton"
-                                            Content="{DynamicResource LOCDisplayManager_TopologyTrialRestoreNow}"
-                                            MinWidth="140"
-                                            MinHeight="36"
-                                            IsEnabled="False"
-                                            Click="TopologyTrialRestore_OnClick" />
-                                </StackPanel>
-                                <CheckBox x:Name="TopologyTurnOffOthersCheck"
-                                          Content="{DynamicResource LOCDisplayManager_TopologyTurnOffOthers}"
-                                          VerticalAlignment="Center"
-                                          Checked="TopologyTurnOffOthersCheck_OnChanged"
-                                          Unchecked="TopologyTurnOffOthersCheck_OnChanged" />
-                            </DockPanel>
-                            <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTurnOffOthersWarning}"
-                                       Style="{StaticResource IndentedHintText}" />
+                            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                <Button x:Name="TopologyTrialApplyButton"
+                                        Content="{DynamicResource LOCDisplayManager_TopologyTrialApply}"
+                                        Style="{StaticResource NarianPrimaryButton}"
+                                        MinWidth="160"
+                                        Margin="0,0,8,0"
+                                        Click="TopologyTrialApply_OnClick" />
+                                <Button x:Name="TopologyTrialCancelButton"
+                                        Content="{DynamicResource LOCDisplayManager_TopologyTrialRestoreNow}"
+                                        MinWidth="140"
+                                        MinHeight="36"
+                                        IsEnabled="False"
+                                        Click="TopologyTrialRestore_OnClick" />
+                            </StackPanel>
+                            <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTrialDesktopHint}"
+                                       Style="{StaticResource HintText}"
+                                       Margin="0,8,0,0" />
                             <CheckBox x:Name="FullscreenModeTopologyCheck"
                                       Content="{DynamicResource LOCDisplayManager_FullscreenModeTopology}"
                                       Margin="0,16,0,0"
@@ -819,6 +845,27 @@
                                             <TextBlock Text="{DynamicResource LOCDisplayManager_HdrTab}" Style="{StaticResource SectionHeaderText}" />
                                         </Border>
                                         <TextBlock Text="{DynamicResource LOCDisplayManager_HdrHelp}" Style="{StaticResource SectionSubtitleText}" />
+                                        <TabControl x:Name="HdrLaunchModeTabs"
+                                                    Style="{StaticResource SubTopTabsHeaderOnly}"
+                                                    Margin="0,12,0,16"
+                                                    SelectionChanged="LaunchModeTabs_OnSelectionChanged">
+                                            <TabItem Tag="Desktop">
+                                                <TabItem.Header>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE7F4;" />
+                                                        <TextBlock Text="{DynamicResource LOCDisplayManager_LaunchModeDesktop}" Style="{StaticResource TabHeaderLabel}" />
+                                                    </StackPanel>
+                                                </TabItem.Header>
+                                            </TabItem>
+                                            <TabItem Tag="Fullscreen">
+                                                <TabItem.Header>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE1D9;" />
+                                                        <TextBlock Text="{DynamicResource LOCDisplayManager_LaunchModeFullscreen}" Style="{StaticResource TabHeaderLabel}" />
+                                                    </StackPanel>
+                                                </TabItem.Header>
+                                            </TabItem>
+                                        </TabControl>
 
                                         <Border x:Name="HdrPrimaryNoSupportCallout"
                                                 Style="{StaticResource ErrorCallout}"
@@ -929,6 +976,27 @@
                                                     <Border Style="{StaticResource PageHeader}">
                                                         <TextBlock Text="{DynamicResource LOCDisplayManager_RefreshRateTitle}" Style="{StaticResource SectionHeaderText}" />
                                                     </Border>
+                                                    <TabControl x:Name="RefreshLaunchModeTabs"
+                                                                Style="{StaticResource SubTopTabsHeaderOnly}"
+                                                                Margin="0,0,0,16"
+                                                                SelectionChanged="LaunchModeTabs_OnSelectionChanged">
+                                                        <TabItem Tag="Desktop">
+                                                            <TabItem.Header>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE7F4;" />
+                                                                    <TextBlock Text="{DynamicResource LOCDisplayManager_LaunchModeDesktop}" Style="{StaticResource TabHeaderLabel}" />
+                                                                </StackPanel>
+                                                            </TabItem.Header>
+                                                        </TabItem>
+                                                        <TabItem Tag="Fullscreen">
+                                                            <TabItem.Header>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE1D9;" />
+                                                                    <TextBlock Text="{DynamicResource LOCDisplayManager_LaunchModeFullscreen}" Style="{StaticResource TabHeaderLabel}" />
+                                                                </StackPanel>
+                                                            </TabItem.Header>
+                                                        </TabItem>
+                                                    </TabControl>
                                                     <StackPanel Style="{StaticResource FieldGroup}">
                                                         <TextBlock Text="{DynamicResource LOCDisplayManager_RefreshRateHelp}" Style="{StaticResource HintText}" />
                                                         <Border Style="{StaticResource SummaryCard}" Margin="0,8,0,12">
@@ -1015,6 +1083,27 @@
                                                     <Border Style="{StaticResource PageHeader}">
                                                         <TextBlock Text="{DynamicResource LOCDisplayManager_ResolutionForGamesTitle}" Style="{StaticResource SectionHeaderText}" />
                                                     </Border>
+                                                    <TabControl x:Name="ResolutionLaunchModeTabs"
+                                                                Style="{StaticResource SubTopTabsHeaderOnly}"
+                                                                Margin="0,0,0,16"
+                                                                SelectionChanged="LaunchModeTabs_OnSelectionChanged">
+                                                        <TabItem Tag="Desktop">
+                                                            <TabItem.Header>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE7F4;" />
+                                                                    <TextBlock Text="{DynamicResource LOCDisplayManager_LaunchModeDesktop}" Style="{StaticResource TabHeaderLabel}" />
+                                                                </StackPanel>
+                                                            </TabItem.Header>
+                                                        </TabItem>
+                                                        <TabItem Tag="Fullscreen">
+                                                            <TabItem.Header>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE1D9;" />
+                                                                    <TextBlock Text="{DynamicResource LOCDisplayManager_LaunchModeFullscreen}" Style="{StaticResource TabHeaderLabel}" />
+                                                                </StackPanel>
+                                                            </TabItem.Header>
+                                                        </TabItem>
+                                                    </TabControl>
                                                     <StackPanel Style="{StaticResource FieldGroup}">
                                                         <TextBlock Text="{DynamicResource LOCDisplayManager_ResolutionForGamesHelp}" Style="{StaticResource HintText}" />
                                                         <Border Style="{StaticResource SummaryCard}" Margin="0,8,0,12">
@@ -1113,6 +1202,36 @@
                                                 <TextBlock Text="{DynamicResource LOCDisplayManager_MissingDisplayTitle}" Style="{StaticResource SectionHeaderText}" />
                                             </Border>
                                             <TextBlock Text="{DynamicResource LOCDisplayManager_MissingDisplayHelp}" Style="{StaticResource SectionSubtitleText}" />
+                                            <TabControl x:Name="MissingLaunchModeTabs"
+                                                        Style="{StaticResource SubTopTabsHeaderOnly}"
+                                                        Margin="0,12,0,16"
+                                                        SelectionChanged="LaunchModeTabs_OnSelectionChanged">
+                                                <TabItem Tag="Desktop">
+                                                    <TabItem.Header>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE7F4;" />
+                                                            <TextBlock Text="{DynamicResource LOCDisplayManager_LaunchModeDesktop}" Style="{StaticResource TabHeaderLabel}" />
+                                                        </StackPanel>
+                                                    </TabItem.Header>
+                                                </TabItem>
+                                                <TabItem Tag="Fullscreen">
+                                                    <TabItem.Header>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE1D9;" />
+                                                            <TextBlock Text="{DynamicResource LOCDisplayManager_LaunchModeFullscreen}" Style="{StaticResource TabHeaderLabel}" />
+                                                        </StackPanel>
+                                                    </TabItem.Header>
+                                                </TabItem>
+                                            </TabControl>
+                                            <CheckBox x:Name="TopologyTurnOffOthersCheck"
+                                                      Content="{DynamicResource LOCDisplayManager_TopologyTurnOffOthers}"
+                                                      Margin="0,0,0,8"
+                                                      VerticalAlignment="Center"
+                                                      Checked="TopologyTurnOffOthersCheck_OnChanged"
+                                                      Unchecked="TopologyTurnOffOthersCheck_OnChanged" />
+                                            <TextBlock Text="{DynamicResource LOCDisplayManager_TopologyTurnOffOthersWarning}"
+                                                       Style="{StaticResource HintText}"
+                                                       Margin="0,0,0,12" />
                                             <TextBlock Text="{DynamicResource LOCDisplayManager_MissingDisplayPolicy}" Style="{StaticResource FieldLabel}" />
                                             <ComboBox x:Name="MissingDisplayPolicyBox"
                                                       MinHeight="36"

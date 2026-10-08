@@ -5,7 +5,7 @@ using PlayniteDisplayManager.Resolution;
 namespace PlayniteDisplayManager.Profiles
 {
     /// <summary>
-    /// Effective session plan after Game > Platform > Default display profile + globals.
+    /// Effective session plan after Game > Platform > mode launch default display profile + globals.
     /// </summary>
     public sealed class ResolvedSessionProfile
     {

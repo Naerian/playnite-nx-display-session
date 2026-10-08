@@ -31,7 +31,17 @@
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayTitle">Tela principal</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayGameMenuHint">Você pode escolher uma tela diferente para um jogo específico no menu de contexto desse jogo.</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuOverrideTitle">Menu de contexto do jogo</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">Esta tela se torna a principal ao iniciar um jogo (exceto se você mantiver o padrão do Windows). Use os botões de teste abaixo para pré-visualizar por alguns segundos e restaurar automaticamente.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">Escolha para onde os jogos vão ao iniciá-los pelo Playnite Desktop ou Tela cheia. Substituições por jogo e plataforma continuam a valer.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktop">Tela principal para área de trabalho</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktopHint">Usada ao iniciar jogos pelo Playnite Desktop. O Playnite pode continuar em qualquer monitor.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreen">Tela principal para tela cheia</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreenHint">Usada ao iniciar jogos pelo Playnite em tela cheia, e ao aplicar o layout ao entrar em tela cheia.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_TopologyTrialDesktopHint">O teste usa a tela principal de área de trabalho acima.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchTitle">Configurar opções de início para</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchHelp">Alterne entre Área de trabalho e Tela cheia para editar HDR, taxa de atualização, resolução, desligar outras telas e tela ausente desse modo.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeDesktop">Área de trabalho</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeFullscreen">Tela cheia</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplayProfileFullscreenLaunchName">Início em tela cheia</sys:String>
     <sys:String x:Key="LOCDisplayManager_PreferredDisplayWait">Esperar a tela principal</sys:String>
     <sys:String x:Key="LOCDisplayManager_PreferredDisplayWaitHelp">Se a tela principal ainda não estiver conectada (por exemplo uma TV acordando por HDMI), espere e tente de novo antes da política de tela ausente.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlayDisplayWindowsDefault">Manter padrão do Windows</sys:String>
@@ -55,14 +65,14 @@
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">Mover o Playnite para a tela principal ao restaurar as telas</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHint">Se o Playnite ficar em um monitor secundário ou desligado após um jogo.</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRestoreTab">Reposicionar Playnite</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">Aplicar o layout das telas ao entrar em tela cheia</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">Mesma tela principal, mesmo desligamento das outras e mesmo fallback do lançamento de um jogo. Aplica ao entrar em tela cheia; restaura ao voltar à área de trabalho. Enquanto a tela cheia estiver aberta, os jogos não ficam trocando de tela entre as sessões.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">Ao entrar em tela cheia, usar a tela principal de tela cheia</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">Usa a tela principal de tela cheia acima (e desligar outras / tela ausente desse modo). Restaura o layout anterior ao sair da tela cheia. Os jogos mantêm esse layout durante toda a sessão.</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsTab">Ao iniciar um jogo</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsHelp">Comportamento padrão de tela ao iniciar um jogo, a menos que um perfil de tela, plataforma ou jogo o substitua.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTab">Perfis de plataforma</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTitle">Perfis de plataforma</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesHelp">Padrões para todos os jogos em uma plataforma quando esse jogo não tem substituição por jogo.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PlatformProfilesPriorityHint">Priority: game profile -> platform profile -> default display profile / global settings.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PlatformProfilesPriorityHint">Prioridade: perfil do jogo → perfil da plataforma → padrão de início do modo atual do Playnite (Área de trabalho ou Tela cheia) / configurações globais.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfileAdd">Adicionar plataforma</sys:String>
     <sys:String x:Key="LOCDisplayManager_NoConfiguredPlatformProfiles">Ainda não há perfis de plataforma.</sys:String>
     <sys:String x:Key="LOCDisplayManager_UnknownPlatform">Plataforma desconhecida</sys:String>
@@ -327,4 +337,6 @@
     <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelay">Espera após mudanças de tela</sys:String>
     <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelayHelp">Aguarde este tempo após aplicar layout, resolução, taxa de atualização ou HDR antes de o jogo continuar.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSource">Padrão ao iniciar</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceDesktop">Padrão de início Área de trabalho</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceFullscreen">Padrão de início Tela cheia</sys:String>
 </ResourceDictionary>

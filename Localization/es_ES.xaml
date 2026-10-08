@@ -31,7 +31,17 @@
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayGameMenuHint">Puedes elegir una pantalla distinta para un juego concreto desde el menú contextual de ese juego.</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuOverrideTitle">Menú contextual de juego</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayTitle">Pantalla principal</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">Esta pantalla pasará a ser la principal al lanzar un juego (salvo si mantienes la predeterminada de Windows). Usa los botones de prueba de abajo para previsualizar unos segundos y restaurar automáticamente.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">Elige dónde van los juegos al lanzarlos desde Playnite Desktop o Fullscreen. Los overrides por juego y plataforma siguen ganando.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktop">Pantalla principal para escritorio</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktopHint">Se usa al lanzar juegos desde Playnite en escritorio. Playnite puede seguir en cualquier monitor.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreen">Pantalla principal para pantalla completa</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreenHint">Se usa al lanzar juegos desde Playnite en pantalla completa, y al aplicar el layout al entrar en pantalla completa.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_TopologyTrialDesktopHint">La prueba usa la pantalla principal de escritorio de arriba.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchTitle">Configurar el lanzamiento para</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchHelp">Cambia entre Escritorio y Pantalla completa para editar HDR, frecuencia, resolución, apagado de otras y pantalla ausente de ese modo.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeDesktop">Escritorio</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeFullscreen">Pantalla completa</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplayProfileFullscreenLaunchName">Lanzamiento pantalla completa</sys:String>
     <sys:String x:Key="LOCDisplayManager_PreferredDisplayWait">Esperar a la pantalla principal</sys:String>
     <sys:String x:Key="LOCDisplayManager_PreferredDisplayWaitHelp">Si la pantalla principal aún no está conectada (por ejemplo una TV que despierta por HDMI), espera y reintenta antes de aplicar la política de pantalla ausente.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlayDisplayWindowsDefault">Mantener la predeterminada de Windows</sys:String>
@@ -55,14 +65,14 @@
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">Mover Playnite a la pantalla principal al restaurar las pantallas</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHint">Si al salir de un juego Playnite se queda en un monitor secundario o apagado.</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRestoreTab">Reubicar Playnite</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">Aplicar la distribución de pantallas al entrar en pantalla completa</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">Misma pantalla principal, mismo apagado de monitores y mismo fallback que al lanzar un juego. Al entrar en pantalla completa se aplica; al volver al escritorio se restaura. Mientras estés en pantalla completa, los juegos no estarán cambiando pantallas entre uno y otro.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">Al entrar en pantalla completa, usar la pantalla principal de pantalla completa</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">Usa la pantalla principal de pantalla completa de arriba (y el apagado / pantalla ausente de ese modo). Al salir de pantalla completa restaura el layout anterior. Los juegos mantienen ese layout durante toda la sesión.</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsTab">Al lanzar un juego</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsHelp">Comportamiento de pantalla por defecto al iniciar un juego, salvo que un perfil de pantalla, plataforma o juego lo anule.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTab">Perfiles por plataforma</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTitle">Perfiles por plataforma</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesHelp">Valores por defecto para todos los juegos de una plataforma cuando ese juego no tiene override propio.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PlatformProfilesPriorityHint">Prioridad: perfil por juego -> perfil por plataforma -> perfil de pantalla predeterminado / ajustes globales.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PlatformProfilesPriorityHint">Prioridad: perfil por juego -> perfil por plataforma -> predeterminado de lanzamiento del modo actual de Playnite (Desktop o Fullscreen) / ajustes globales.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfileAdd">Añadir plataforma</sys:String>
     <sys:String x:Key="LOCDisplayManager_NoConfiguredPlatformProfiles">Aún no hay perfiles por plataforma.</sys:String>
     <sys:String x:Key="LOCDisplayManager_UnknownPlatform">Plataforma desconocida</sys:String>
@@ -328,4 +338,6 @@
     <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelay">Espera tras cambios de pantalla</sys:String>
     <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelayHelp">Tiempo de espera tras aplicar distribución, resolución, frecuencia o HDR antes de continuar con el juego.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSource">Predeterminado al lanzar</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceDesktop">Predeterminado Desktop</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceFullscreen">Predeterminado Fullscreen</sys:String>
 </ResourceDictionary>

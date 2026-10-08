@@ -31,7 +31,17 @@
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayTitle">Écran principal</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayGameMenuHint">Vous pouvez choisir un écran différent pour un jeu précis depuis le menu contextuel de ce jeu.</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuOverrideTitle">Menu contextuel du jeu</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">Cet écran devient principal au lancement d&apos;un jeu (sauf si vous conservez la valeur par défaut de Windows). Utilisez les boutons d&apos;essai ci-dessous pour prévisualiser quelques secondes et restaurer automatiquement.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">Choisissez où vont les jeux au lancement depuis Playnite Desktop ou Plein écran. Les remplacements par jeu et plateforme restent prioritaires.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktop">Écran principal pour le bureau</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktopHint">Utilisé au lancement des jeux depuis Playnite Desktop. Playnite peut rester sur n'importe quel moniteur.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreen">Écran principal pour le plein écran</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreenHint">Utilisé au lancement des jeux depuis Playnite en plein écran, et lors de l'application de la disposition à l'entrée en plein écran.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_TopologyTrialDesktopHint">L'essai utilise l'écran principal Bureau ci-dessus.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchTitle">Configurer les réglages de lancement pour</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchHelp">Passez entre Bureau et Plein écran pour modifier le HDR, la fréquence, la résolution, l'extinction des autres écrans et l'écran manquant pour ce mode.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeDesktop">Bureau</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeFullscreen">Plein écran</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplayProfileFullscreenLaunchName">Lancement plein écran</sys:String>
     <sys:String x:Key="LOCDisplayManager_PreferredDisplayWait">Attendre l'écran principal</sys:String>
     <sys:String x:Key="LOCDisplayManager_PreferredDisplayWaitHelp">Si l'écran principal n'est pas encore connecté (par ex. une TV qui se réveille en HDMI), attendre et réessayer avant d'appliquer la politique d'écran absent.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlayDisplayWindowsDefault">Garder le réglage Windows par défaut</sys:String>
@@ -55,14 +65,14 @@
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">Déplacer Playnite vers l’écran principal lors de la restauration des écrans</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHint">Si Playnite reste sur un moniteur secondaire ou éteint après un jeu.</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRestoreTab">Repositionner Playnite</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">Appliquer la disposition des écrans en passant en plein écran</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">Même écran principal, même extinction des autres et même secours qu’au lancement d’un jeu. S’applique en passant en plein écran ; se restaure en revenant au bureau. Tant que le plein écran est ouvert, les jeux ne changeront pas d’écran entre les sessions.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">En passant en plein écran, utiliser l'écran principal plein écran</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">Utilise l'écran principal plein écran ci-dessus (et l'extinction des autres / écran manquant de ce mode). Restaure la disposition précédente en quittant le plein écran. Les jeux gardent cette disposition pendant toute la session plein écran.</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsTab">Au lancement d'un jeu</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsHelp">Comportement d'affichage par défaut au démarrage d'un jeu, sauf si un profil d'affichage, de plateforme ou de jeu le remplace.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTab">Profils de plateforme</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTitle">Profils de plateforme</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesHelp">Valeurs par défaut pour chaque jeu d’une plateforme lorsque ce jeu n’a pas de remplacement propre.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PlatformProfilesPriorityHint">Priority: game profile -> platform profile -> default display profile / global settings.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PlatformProfilesPriorityHint">Priorité : profil jeu → profil plateforme → défaut de lancement du mode Playnite actuel (Bureau ou Plein écran) / paramètres globaux.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfileAdd">Ajouter une plateforme</sys:String>
     <sys:String x:Key="LOCDisplayManager_NoConfiguredPlatformProfiles">Aucun profil de plateforme pour l’instant.</sys:String>
     <sys:String x:Key="LOCDisplayManager_UnknownPlatform">Plateforme inconnue</sys:String>
@@ -327,4 +337,6 @@
     <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelay">Délai après changements d'affichage</sys:String>
     <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelayHelp">Attendre ce délai après l'application de la disposition, de la résolution, de la fréquence ou du HDR avant que le jeu continue.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSource">Par défaut au lancement</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceDesktop">Défaut lancement Bureau</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceFullscreen">Défaut lancement Plein écran</sys:String>
 </ResourceDictionary>

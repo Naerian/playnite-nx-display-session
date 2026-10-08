@@ -13,13 +13,13 @@ In Settings -> General -> Display profiles, each profile can define:
 - Missing-display policy and fallback display.
 - HDR, refresh rate, and resolution defaults.
 
-The built-in defaults are **Solo TV** for a TV-only game session and **PC / Desktop** for the normal desktop layout. One profile is the **launch default** unless a game or platform profile overrides it.
+On Settings → Displays you choose a **primary display for Desktop** and a **primary display for Fullscreen** from your connected screens (or Keep Windows default). Playnite’s window can stay on any monitor; these pickers only steer where games go. Built-in profiles (**Solo TV**, **PC / Desktop**) remain available for game/platform overrides. Game and platform profiles still override the mode primary.
 
 ## Fullscreen layout
 
-On Displays, **Apply primary display layout when entering fullscreen** is off by default. When enabled, Playnite fullscreen uses the same primary display, turn-off-others, and missing-display fallback as a game launch. The layout stays for the whole fullscreen session so games do not switch monitors back and forth. Returning to desktop restores the previous layout.
+On Displays, **When entering fullscreen, switch to the Fullscreen primary display** is off by default. When enabled, Playnite fullscreen uses the **Fullscreen** primary (and that mode’s turn-off-others / missing-display settings from **When a game launches**). The layout stays for the whole fullscreen session so games do not switch monitors back and forth. Returning to desktop restores the previous layout.
 
-Typical living-room setup: TV as primary for games, turn other displays off, desk monitor as fallback if the TV is unplugged or asleep.
+Typical living-room setup: Desktop primary = desk monitor (or Windows default); Fullscreen primary = TV; turn other displays off under Fullscreen launch settings; desk monitor as fallback if the TV is unplugged or asleep.
 
 ## Game context menu
 
@@ -42,7 +42,7 @@ The **settle delay** in General -> Options waits after display layout, resolutio
 
 1. Game profile from the game context menu.
 2. Platform profile from Settings -> General -> Platform profiles.
-3. Default display profile and global settings.
+3. Launch settings for the current Playnite mode (Desktop or Fullscreen): primary display, turn-off-others, missing display, HDR, refresh rate, and resolution.
 
 ## Restore coverage
 

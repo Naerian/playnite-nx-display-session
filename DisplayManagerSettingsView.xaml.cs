@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Navigation;
 using System.Windows.Threading;
+using Playnite.SDK;
 using PlayniteDisplayManager.Displays;
 using PlayniteDisplayManager.Hdr;
 using PlayniteDisplayManager.Profiles;
@@ -31,6 +32,8 @@ namespace PlayniteDisplayManager
         private bool syncingRefreshRadios;
         private bool syncingResolutionRadios;
         private bool syncingTopologyTarget;
+        private bool syncingLaunchMode;
+        private ApplicationMode editingLaunchMode = ApplicationMode.Desktop;
         private const string WindowsPlayDisplayChoiceId = "__windows_primary__";
 
         private sealed class PlayDisplayChoice
@@ -582,7 +585,7 @@ namespace PlayniteDisplayManager
             UpdateOverview();
         }
 
-        private DisplayProfile GetDefaultDisplayProfileForMissing(DisplayManagerSettings settings)
+        private DisplayProfile GetEditingLaunchProfile(DisplayManagerSettings settings)
         {
             if (settings == null)
             {
@@ -590,7 +593,7 @@ namespace PlayniteDisplayManager
             }
 
             settings.MigrateDisplayProfilesPublic();
-            return settings.GetDefaultDisplayProfile();
+            return settings.GetDefaultDisplayProfileForMode(editingLaunchMode);
         }
 
         private void RefreshDisplayProfilesUi()
@@ -627,24 +630,101 @@ namespace PlayniteDisplayManager
                 };
             }
 
-            RefreshTopologyTargetBox();
+            SyncLaunchModeTabs();
+            RefreshPlayDisplayBoxes();
+            RefreshLaunchModeDependentUi();
         }
 
-        private void RefreshTopologyTargetBox()
+        private IEnumerable<TabControl> LaunchModeTabControls()
         {
-            if (TopologyTargetBox == null)
+            if (HdrLaunchModeTabs != null)
+            {
+                yield return HdrLaunchModeTabs;
+            }
+
+            if (RefreshLaunchModeTabs != null)
+            {
+                yield return RefreshLaunchModeTabs;
+            }
+
+            if (ResolutionLaunchModeTabs != null)
+            {
+                yield return ResolutionLaunchModeTabs;
+            }
+
+            if (MissingLaunchModeTabs != null)
+            {
+                yield return MissingLaunchModeTabs;
+            }
+        }
+
+        private void SyncLaunchModeTabs()
+        {
+            var index = editingLaunchMode == ApplicationMode.Fullscreen ? 1 : 0;
+            syncingLaunchMode = true;
+            try
+            {
+                foreach (var tabs in LaunchModeTabControls())
+                {
+                    if (tabs.SelectedIndex != index)
+                    {
+                        tabs.SelectedIndex = index;
+                    }
+                }
+            }
+            finally
+            {
+                syncingLaunchMode = false;
+            }
+        }
+
+        private void LaunchModeTabs_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (syncingLaunchMode)
             {
                 return;
             }
 
-            var settings = DataContext as DisplayManagerSettings;
-            var previous = settings?.PreferredPlayDisplayId;
-            var defaults = GetDefaultDisplayProfileForMissing(settings);
+            var tabs = sender as TabControl;
+            if (tabs == null || !ReferenceEquals(e.Source, tabs))
+            {
+                return;
+            }
+
+            var selected = tabs.SelectedItem as TabItem;
+            var tag = selected?.Tag as string;
+            var next = string.Equals(tag, "Fullscreen", StringComparison.OrdinalIgnoreCase)
+                ? ApplicationMode.Fullscreen
+                : ApplicationMode.Desktop;
+            if (next == editingLaunchMode)
+            {
+                SyncLaunchModeTabs();
+                return;
+            }
+
+            editingLaunchMode = next;
+            SyncLaunchModeTabs();
+            RefreshLaunchModeDependentUi();
+        }
+
+        private void RefreshLaunchModeDependentUi()
+        {
+            RefreshMissingDisplayAndTurnOffUi();
+            SyncHdrPolicyRadios();
+            SyncHdrMetadataControls();
+            SyncRefreshRateRadios();
+            SyncResolutionRadios();
+            SyncHdrCapabilityUi();
+            UpdateOverview();
+        }
+
+        private List<PlayDisplayChoice> BuildPlayDisplayChoices(DisplayManagerSettings settings)
+        {
             var connected = settings?.AvailableDisplays?
                 .Where(d => d.IsConnected)
-                .ToList() ?? new System.Collections.Generic.List<DisplayInfo>();
+                .ToList() ?? new List<DisplayInfo>();
 
-            var choices = new System.Collections.Generic.List<PlayDisplayChoice>
+            var choices = new List<PlayDisplayChoice>
             {
                 new PlayDisplayChoice
                 {
@@ -658,48 +738,49 @@ namespace PlayniteDisplayManager
                 Id = d.Id,
                 EffectiveName = d.EffectiveName
             }));
+            return choices;
+        }
+
+        private static void SelectPlayDisplayChoice(
+            ComboBox box,
+            IList<PlayDisplayChoice> choices,
+            string preferredId)
+        {
+            if (box == null)
+            {
+                return;
+            }
+
+            box.ItemsSource = choices;
+            if (string.IsNullOrWhiteSpace(preferredId)
+                || !choices.Any(c => string.Equals(c.Id, preferredId, StringComparison.OrdinalIgnoreCase)))
+            {
+                box.SelectedValue = WindowsPlayDisplayChoiceId;
+            }
+            else
+            {
+                box.SelectedValue = preferredId;
+            }
+        }
+
+        private void RefreshPlayDisplayBoxes()
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null)
+            {
+                return;
+            }
+
+            settings.MigrateDisplayProfilesPublic();
+            var choices = BuildPlayDisplayChoices(settings);
+            var desktop = settings.GetDefaultDisplayProfileForMode(ApplicationMode.Desktop);
+            var fullscreen = settings.GetDefaultDisplayProfileForMode(ApplicationMode.Fullscreen);
 
             syncingTopologyTarget = true;
             try
             {
-                TopologyTargetBox.ItemsSource = choices;
-                if (string.IsNullOrWhiteSpace(previous))
-                {
-                    TopologyTargetBox.SelectedValue = WindowsPlayDisplayChoiceId;
-                }
-                else if (connected.Any(d => string.Equals(d.Id, previous, StringComparison.OrdinalIgnoreCase)))
-                {
-                    TopologyTargetBox.SelectedValue = previous;
-                }
-                else
-                {
-                    TopologyTargetBox.SelectedValue = WindowsPlayDisplayChoiceId;
-                }
-
-                if (MissingDisplayFallbackBox != null)
-                {
-                    MissingDisplayFallbackBox.ItemsSource = choices;
-                    var fallback = defaults?.FallbackDisplayId;
-                    if (!string.IsNullOrWhiteSpace(fallback)
-                        && connected.Any(d => string.Equals(d.Id, fallback, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        MissingDisplayFallbackBox.SelectedValue = fallback;
-                    }
-                    else
-                    {
-                        MissingDisplayFallbackBox.SelectedValue = WindowsPlayDisplayChoiceId;
-                    }
-                }
-
-                if (MissingDisplayPolicyBox != null && defaults != null)
-                {
-                    MissingDisplayPolicyBox.SelectedValue = defaults.MissingDisplayPolicy.ToString();
-                }
-
-                if (TopologyTurnOffOthersCheck != null)
-                {
-                    TopologyTurnOffOthersCheck.IsChecked = settings?.TurnOffOtherDisplaysOnLaunch == true;
-                }
+                SelectPlayDisplayChoice(DesktopPlayDisplayBox, choices, desktop?.PreferredPlayDisplayId);
+                SelectPlayDisplayChoice(FullscreenPlayDisplayBox, choices, fullscreen?.PreferredPlayDisplayId);
             }
             finally
             {
@@ -709,7 +790,7 @@ namespace PlayniteDisplayManager
             SyncHdrCapabilityUi();
         }
 
-        private void PersistLaunchDisplaySettings()
+        private void RefreshMissingDisplayAndTurnOffUi()
         {
             var settings = DataContext as DisplayManagerSettings;
             if (settings == null)
@@ -717,67 +798,116 @@ namespace PlayniteDisplayManager
                 return;
             }
 
-            var preferredId = settings.PreferredPlayDisplayId;
-            var turnOffOthers = settings.TurnOffOtherDisplaysOnLaunch;
-            var defaults = settings.GetDefaultDisplayProfile();
-            if (defaults != null)
+            var profile = GetEditingLaunchProfile(settings);
+            var choices = BuildPlayDisplayChoices(settings);
+
+            syncingTopologyTarget = true;
+            try
             {
-                defaults.PreferredPlayDisplayId = preferredId;
-                defaults.TurnOffOtherDisplays = turnOffOthers;
+                if (MissingDisplayFallbackBox != null)
+                {
+                    MissingDisplayFallbackBox.ItemsSource = choices;
+                    var fallback = profile?.FallbackDisplayId;
+                    if (!string.IsNullOrWhiteSpace(fallback)
+                        && choices.Any(c => string.Equals(c.Id, fallback, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        MissingDisplayFallbackBox.SelectedValue = fallback;
+                    }
+                    else
+                    {
+                        MissingDisplayFallbackBox.SelectedValue = WindowsPlayDisplayChoiceId;
+                    }
+                }
+
+                if (MissingDisplayPolicyBox != null && profile != null)
+                {
+                    MissingDisplayPolicyBox.SelectedValue = profile.MissingDisplayPolicy.ToString();
+                }
+
+                if (TopologyTurnOffOthersCheck != null)
+                {
+                    TopologyTurnOffOthersCheck.IsChecked = profile?.TurnOffOtherDisplays == true;
+                }
+            }
+            finally
+            {
+                syncingTopologyTarget = false;
             }
         }
 
         private void PersistDefaultDisplayProfile(Action<DisplayProfile> mutate)
         {
             var settings = DataContext as DisplayManagerSettings;
-            var profile = GetDefaultDisplayProfileForMissing(settings);
+            var profile = GetEditingLaunchProfile(settings);
             if (settings == null || profile == null || mutate == null)
             {
                 return;
             }
 
             mutate(profile);
-            settings.SyncLegacyFieldsFromDefaultTopology();
+            if (editingLaunchMode == ApplicationMode.Desktop)
+            {
+                settings.SyncLegacyFieldsFromDefaultTopology();
+            }
         }
 
-        private void TopologyTargetBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ApplyPlayDisplaySelection(ApplicationMode mode, string selectedId)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null || string.IsNullOrWhiteSpace(selectedId))
+            {
+                return;
+            }
+
+            var profile = settings.GetDefaultDisplayProfileForMode(mode);
+            if (profile == null)
+            {
+                return;
+            }
+
+            profile.PreferredPlayDisplayId =
+                string.Equals(selectedId, WindowsPlayDisplayChoiceId, StringComparison.Ordinal)
+                    ? null
+                    : selectedId;
+
+            if (mode == ApplicationMode.Desktop)
+            {
+                settings.SyncLegacyFieldsFromDefaultDisplayProfile();
+            }
+
+            SanitizeGlobalOverridesForPlayDisplay(settings, mode);
+            RebuildDisplayCards();
+            if (mode == editingLaunchMode)
+            {
+                SyncHdrCapabilityUi();
+                SyncResolutionRadios();
+                SyncRefreshRateRadios();
+            }
+
+            UpdateOverview();
+        }
+
+        private void DesktopPlayDisplayBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (syncingTopologyTarget)
             {
                 return;
             }
 
-            var settings = DataContext as DisplayManagerSettings;
-            if (settings == null)
-            {
-                return;
-            }
-
-            var selectedId = TopologyTargetBox?.SelectedValue as string;
-            if (string.IsNullOrWhiteSpace(selectedId))
-            {
-                return;
-            }
-
-            if (string.Equals(selectedId, WindowsPlayDisplayChoiceId, StringComparison.Ordinal))
-            {
-                settings.PreferredPlayDisplayId = null;
-            }
-            else
-            {
-                settings.PreferredPlayDisplayId = selectedId;
-            }
-
-            SanitizeGlobalOverridesForPlayDisplay(settings);
-            PersistLaunchDisplaySettings();
-            RebuildDisplayCards();
-            SyncHdrCapabilityUi();
-            SyncResolutionRadios();
-            SyncRefreshRateRadios();
-            UpdateOverview();
+            ApplyPlayDisplaySelection(ApplicationMode.Desktop, DesktopPlayDisplayBox?.SelectedValue as string);
         }
 
-        private void SanitizeGlobalOverridesForPlayDisplay(DisplayManagerSettings settings)
+        private void FullscreenPlayDisplayBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (syncingTopologyTarget)
+            {
+                return;
+            }
+
+            ApplyPlayDisplaySelection(ApplicationMode.Fullscreen, FullscreenPlayDisplayBox?.SelectedValue as string);
+        }
+
+        private void SanitizeGlobalOverridesForPlayDisplay(DisplayManagerSettings settings, ApplicationMode mode)
         {
             if (settings == null)
             {
@@ -787,18 +917,19 @@ namespace PlayniteDisplayManager
             var connected = settings.AvailableDisplays?
                 .Where(d => d.IsConnected)
                 .ToList() ?? new List<DisplayInfo>();
-            var target = ResolvePreferredPlayDisplay(settings, connected);
+            var target = ResolvePreferredPlayDisplayForMode(settings, connected, mode);
             if (target == null)
             {
                 return;
             }
 
+            settings.GetPreferredResolutionForMode(mode, out var width, out var height);
             var result = DisplayOverrideSanitizer.SanitizeGlobalSettings(
-                settings.PreferredResolutionWidth,
-                settings.PreferredResolutionHeight,
-                settings.GlobalResolutionPolicy,
-                settings.PreferredRefreshRateHz,
-                settings.GlobalRefreshRatePolicy,
+                width,
+                height,
+                settings.GetResolutionPolicyForMode(mode),
+                settings.GetPreferredRefreshRateHzForMode(mode),
+                settings.GetRefreshRatePolicyForMode(mode),
                 target,
                 settings.Plugin?.Resolutions,
                 settings.Plugin?.RefreshRates,
@@ -813,11 +944,10 @@ namespace PlayniteDisplayManager
                 return;
             }
 
-            settings.GlobalResolutionPolicy = newResolutionPolicy;
-            settings.PreferredResolutionWidth = newPreferredWidth;
-            settings.PreferredResolutionHeight = newPreferredHeight;
-            settings.GlobalRefreshRatePolicy = newRefreshPolicy;
-            settings.PreferredRefreshRateHz = newPreferredHz;
+            settings.SetResolutionPolicyForMode(mode, newResolutionPolicy);
+            settings.SetPreferredResolutionForMode(mode, newPreferredWidth, newPreferredHeight);
+            settings.SetRefreshRatePolicyForMode(mode, newRefreshPolicy);
+            settings.SetPreferredRefreshRateHzForMode(mode, newPreferredHz);
             settings.Plugin?.ShowOverrideResetMessage(result, useNativeDefault: true);
         }
 
@@ -828,14 +958,8 @@ namespace PlayniteDisplayManager
                 return;
             }
 
-            var settings = DataContext as DisplayManagerSettings;
-            if (settings == null)
-            {
-                return;
-            }
-
-            settings.TurnOffOtherDisplaysOnLaunch = TopologyTurnOffOthersCheck.IsChecked == true;
-            PersistLaunchDisplaySettings();
+            PersistDefaultDisplayProfile(profile =>
+                profile.TurnOffOtherDisplays = TopologyTurnOffOthersCheck.IsChecked == true);
         }
 
         private void MissingDisplayPolicyBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1012,7 +1136,7 @@ namespace PlayniteDisplayManager
                 return;
             }
 
-            var targetId = TopologyTargetBox?.SelectedValue as string;
+            var targetId = DesktopPlayDisplayBox?.SelectedValue as string;
             var makePrimary = true;
             if (string.IsNullOrWhiteSpace(targetId)
                 || string.Equals(targetId, WindowsPlayDisplayChoiceId, StringComparison.Ordinal))
@@ -1031,8 +1155,8 @@ namespace PlayniteDisplayManager
                 makePrimary = false;
             }
 
-            var turnOffOthers = settings.TurnOffOtherDisplaysOnLaunch
-                || TopologyTurnOffOthersCheck?.IsChecked == true;
+            var desktopProfile = settings.GetDefaultDisplayProfileForMode(ApplicationMode.Desktop);
+            var turnOffOthers = desktopProfile?.TurnOffOtherDisplays == true;
             if (!makePrimary && !turnOffOthers)
             {
                 TopologyTrialStatusText.Text = TryFindResource("LOCDisplayManager_TopologyTrialNothing") as string
@@ -1179,19 +1303,19 @@ namespace PlayniteDisplayManager
 
             if (HdrPolicyAllRadio?.IsChecked == true)
             {
-                settings.GlobalHdrPolicy = GlobalHdrPolicy.OnForAllGames;
+                settings.SetHdrPolicyForMode(editingLaunchMode, GlobalHdrPolicy.OnForAllGames);
             }
             else if (HdrPolicyMetadataRadio?.IsChecked == true)
             {
-                settings.GlobalHdrPolicy = GlobalHdrPolicy.OnWhenMetadataIndicates;
+                settings.SetHdrPolicyForMode(editingLaunchMode, GlobalHdrPolicy.OnWhenMetadataIndicates);
             }
             else if (HdrPolicyPlayniteNativeRadio?.IsChecked == true)
             {
-                settings.GlobalHdrPolicy = GlobalHdrPolicy.UsePlayniteNative;
+                settings.SetHdrPolicyForMode(editingLaunchMode, GlobalHdrPolicy.UsePlayniteNative);
             }
             else
             {
-                settings.GlobalHdrPolicy = GlobalHdrPolicy.DoNotManage;
+                settings.SetHdrPolicyForMode(editingLaunchMode, GlobalHdrPolicy.DoNotManage);
             }
 
             SyncHdrMetadataPanelVisibility();
@@ -1206,7 +1330,7 @@ namespace PlayniteDisplayManager
                 return;
             }
 
-            switch (settings.GlobalHdrPolicy)
+            switch (settings.GetHdrPolicyForMode(editingLaunchMode))
             {
                 case GlobalHdrPolicy.OnForAllGames:
                     HdrPolicyAllRadio.IsChecked = true;
@@ -1233,7 +1357,7 @@ namespace PlayniteDisplayManager
             }
 
             var settings = DataContext as DisplayManagerSettings;
-            var show = settings?.GlobalHdrPolicy == GlobalHdrPolicy.OnWhenMetadataIndicates
+            var show = settings?.GetHdrPolicyForMode(editingLaunchMode) == GlobalHdrPolicy.OnWhenMetadataIndicates
                 || HdrPolicyMetadataRadio?.IsChecked == true;
             HdrMetadataPanel.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         }
@@ -1442,16 +1566,24 @@ namespace PlayniteDisplayManager
             SyncHdrCapabilityUi();
         }
 
-        private static DisplayInfo ResolvePreferredPlayDisplay(
+        private DisplayInfo ResolvePreferredPlayDisplay(
             DisplayManagerSettings settings,
             System.Collections.Generic.IList<DisplayInfo> connected)
+        {
+            return ResolvePreferredPlayDisplayForMode(settings, connected, editingLaunchMode);
+        }
+
+        private static DisplayInfo ResolvePreferredPlayDisplayForMode(
+            DisplayManagerSettings settings,
+            System.Collections.Generic.IList<DisplayInfo> connected,
+            ApplicationMode mode)
         {
             if (connected == null || connected.Count == 0)
             {
                 return null;
             }
 
-            var preferredId = settings?.PreferredPlayDisplayId;
+            var preferredId = settings?.GetDefaultDisplayProfileForMode(mode)?.PreferredPlayDisplayId;
             if (!string.IsNullOrWhiteSpace(preferredId))
             {
                 var match = connected.FirstOrDefault(d =>
@@ -1505,7 +1637,7 @@ namespace PlayniteDisplayManager
 
         private string GetHdrPolicyBadgeValue(DisplayManagerSettings settings)
         {
-            switch (settings?.GlobalHdrPolicy ?? GlobalHdrPolicy.DoNotManage)
+            switch (settings?.GetHdrPolicyForMode(editingLaunchMode) ?? GlobalHdrPolicy.DoNotManage)
             {
                 case GlobalHdrPolicy.OnForAllGames:
                     return TryFindResource("LOCDisplayManager_OverviewActionAlwaysOnShort") as string
@@ -1584,7 +1716,7 @@ namespace PlayniteDisplayManager
             try
             {
                 var rates = settings.Plugin?.RefreshRates?.GetAvailableRates(primary) ?? Array.Empty<double>();
-                var preferred = settings.PreferredRefreshRateHz;
+                var preferred = settings.GetPreferredRefreshRateHzForMode(editingLaunchMode);
                 var items = BuildRefreshExactItems(rates, preferred);
                 if (RefreshExactBox != null)
                 {
@@ -1597,9 +1729,9 @@ namespace PlayniteDisplayManager
                     }
 
                     if (selected == null
-                        && (settings.GlobalRefreshRatePolicy == RefreshRatePolicy.ExactHz
-                            || settings.GlobalRefreshRatePolicy == RefreshRatePolicy.Prefer60
-                            || settings.GlobalRefreshRatePolicy == RefreshRatePolicy.Prefer120))
+                        && (settings.GetRefreshRatePolicyForMode(editingLaunchMode) == RefreshRatePolicy.ExactHz
+                            || settings.GetRefreshRatePolicyForMode(editingLaunchMode) == RefreshRatePolicy.Prefer60
+                            || settings.GetRefreshRatePolicyForMode(editingLaunchMode) == RefreshRatePolicy.Prefer120))
                     {
                         selected = items.FirstOrDefault(i => !i.IsUnavailable);
                     }
@@ -1608,7 +1740,7 @@ namespace PlayniteDisplayManager
                     UpdateRefreshUnavailableHint(selected);
                 }
 
-                switch (settings.GlobalRefreshRatePolicy)
+                switch (settings.GetRefreshRatePolicyForMode(editingLaunchMode))
                 {
                     case RefreshRatePolicy.HighestDetected:
                         RefreshPolicyHighestRadio.IsChecked = true;
@@ -1819,19 +1951,19 @@ namespace PlayniteDisplayManager
             if (ReferenceEquals(radio, RefreshPolicyHighestRadio)
                 || string.Equals(radio.Tag as string, "HighestDetected", StringComparison.OrdinalIgnoreCase))
             {
-                settings.GlobalRefreshRatePolicy = RefreshRatePolicy.HighestDetected;
-                settings.PreferredRefreshRateHz = null;
+                settings.SetRefreshRatePolicyForMode(editingLaunchMode, RefreshRatePolicy.HighestDetected);
+                settings.SetPreferredRefreshRateHzForMode(editingLaunchMode, null);
             }
             else if (ReferenceEquals(radio, RefreshPolicyExactRadio)
                 || string.Equals(radio.Tag as string, "ExactHz", StringComparison.OrdinalIgnoreCase))
             {
-                settings.GlobalRefreshRatePolicy = RefreshRatePolicy.ExactHz;
+                settings.SetRefreshRatePolicyForMode(editingLaunchMode, RefreshRatePolicy.ExactHz);
                 ApplySelectedExactRefreshRate(settings);
             }
             else
             {
-                settings.GlobalRefreshRatePolicy = RefreshRatePolicy.Native;
-                settings.PreferredRefreshRateHz = null;
+                settings.SetRefreshRatePolicyForMode(editingLaunchMode, RefreshRatePolicy.Native);
+                settings.SetPreferredRefreshRateHzForMode(editingLaunchMode, null);
             }
 
             if (RefreshExactBox != null)
@@ -1839,7 +1971,7 @@ namespace PlayniteDisplayManager
                 var count = (RefreshExactBox.ItemsSource as IEnumerable<RefreshExactItem>)?.Count()
                     ?? RefreshExactBox.Items.Count;
                 RefreshExactBox.IsEnabled =
-                    settings.GlobalRefreshRatePolicy == RefreshRatePolicy.ExactHz && count > 0;
+                    settings.GetRefreshRatePolicyForMode(editingLaunchMode) == RefreshRatePolicy.ExactHz && count > 0;
             }
 
             if (OverviewRefreshRateText != null)
@@ -1864,14 +1996,14 @@ namespace PlayniteDisplayManager
             }
 
             if (RefreshPolicyExactRadio?.IsChecked != true
-                && settings.GlobalRefreshRatePolicy != RefreshRatePolicy.ExactHz
-                && settings.GlobalRefreshRatePolicy != RefreshRatePolicy.Prefer60
-                && settings.GlobalRefreshRatePolicy != RefreshRatePolicy.Prefer120)
+                && settings.GetRefreshRatePolicyForMode(editingLaunchMode) != RefreshRatePolicy.ExactHz
+                && settings.GetRefreshRatePolicyForMode(editingLaunchMode) != RefreshRatePolicy.Prefer60
+                && settings.GetRefreshRatePolicyForMode(editingLaunchMode) != RefreshRatePolicy.Prefer120)
             {
                 return;
             }
 
-            settings.GlobalRefreshRatePolicy = RefreshRatePolicy.ExactHz;
+            settings.SetRefreshRatePolicyForMode(editingLaunchMode, RefreshRatePolicy.ExactHz);
             if (RefreshPolicyExactRadio != null && RefreshPolicyExactRadio.IsChecked != true)
             {
                 syncingRefreshRadios = true;
@@ -1931,11 +2063,11 @@ namespace PlayniteDisplayManager
             if (item == null)
             {
                 UpdateRefreshUnavailableHint(null);
-                settings.PreferredRefreshRateHz = null;
+                settings.SetPreferredRefreshRateHzForMode(editingLaunchMode, null);
                 return;
             }
 
-            settings.PreferredRefreshRateHz = item.Hz;
+            settings.SetPreferredRefreshRateHzForMode(editingLaunchMode, item.Hz);
             UpdateRefreshUnavailableHint(item);
         }
 
@@ -1962,8 +2094,7 @@ namespace PlayniteDisplayManager
                     ?? (IReadOnlyList<ResolutionMode>)Array.Empty<ResolutionMode>());
                 if (ResolutionExactBox != null)
                 {
-                    int? preferredW = settings.PreferredResolutionWidth;
-                    int? preferredH = settings.PreferredResolutionHeight;
+                    settings.GetPreferredResolutionForMode(editingLaunchMode, out var preferredW, out var preferredH);
                     var items = BuildResolutionExactItems(modes, preferredW, preferredH);
                     ResolutionExactBox.ItemsSource = items;
 
@@ -1977,7 +2108,7 @@ namespace PlayniteDisplayManager
                     }
 
                     if (selected == null
-                        && settings.GlobalResolutionPolicy == ResolutionPolicy.Exact)
+                        && settings.GetResolutionPolicyForMode(editingLaunchMode) == ResolutionPolicy.Exact)
                     {
                         selected = items.FirstOrDefault(i => !i.IsHeader && !i.IsUnavailable);
                     }
@@ -1986,7 +2117,7 @@ namespace PlayniteDisplayManager
                     UpdateResolutionUnavailableHint(selected);
                 }
 
-                switch (settings.GlobalResolutionPolicy)
+                switch (settings.GetResolutionPolicyForMode(editingLaunchMode))
                 {
                     case ResolutionPolicy.LowestAvailable:
                         if (ResolutionPolicyLowestRadio != null)
@@ -2227,33 +2358,30 @@ namespace PlayniteDisplayManager
             if (ReferenceEquals(radio, ResolutionPolicyLowestRadio)
                 || string.Equals(radio.Tag as string, "LowestAvailable", StringComparison.OrdinalIgnoreCase))
             {
-                settings.GlobalResolutionPolicy = ResolutionPolicy.LowestAvailable;
-                settings.PreferredResolutionWidth = null;
-                settings.PreferredResolutionHeight = null;
+                settings.SetResolutionPolicyForMode(editingLaunchMode, ResolutionPolicy.LowestAvailable);
+                settings.SetPreferredResolutionForMode(editingLaunchMode, null, null);
             }
             else if (ReferenceEquals(radio, ResolutionPolicyHighestRadio)
                 || string.Equals(radio.Tag as string, "HighestAvailable", StringComparison.OrdinalIgnoreCase))
             {
-                settings.GlobalResolutionPolicy = ResolutionPolicy.HighestAvailable;
-                settings.PreferredResolutionWidth = null;
-                settings.PreferredResolutionHeight = null;
+                settings.SetResolutionPolicyForMode(editingLaunchMode, ResolutionPolicy.HighestAvailable);
+                settings.SetPreferredResolutionForMode(editingLaunchMode, null, null);
             }
             else if (ReferenceEquals(radio, ResolutionPolicyExactRadio)
                 || string.Equals(radio.Tag as string, "Exact", StringComparison.OrdinalIgnoreCase))
             {
-                settings.GlobalResolutionPolicy = ResolutionPolicy.Exact;
+                settings.SetResolutionPolicyForMode(editingLaunchMode, ResolutionPolicy.Exact);
                 ApplySelectedExactResolution(settings);
             }
             else
             {
-                settings.GlobalResolutionPolicy = ResolutionPolicy.Native;
-                settings.PreferredResolutionWidth = null;
-                settings.PreferredResolutionHeight = null;
+                settings.SetResolutionPolicyForMode(editingLaunchMode, ResolutionPolicy.Native);
+                settings.SetPreferredResolutionForMode(editingLaunchMode, null, null);
             }
 
             if (ResolutionExactBox != null)
             {
-                ResolutionExactBox.IsEnabled = settings.GlobalResolutionPolicy == ResolutionPolicy.Exact
+                ResolutionExactBox.IsEnabled = settings.GetResolutionPolicyForMode(editingLaunchMode) == ResolutionPolicy.Exact
                     && ResolutionExactBox.Items.Count > 0;
             }
         }
@@ -2272,12 +2400,12 @@ namespace PlayniteDisplayManager
             }
 
             if (ResolutionPolicyExactRadio?.IsChecked != true
-                && settings.GlobalResolutionPolicy != ResolutionPolicy.Exact)
+                && settings.GetResolutionPolicyForMode(editingLaunchMode) != ResolutionPolicy.Exact)
             {
                 return;
             }
 
-            settings.GlobalResolutionPolicy = ResolutionPolicy.Exact;
+            settings.SetResolutionPolicyForMode(editingLaunchMode, ResolutionPolicy.Exact);
             if (ResolutionPolicyExactRadio != null && ResolutionPolicyExactRadio.IsChecked != true)
             {
                 syncingResolutionRadios = true;
@@ -2335,8 +2463,7 @@ namespace PlayniteDisplayManager
 
             if (item?.Mode != null)
             {
-                settings.PreferredResolutionWidth = item.Width;
-                settings.PreferredResolutionHeight = item.Height;
+                settings.SetPreferredResolutionForMode(editingLaunchMode, item.Width, item.Height);
             }
 
             UpdateResolutionUnavailableHint(item);
@@ -2706,7 +2833,8 @@ namespace PlayniteDisplayManager
                 }
 
                 UpdateOverview();
-                RefreshTopologyTargetBox();
+                RefreshPlayDisplayBoxes();
+                RefreshMissingDisplayAndTurnOffUi();
             };
             aliasRow.Children.Add(aliasBox);
             root.Children.Add(aliasRow);

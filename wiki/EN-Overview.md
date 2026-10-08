@@ -7,7 +7,7 @@ Built for living-room gaming: a PC on the sofa connected to a TV, or setups that
 ## What it does
 
 - Lists active displays with EDID-based identity when Windows exposes enough data.
-- Lets you choose a **primary display for games**. The built-in profile defaults are **Solo TV** for TV play and **PC / Desktop** for keeping the normal desktop layout. Optionally apply that layout when entering **fullscreen** (and restore it when you return to desktop) so games do not flip monitors between sessions.
+- Lets you choose separate **primary displays for Desktop and Fullscreen**, and edit each mode’s launch settings (HDR, refresh, resolution, turn-off-others, missing display). Built-in profiles **Solo TV** / **PC / Desktop** remain for overrides. Optionally apply the Fullscreen primary when entering **fullscreen** (and restore when you return to desktop) so games do not flip monitors between sessions.
 - Handles missing displays with Windows primary, fallback display, or notify-and-continue behavior.
 - Owns **HDR** with global policy, display-profile defaults, and per-game/per-platform overrides.
 - Optionally applies **resolution** and **refresh rate** after the display profile, then waits the configured **settle delay** before continuing.
@@ -15,7 +15,7 @@ Built for living-room gaming: a PC on the sofa connected to a TV, or setups that
 
 ## Priority
 
-Display Manager resolves settings in this order: game profile, platform profile, default display profile, then global settings. `Keep global settings` in a game menu clears that override so the next layer applies.
+Display Manager resolves settings in this order: game profile, platform profile, then launch settings for the current Playnite mode (Desktop or Fullscreen). `Keep global settings` in a game menu clears that override so the next layer applies.
 
 ## Design priorities
 

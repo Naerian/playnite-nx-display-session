@@ -13,13 +13,13 @@ En Ajustes -> General -> Perfiles de pantalla, cada perfil puede definir:
 - Politica de pantalla ausente y pantalla de respaldo.
 - Valores de HDR, frecuencia y resolucion.
 
-Los valores incluidos son **Solo TV** para una sesion solo en TV y **PC / Desktop** para el escritorio normal. Un perfil es el **predeterminado al lanzar** salvo que un perfil por juego o plataforma lo sobrescriba.
+En Ajustes → Pantallas eliges una **pantalla principal para escritorio** y otra **para pantalla completa** entre las conectadas (o mantener Windows). La ventana de Playnite puede estar en cualquier monitor; esos selectores solo dirigen donde van los juegos. Los perfiles incluidos (**Solo TV**, **PC / Desktop**) siguen disponibles para overrides por juego/plataforma.
 
 ## Layout en pantalla completa
 
-En Pantallas, **Aplicar la distribucion de pantallas al entrar en pantalla completa** esta desactivado por defecto. Si lo activas, Playnite en pantalla completa usa la misma pantalla principal, apagado de otras y respaldo que al lanzar un juego. El layout se mantiene durante toda la sesion de pantalla completa para que los juegos no cambien de monitor entre uno y otro. Al volver al escritorio se restaura el layout anterior.
+En Pantallas, **Al entrar en pantalla completa, usar la pantalla principal de pantalla completa** esta desactivado por defecto. Si lo activas, Playnite en pantalla completa usa la principal de **pantalla completa** (y el apagado de otras / pantalla ausente de ese modo en **Al lanzar un juego**). El layout se mantiene durante toda la sesion de pantalla completa para que los juegos no cambien de monitor entre uno y otro. Al volver al escritorio se restaura el layout anterior.
 
-Uso tipico en el salon: TV como principal para juegos, apagar las demas, monitor del PC como respaldo si la TV esta apagada o desconectada.
+Uso tipico en el salon: principal Desktop = monitor (o Windows); principal Fullscreen = TV; apagar otras en los ajustes de lanzamiento Fullscreen; monitor del PC como respaldo si la TV esta apagada o desconectada.
 
 ## Menu contextual del juego
 
@@ -42,7 +42,7 @@ El **retardo de asentamiento** en General -> Opciones espera tras cambios de dis
 
 1. Perfil por juego desde el menu contextual.
 2. Perfil por plataforma desde Ajustes -> General -> Perfiles por plataforma.
-3. Perfil de pantalla predeterminado y ajustes globales.
+3. Ajustes de lanzamiento del modo actual de Playnite (Desktop o Fullscreen): pantalla principal, apagado de otras, pantalla ausente, HDR, frecuencia y resolucion.
 
 ## Restauracion
 

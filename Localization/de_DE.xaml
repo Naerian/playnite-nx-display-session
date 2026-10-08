@@ -31,7 +31,17 @@
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayTitle">Primäre Anzeige</sys:String>
     <sys:String x:Key="LOCDisplayManager_PrimaryDisplayGameMenuHint">Für ein bestimmtes Spiel können Sie eine andere Anzeige im Kontextmenü dieses Spiels wählen.</sys:String>
     <sys:String x:Key="LOCDisplayManager_GameMenuOverrideTitle">Spiel-Kontextmenü</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">Diese Anzeige wird beim Start eines Spiels zur Primäranzeige (außer wenn Sie die Windows-Vorgabe beibehalten). Mit den Testschaltflächen unten können Sie einige Sekunden vorschauen und automatisch wiederherstellen.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayHelp">Wähle, wohin Spiele gehen, wenn du sie aus Playnite Desktop oder Vollbild startest. Spiel- und Plattform-Overrides haben Vorrang.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktop">Primäre Anzeige für Desktop</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayDesktopHint">Wird verwendet, wenn du Spiele aus Playnite Desktop startest. Playnite selbst kann auf jedem Monitor bleiben.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreen">Primäre Anzeige für Vollbild</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PrimaryDisplayFullscreenHint">Wird verwendet, wenn du Spiele aus Playnite-Vollbild startest, und beim Anwenden des Layouts beim Wechsel in den Vollbildmodus.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_TopologyTrialDesktopHint">Der Test verwendet die Desktop-Primäranzeige oben.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchTitle">Start-Einstellungen konfigurieren für</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeSwitchHelp">Zwischen Desktop und Vollbild wechseln, um HDR, Bildwiederholrate, Auflösung, andere Anzeigen ausschalten und fehlende Anzeige für diesen Modus zu bearbeiten.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeDesktop">Desktop</sys:String>
+    <sys:String x:Key="LOCDisplayManager_LaunchModeFullscreen">Vollbild</sys:String>
+    <sys:String x:Key="LOCDisplayManager_DisplayProfileFullscreenLaunchName">Vollbild-Start</sys:String>
     <sys:String x:Key="LOCDisplayManager_PreferredDisplayWait">Auf primäre Anzeige warten</sys:String>
     <sys:String x:Key="LOCDisplayManager_PreferredDisplayWaitHelp">Wenn die primäre Anzeige noch nicht verbunden ist (z. B. TV über HDMI), warten und erneut prüfen, bevor die Richtlinie für fehlende Anzeigen gilt.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlayDisplayWindowsDefault">Windows-Standard beibehalten</sys:String>
@@ -55,14 +65,14 @@
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">Playnite beim Wiederherstellen der Anzeigen auf die primäre Anzeige verschieben</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHint">Falls Playnite nach einem Spiel auf einem sekundären oder ausgeschalteten Monitor bleibt.</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRestoreTab">Playnite neu platzieren</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">Anzeigelayout beim Wechsel in den Vollbildmodus anwenden</sys:String>
-    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">Dieselbe primäre Anzeige, dasselbe Ausschalten anderer Anzeigen und derselbe Fallback wie beim Spielstart. Wird beim Wechsel in den Vollbildmodus angewendet und beim Zurückkehren zum Desktop wiederhergestellt. Solange der Vollbildmodus geöffnet ist, wechseln Spiele nicht ständig die Anzeigen.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopology">Beim Wechsel in den Vollbildmodus zur Vollbild-Primäranzeige wechseln</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenModeTopologyHelp">Verwendet die Vollbild-Primäranzeige oben (sowie Ausschalten anderer / fehlende Anzeige dieses Modus). Stellt beim Verlassen des Vollbildmodus das vorherige Layout wieder her. Spiele behalten dieses Layout für die gesamte Vollbildsitzung.</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsTab">Beim Spielstart</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsHelp">Standardverhalten der Anzeige beim Spielstart, sofern kein Anzeige-, Plattform- oder Spielprofil es überschreibt.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTab">Plattformprofile</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesTitle">Plattformprofile</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfilesHelp">Standardwerte für alle Spiele einer Plattform, wenn das Spiel keine eigene Überschreibung hat.</sys:String>
-    <sys:String x:Key="LOCDisplayManager_PlatformProfilesPriorityHint">Priority: game profile -> platform profile -> default display profile / global settings.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PlatformProfilesPriorityHint">Priorität: Spielprofil → Plattformprofil → Startstandard für den aktuellen Playnite-Modus (Desktop oder Vollbild) / globale Einstellungen.</sys:String>
     <sys:String x:Key="LOCDisplayManager_PlatformProfileAdd">Plattform hinzufügen</sys:String>
     <sys:String x:Key="LOCDisplayManager_NoConfiguredPlatformProfiles">Noch keine Plattformprofile.</sys:String>
     <sys:String x:Key="LOCDisplayManager_UnknownPlatform">Unbekannte Plattform</sys:String>
@@ -327,4 +337,6 @@
     <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelay">Wartezeit nach Anzeigeänderungen</sys:String>
     <sys:String x:Key="LOCDisplayManager_PostChangeSettleDelayHelp">So lange warten, nachdem Layout, Auflösung, Bildwiederholrate oder HDR angewendet wurden, bevor das Spiel fortgesetzt wird.</sys:String>
     <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSource">Startstandard</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceDesktop">Desktop-Startstandard</sys:String>
+    <sys:String x:Key="LOCDisplayManager_ActiveProfileDefaultSourceFullscreen">Vollbild-Startstandard</sys:String>
 </ResourceDictionary>
