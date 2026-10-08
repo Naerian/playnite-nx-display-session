@@ -229,6 +229,8 @@ namespace PlayniteDisplayManager
 
         public void NotifyDisplaysChanged()
         {
+            resolutions?.ClearCache();
+            refreshRates?.ClearCache();
             Theme?.Refresh();
             RefreshTopPanelItem();
             DisplaysChanged?.Invoke(this, EventArgs.Empty);

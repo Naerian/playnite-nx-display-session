@@ -78,14 +78,37 @@ namespace PlayniteDisplayManager.Resolution
         private const uint DmPelsHeight = 0x00100000;
         private const uint DmDisplayFrequency = 0x00400000;
 
+        private readonly object cacheLock = new object();
+        private readonly Dictionary<string, IReadOnlyList<ResolutionMode>> modesCache =
+            new Dictionary<string, IReadOnlyList<ResolutionMode>>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Drop cached EnumDisplaySettings results (call when topology changes).</summary>
+        public void ClearCache()
+        {
+            lock (cacheLock)
+            {
+                modesCache.Clear();
+            }
+        }
+
         public IReadOnlyList<ResolutionMode> GetAvailableModes(DisplayInfo display)
         {
-            var modes = new SortedDictionary<long, ResolutionMode>();
             if (display == null || string.IsNullOrWhiteSpace(display.GdiDeviceName))
             {
                 return new List<ResolutionMode>();
             }
 
+            // CRT/CRU setups can expose thousands of RAWMODE entries; enumerating is expensive.
+            var cacheKey = display.GdiDeviceName + "\n" + (display.MonitorDevicePath ?? string.Empty);
+            lock (cacheLock)
+            {
+                if (modesCache.TryGetValue(cacheKey, out var cached))
+                {
+                    return cached;
+                }
+            }
+
+            var modes = new SortedDictionary<long, ResolutionMode>();
             var device = display.GdiDeviceName;
             var edidKeys = DisplayEdidReader.TryReadResolutionKeys(display.MonitorDevicePath);
             var plainKeys = CollectModeKeys(device, raw: false);
@@ -121,10 +144,17 @@ namespace PlayniteDisplayManager.Resolution
             }
 
             // Monitor (EDID) first, then custom/driver extras; largest area within each group.
-            return modes.Values
+            IReadOnlyList<ResolutionMode> result = modes.Values
                 .OrderBy(m => m.IsCustom)
                 .ThenByDescending(m => (long)m.Width * m.Height)
                 .ToList();
+
+            lock (cacheLock)
+            {
+                modesCache[cacheKey] = result;
+            }
+
+            return result;
         }
 
         private static HashSet<long> CollectModeKeys(string device, bool raw)

@@ -31,9 +31,20 @@ namespace PlayniteDisplayManager
         private int topologyTrialSecondsLeft;
         private bool syncingRefreshRadios;
         private bool syncingResolutionRadios;
+        private bool syncingHdrPolicy;
+        private bool syncingHdrMetadata;
         private bool syncingTopologyTarget;
+        private int topologySyncDepth;
         private bool syncingLaunchMode;
+        private bool settingsUiRefreshQueued;
         private ApplicationMode editingLaunchMode = ApplicationMode.Desktop;
+        private int? cachedNativeHdrEnabledCount;
+        private string cachedRatesDisplayId;
+        private IReadOnlyList<double> cachedRates;
+        private string cachedModesDisplayId;
+        private IReadOnlyList<ResolutionMode> cachedModes;
+        private readonly Dictionary<string, bool> hdrSupportCache =
+            new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         private const string WindowsPlayDisplayChoiceId = "__windows_primary__";
 
         private sealed class PlayDisplayChoice
@@ -88,50 +99,116 @@ namespace PlayniteDisplayManager
                 TryFindResource("LOCDisplayManager_VersionAuthorFormat") as string ?? "Display Manager {0} · Narian",
                 GetInstalledVersion());
 
-            DataContextChanged += (_, __) =>
-            {
-                SubscribeDisplaysChanged();
-                ApplyAppearancePreset();
-                BuildAppearancePresetChips();
-                RebuildDisplayCards();
-                RebuildGameProfileRows();
-                RebuildPlatformProfileRows();
-                RefreshDisplayProfilesUi();
-                SyncHdrPolicyRadios();
-                SyncHdrMetadataControls();
-                SyncRefreshRateRadios();
-                SyncResolutionRadios();
-                SyncDesktopAccessControls();
-                SyncFullscreenRelocateControl();
-                SyncLoggingControls();
-                UpdateOverview();
-            };
+            DataContextChanged += (_, __) => ScheduleSettingsUiRefresh();
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
         }
 
         private void OnLoaded(object sender, RoutedEventArgs args)
         {
-            ApplyAppearancePreset();
-            BuildAppearancePresetChips();
             ApplyPreferredWindowSize();
             AttachToHost();
             Dispatcher.BeginInvoke(new Action(AttachToHost), DispatcherPriority.Loaded);
             Dispatcher.BeginInvoke(new Action(AttachToHost), DispatcherPriority.ApplicationIdle);
             Dispatcher.BeginInvoke(new Action(FillSelectedContentHosts), DispatcherPriority.Loaded);
             Dispatcher.BeginInvoke(new Action(FillSelectedContentHosts), DispatcherPriority.ApplicationIdle);
+            ScheduleSettingsUiRefresh();
+        }
+
+        private void ScheduleSettingsUiRefresh()
+        {
+            if (settingsUiRefreshQueued)
+            {
+                return;
+            }
+
+            settingsUiRefreshQueued = true;
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                settingsUiRefreshQueued = false;
+                RefreshAllSettingsUi();
+            }), DispatcherPriority.Loaded);
+        }
+
+        private void RefreshAllSettingsUi()
+        {
+            var sw = Stopwatch.StartNew();
+            SubscribeDisplaysChanged();
+            InvalidateDisplayQueryCaches();
+            ApplyAppearancePreset();
+            BuildAppearancePresetChips();
             RebuildDisplayCards();
-            RebuildGameProfileRows();
-            RebuildPlatformProfileRows();
             RefreshDisplayProfilesUi();
-            SyncHdrPolicyRadios();
-            SyncHdrMetadataControls();
-            SyncRefreshRateRadios();
-            SyncResolutionRadios();
             SyncDesktopAccessControls();
             SyncFullscreenRelocateControl();
             SyncLoggingControls();
-            UpdateOverview();
+            // Game/platform profile editors are heavy (ComboBoxes × modes per row).
+            // Build them only when those tabs are visible — not on every settings open.
+            MaybeRebuildVisibleProfileEditors();
+            sw.Stop();
+
+            var settings = DataContext as DisplayManagerSettings;
+            var gameProfiles = settings?.AvailableGameProfiles?.Count ?? 0;
+            var platformProfiles = settings?.AvailablePlatformProfiles?.Count ?? 0;
+            settings?.Plugin?.LogInfo(
+                $"Settings UI refresh: {sw.ElapsedMilliseconds} ms · gameProfiles={gameProfiles} · platformProfiles={platformProfiles}");
+        }
+
+        private void InvalidateDisplayQueryCaches()
+        {
+            cachedNativeHdrEnabledCount = null;
+            cachedRatesDisplayId = null;
+            cachedRates = null;
+            cachedModesDisplayId = null;
+            cachedModes = null;
+            hdrSupportCache.Clear();
+        }
+
+        private int GetCachedNativeHdrEnabledCount(PlayniteDisplayManagerPlugin plugin)
+        {
+            if (plugin == null)
+            {
+                return 0;
+            }
+
+            if (!cachedNativeHdrEnabledCount.HasValue)
+            {
+                cachedNativeHdrEnabledCount = plugin.CountNativeHdrEnabledGames();
+            }
+
+            return cachedNativeHdrEnabledCount.Value;
+        }
+
+        private IReadOnlyList<double> GetCachedAvailableRates(DisplayManagerSettings settings, DisplayInfo display)
+        {
+            var key = display?.Id ?? string.Empty;
+            if (cachedRates != null
+                && string.Equals(cachedRatesDisplayId, key, StringComparison.OrdinalIgnoreCase))
+            {
+                return cachedRates;
+            }
+
+            cachedRatesDisplayId = key;
+            cachedRates = settings?.Plugin?.RefreshRates?.GetAvailableRates(display)
+                ?? (IReadOnlyList<double>)Array.Empty<double>();
+            return cachedRates;
+        }
+
+        private IReadOnlyList<ResolutionMode> GetCachedAvailableModes(
+            DisplayManagerSettings settings,
+            DisplayInfo display)
+        {
+            var key = display?.Id ?? string.Empty;
+            if (cachedModes != null
+                && string.Equals(cachedModesDisplayId, key, StringComparison.OrdinalIgnoreCase))
+            {
+                return cachedModes;
+            }
+
+            cachedModesDisplayId = key;
+            cachedModes = settings?.Plugin?.Resolutions?.GetAvailableModes(display)
+                ?? (IReadOnlyList<ResolutionMode>)Array.Empty<ResolutionMode>();
+            return cachedModes;
         }
 
         private void OnUnloaded(object sender, RoutedEventArgs args)
@@ -164,22 +241,11 @@ namespace PlayniteDisplayManager
         {
             if (!Dispatcher.CheckAccess())
             {
-                Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    RebuildDisplayCards();
-                    RefreshDisplayProfilesUi();
-                    SyncRefreshRateRadios();
-                    SyncResolutionRadios();
-                    UpdateOverview();
-                }));
+                Dispatcher.BeginInvoke(new Action(ScheduleSettingsUiRefresh));
                 return;
             }
 
-            RebuildDisplayCards();
-            RefreshDisplayProfilesUi();
-            SyncRefreshRateRadios();
-            SyncResolutionRadios();
-            UpdateOverview();
+            ScheduleSettingsUiRefresh();
         }
 
         private void ApplyAppearancePreset()
@@ -200,12 +266,76 @@ namespace PlayniteDisplayManager
 
         private void RootTabsSelectionChanged(object sender, SelectionChangedEventArgs args)
         {
+            // Nested Desktop/Fullscreen TabControls bubble SelectionChanged; ignore those
+            // or every mode sync rebuilds all game-profile ComboBoxes (very expensive).
+            if (!ReferenceEquals(args.Source, sender))
+            {
+                return;
+            }
+
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 FillSelectedContentHosts();
-                RebuildGameProfileRows();
-                RebuildPlatformProfileRows();
+                MaybeSyncLaunchRateAndResolutionEditors();
+                MaybeRebuildVisibleProfileEditors();
             }), DispatcherPriority.Loaded);
+        }
+
+        private void MaybeRebuildVisibleProfileEditors()
+        {
+            if (IsNestedTabSelected(RootTabs, "GameProfiles"))
+            {
+                RebuildGameProfileRows();
+            }
+
+            if (IsNestedTabSelected(RootTabs, "PlatformProfiles"))
+            {
+                RebuildPlatformProfileRows();
+            }
+        }
+
+        private static bool IsNestedTabSelected(TabControl root, string tag)
+        {
+            if (root == null || string.IsNullOrEmpty(tag))
+            {
+                return false;
+            }
+
+            var selected = root.SelectedItem as TabItem;
+            if (selected == null)
+            {
+                return false;
+            }
+
+            if (string.Equals(selected.Tag as string, tag, StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            return IsNestedTabSelectedInContent(selected.Content, tag);
+        }
+
+        private static bool IsNestedTabSelectedInContent(object content, string tag)
+        {
+            if (content is TabControl nestedTabs)
+            {
+                return IsNestedTabSelected(nestedTabs, tag);
+            }
+
+            if (!(content is DependencyObject node))
+            {
+                return false;
+            }
+
+            foreach (var child in LogicalTreeHelper.GetChildren(node))
+            {
+                if (IsNestedTabSelectedInContent(child, tag))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void AttachToHost()
@@ -246,7 +376,6 @@ namespace PlayniteDisplayManager
         private void OnHostSizeChanged(object sender, SizeChangedEventArgs args)
         {
             ApplyViewportSize();
-            FillSelectedContentHosts();
         }
 
         private void FillSelectedContentHosts()
@@ -578,9 +707,7 @@ namespace PlayniteDisplayManager
             var settings = DataContext as DisplayManagerSettings;
             settings?.RefreshDisplays();
             settings?.Plugin?.NotifyDisplaysChanged();
-            RebuildDisplayCards();
-            RefreshDisplayProfilesUi();
-            UpdateOverview();
+            ScheduleSettingsUiRefresh();
         }
 
         private DisplayProfile GetEditingLaunchProfile(DisplayManagerSettings settings)
@@ -710,10 +837,24 @@ namespace PlayniteDisplayManager
             RefreshMissingDisplayAndTurnOffUi();
             SyncHdrPolicyRadios();
             SyncHdrMetadataControls();
-            SyncRefreshRateRadios();
-            SyncResolutionRadios();
             SyncHdrCapabilityUi();
+            SyncNativeHdrMigrationStatus();
+            // CRT/CRU RAWMODE enumeration is expensive — only when those pages are open.
+            MaybeSyncLaunchRateAndResolutionEditors();
             UpdateOverview();
+        }
+
+        private void MaybeSyncLaunchRateAndResolutionEditors()
+        {
+            if (IsNestedTabSelected(RootTabs, "LaunchRefresh"))
+            {
+                SyncRefreshRateRadios();
+            }
+
+            if (IsNestedTabSelected(RootTabs, "LaunchResolution"))
+            {
+                SyncResolutionRadios();
+            }
         }
 
         private List<PlayDisplayChoice> BuildPlayDisplayChoices(DisplayManagerSettings settings)
@@ -774,16 +915,10 @@ namespace PlayniteDisplayManager
             var desktop = settings.GetDefaultDisplayProfileForMode(ApplicationMode.Desktop);
             var fullscreen = settings.GetDefaultDisplayProfileForMode(ApplicationMode.Fullscreen);
 
-            syncingTopologyTarget = true;
-            try
-            {
-                SelectPlayDisplayChoice(DesktopPlayDisplayBox, choices, desktop?.PreferredPlayDisplayId);
-                SelectPlayDisplayChoice(FullscreenPlayDisplayBox, choices, fullscreen?.PreferredPlayDisplayId);
-            }
-            finally
-            {
-                syncingTopologyTarget = false;
-            }
+            BeginTopologySync();
+            SelectPlayDisplayChoice(DesktopPlayDisplayBox, choices, desktop?.PreferredPlayDisplayId);
+            SelectPlayDisplayChoice(FullscreenPlayDisplayBox, choices, fullscreen?.PreferredPlayDisplayId);
+            EndTopologySyncDeferred();
 
             SyncHdrCapabilityUi();
         }
@@ -799,38 +934,56 @@ namespace PlayniteDisplayManager
             var profile = GetEditingLaunchProfile(settings);
             var choices = BuildPlayDisplayChoices(settings);
 
+            BeginTopologySync();
+            if (MissingDisplayFallbackBox != null)
+            {
+                MissingDisplayFallbackBox.ItemsSource = choices;
+                var fallback = profile?.FallbackDisplayId;
+                if (!string.IsNullOrWhiteSpace(fallback)
+                    && choices.Any(c => string.Equals(c.Id, fallback, StringComparison.OrdinalIgnoreCase)))
+                {
+                    MissingDisplayFallbackBox.SelectedValue = fallback;
+                }
+                else
+                {
+                    MissingDisplayFallbackBox.SelectedValue = WindowsPlayDisplayChoiceId;
+                }
+            }
+
+            if (MissingDisplayPolicyBox != null && profile != null)
+            {
+                MissingDisplayPolicyBox.SelectedValue = profile.MissingDisplayPolicy.ToString();
+            }
+
+            if (TopologyTurnOffOthersCheck != null)
+            {
+                TopologyTurnOffOthersCheck.IsChecked = profile?.TurnOffOtherDisplays == true;
+            }
+
+            EndTopologySyncDeferred();
+        }
+
+        private void BeginTopologySync()
+        {
+            topologySyncDepth++;
             syncingTopologyTarget = true;
-            try
+        }
+
+        private void EndTopologySyncDeferred()
+        {
+            // SelectionChanged can raise after ItemsSource assignment; keep the guard until input idle.
+            Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (MissingDisplayFallbackBox != null)
+                if (topologySyncDepth > 0)
                 {
-                    MissingDisplayFallbackBox.ItemsSource = choices;
-                    var fallback = profile?.FallbackDisplayId;
-                    if (!string.IsNullOrWhiteSpace(fallback)
-                        && choices.Any(c => string.Equals(c.Id, fallback, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        MissingDisplayFallbackBox.SelectedValue = fallback;
-                    }
-                    else
-                    {
-                        MissingDisplayFallbackBox.SelectedValue = WindowsPlayDisplayChoiceId;
-                    }
+                    topologySyncDepth--;
                 }
 
-                if (MissingDisplayPolicyBox != null && profile != null)
+                if (topologySyncDepth == 0)
                 {
-                    MissingDisplayPolicyBox.SelectedValue = profile.MissingDisplayPolicy.ToString();
+                    syncingTopologyTarget = false;
                 }
-
-                if (TopologyTurnOffOthersCheck != null)
-                {
-                    TopologyTurnOffOthersCheck.IsChecked = profile?.TurnOffOtherDisplays == true;
-                }
-            }
-            finally
-            {
-                syncingTopologyTarget = false;
-            }
+            }), DispatcherPriority.Input);
         }
 
         private void PersistDefaultDisplayProfile(Action<DisplayProfile> mutate)
@@ -873,13 +1026,15 @@ namespace PlayniteDisplayManager
                 settings.SyncLegacyFieldsFromDefaultDisplayProfile();
             }
 
+            InvalidateDisplayQueryCaches();
+            settings.Plugin?.Resolutions?.ClearCache();
+            settings.Plugin?.RefreshRates?.ClearCache();
             SanitizeGlobalOverridesForPlayDisplay(settings, mode);
             RebuildDisplayCards();
             if (mode == editingLaunchMode)
             {
                 SyncHdrCapabilityUi();
-                SyncResolutionRadios();
-                SyncRefreshRateRadios();
+                MaybeSyncLaunchRateAndResolutionEditors();
             }
 
             UpdateOverview();
@@ -1271,6 +1426,11 @@ namespace PlayniteDisplayManager
 
         private void HdrPolicyRadio_OnChecked(object sender, RoutedEventArgs e)
         {
+            if (syncingHdrPolicy)
+            {
+                return;
+            }
+
             var settings = DataContext as DisplayManagerSettings;
             if (settings == null)
             {
@@ -1306,20 +1466,28 @@ namespace PlayniteDisplayManager
                 return;
             }
 
-            switch (settings.GetHdrPolicyForMode(editingLaunchMode))
+            syncingHdrPolicy = true;
+            try
             {
-                case GlobalHdrPolicy.OnForAllGames:
-                    HdrPolicyAllRadio.IsChecked = true;
-                    break;
-                case GlobalHdrPolicy.OnWhenMetadataIndicates:
-                    HdrPolicyMetadataRadio.IsChecked = true;
-                    break;
-                case GlobalHdrPolicy.UsePlayniteNative:
-                    HdrPolicyPlayniteNativeRadio.IsChecked = true;
-                    break;
-                default:
-                    HdrPolicyNoneRadio.IsChecked = true;
-                    break;
+                switch (settings.GetHdrPolicyForMode(editingLaunchMode))
+                {
+                    case GlobalHdrPolicy.OnForAllGames:
+                        HdrPolicyAllRadio.IsChecked = true;
+                        break;
+                    case GlobalHdrPolicy.OnWhenMetadataIndicates:
+                        HdrPolicyMetadataRadio.IsChecked = true;
+                        break;
+                    case GlobalHdrPolicy.UsePlayniteNative:
+                        HdrPolicyPlayniteNativeRadio.IsChecked = true;
+                        break;
+                    default:
+                        HdrPolicyNoneRadio.IsChecked = true;
+                        break;
+                }
+            }
+            finally
+            {
+                syncingHdrPolicy = false;
             }
 
             SyncHdrMetadataPanelVisibility();
@@ -1346,14 +1514,22 @@ namespace PlayniteDisplayManager
                 return;
             }
 
-            if (HdrMetadataNamesBox != null)
+            syncingHdrMetadata = true;
+            try
             {
-                HdrMetadataNamesBox.Text = settings.HdrMetadataMatchNamesText;
-            }
+                if (HdrMetadataNamesBox != null)
+                {
+                    HdrMetadataNamesBox.Text = settings.HdrMetadataMatchNamesText;
+                }
 
-            if (HdrIncludeTagsCheck != null)
+                if (HdrIncludeTagsCheck != null)
+                {
+                    HdrIncludeTagsCheck.IsChecked = settings.IncludeTagsInHdrMetadataMatch;
+                }
+            }
+            finally
             {
-                HdrIncludeTagsCheck.IsChecked = settings.IncludeTagsInHdrMetadataMatch;
+                syncingHdrMetadata = false;
             }
 
             SyncHdrMetadataPanelVisibility();
@@ -1361,6 +1537,11 @@ namespace PlayniteDisplayManager
 
         private void HdrMetadataNamesBox_OnLostFocus(object sender, RoutedEventArgs e)
         {
+            if (syncingHdrMetadata)
+            {
+                return;
+            }
+
             var settings = DataContext as DisplayManagerSettings;
             if (settings == null || HdrMetadataNamesBox == null)
             {
@@ -1374,6 +1555,11 @@ namespace PlayniteDisplayManager
 
         private void HdrIncludeTagsCheck_OnChanged(object sender, RoutedEventArgs e)
         {
+            if (syncingHdrMetadata)
+            {
+                return;
+            }
+
             var settings = DataContext as DisplayManagerSettings;
             if (settings == null || HdrIncludeTagsCheck == null)
             {
@@ -1485,14 +1671,24 @@ namespace PlayniteDisplayManager
                 }
             }
 
+            var nativeEnabled = GetCachedNativeHdrEnabledCount(settings?.Plugin);
             if (OverviewNativeHdrText != null)
             {
-                OverviewNativeHdrText.Text = settings?.Plugin?.GetNativeHdrOverviewText()
-                    ?? (TryFindResource("LOCDisplayManager_OverviewNativeHdrClear") as string
-                        ?? "No games have Playnite's Enable HDR option turned on.");
+                if (nativeEnabled <= 0)
+                {
+                    OverviewNativeHdrText.Text =
+                        TryFindResource("LOCDisplayManager_OverviewNativeHdrClear") as string
+                        ?? "No games have Playnite's Enable HDR option turned on.";
+                }
+                else
+                {
+                    var conflictFormat =
+                        TryFindResource("LOCDisplayManager_OverviewNativeHdrConflictFormat") as string
+                        ?? "{0} game(s) still have Playnite Enable HDR turned on.";
+                    OverviewNativeHdrText.Text = string.Format(conflictFormat, nativeEnabled);
+                }
             }
 
-            var nativeEnabled = settings?.Plugin?.CountNativeHdrEnabledGames() ?? 0;
             if (OverviewNativeHdrStatusText != null)
             {
                 var nativeValue = nativeEnabled > 0
@@ -1510,12 +1706,6 @@ namespace PlayniteDisplayManager
                     ?? (TryFindResource("LOCDisplayManager_RefreshPolicyNative") as string
                         ?? "Native (do not change refresh rate)");
             }
-
-            SyncHdrMetadataControls();
-            SyncNativeHdrMigrationStatus();
-            SyncRefreshRateRadios();
-            SyncResolutionRadios();
-            SyncHdrCapabilityUi();
         }
 
         private DisplayInfo ResolvePreferredPlayDisplay(
@@ -1580,22 +1770,36 @@ namespace PlayniteDisplayManager
                 "PositiveRatingBrush"));
         }
 
-        private static bool ProbeDisplayHdrSupported(DisplayManagerSettings settings, DisplayInfo display)
+        private bool ProbeDisplayHdrSupported(DisplayManagerSettings settings, DisplayInfo display)
         {
             if (display == null || settings?.Plugin?.Hdr == null)
             {
                 return false;
             }
 
+            if (!string.IsNullOrWhiteSpace(display.Id)
+                && hdrSupportCache.TryGetValue(display.Id, out var cached))
+            {
+                return cached;
+            }
+
+            bool supported;
             try
             {
                 var probe = settings.Plugin.Hdr.ProbeActiveTargets(new[] { display }).FirstOrDefault();
-                return probe != null && probe.HdrSupported;
+                supported = probe != null && probe.HdrSupported;
             }
             catch
             {
-                return false;
+                supported = false;
             }
+
+            if (!string.IsNullOrWhiteSpace(display.Id))
+            {
+                hdrSupportCache[display.Id] = supported;
+            }
+
+            return supported;
         }
 
         private void SyncHdrCapabilityUi()
@@ -1698,7 +1902,7 @@ namespace PlayniteDisplayManager
             syncingRefreshRadios = true;
             try
             {
-                var rates = settings.Plugin?.RefreshRates?.GetAvailableRates(primary) ?? Array.Empty<double>();
+                var rates = GetCachedAvailableRates(settings, primary);
                 var preferred = settings.GetPreferredRefreshRateHzForMode(editingLaunchMode);
                 var items = BuildRefreshExactItems(rates, preferred);
                 if (RefreshExactBox != null)
@@ -1807,6 +2011,10 @@ namespace PlayniteDisplayManager
 
         private void RefreshExactRefreshButton_OnClick(object sender, RoutedEventArgs e)
         {
+            var settings = DataContext as DisplayManagerSettings;
+            settings?.Plugin?.RefreshRates?.ClearCache();
+            cachedRatesDisplayId = null;
+            cachedRates = null;
             SyncRefreshRateRadios();
         }
 
@@ -1863,7 +2071,7 @@ namespace PlayniteDisplayManager
 
             RefreshRatePrimaryPanel.Children.Add(pills);
 
-            var rates = settings?.Plugin?.RefreshRates?.GetAvailableRates(primary) ?? Array.Empty<double>();
+            var rates = GetCachedAvailableRates(settings, primary);
             RefreshRatePrimaryPanel.Children.Add(new TextBlock
             {
                 Text = TryFindResource("LOCDisplayManager_RefreshRateAvailableLabel") as string
@@ -2075,9 +2283,7 @@ namespace PlayniteDisplayManager
             syncingResolutionRadios = true;
             try
             {
-                var modes = PrepareResolutionModesForUi(
-                    settings.Plugin?.Resolutions?.GetAvailableModes(primary)
-                    ?? (IReadOnlyList<ResolutionMode>)Array.Empty<ResolutionMode>());
+                var modes = PrepareResolutionModesForUi(GetCachedAvailableModes(settings, primary));
                 if (ResolutionExactBox != null)
                 {
                     settings.GetPreferredResolutionForMode(editingLaunchMode, out var preferredW, out var preferredH);
@@ -2262,6 +2468,10 @@ namespace PlayniteDisplayManager
 
         private void ResolutionExactRefreshButton_OnClick(object sender, RoutedEventArgs e)
         {
+            var settings = DataContext as DisplayManagerSettings;
+            settings?.Plugin?.Resolutions?.ClearCache();
+            cachedModesDisplayId = null;
+            cachedModes = null;
             SyncResolutionRadios();
         }
 
@@ -2308,7 +2518,7 @@ namespace PlayniteDisplayManager
                 ResolutionPrimaryPanel.Children.Add(pills);
             }
 
-            var modeCount = settings?.Plugin?.Resolutions?.GetAvailableModes(primary)?.Count ?? 0;
+            var modeCount = GetCachedAvailableModes(settings, primary).Count;
             ResolutionPrimaryPanel.Children.Add(new TextBlock
             {
                 Text = modeCount > 0
@@ -2464,7 +2674,7 @@ namespace PlayniteDisplayManager
                 return;
             }
 
-            var enabled = plugin.CountNativeHdrEnabledGames();
+            var enabled = GetCachedNativeHdrEnabledCount(plugin);
             var backup = plugin.CountNativeHdrBackupIds();
             var format = TryFindResource("LOCDisplayManager_NativeHdrStatusFormat") as string
                 ?? "{0} game(s) still have EnableSystemHdr on · backup: {1} id(s).";
@@ -2481,6 +2691,7 @@ namespace PlayniteDisplayManager
             }
 
             var result = plugin.RunNativeHdrMigration();
+            cachedNativeHdrEnabledCount = null;
             if (!result.Success)
             {
                 NativeHdrMigrationStatusText.Text = result.Error ?? "Migration failed.";
@@ -2510,6 +2721,7 @@ namespace PlayniteDisplayManager
             }
 
             var result = plugin.RestoreNativeHdrFromBackup();
+            cachedNativeHdrEnabledCount = null;
             if (!result.Success)
             {
                 NativeHdrMigrationStatusText.Text = result.Error ?? "Restore failed.";
@@ -2658,7 +2870,6 @@ namespace PlayniteDisplayManager
                         ?? "No displays detected.",
                     Style = TryFindResource("HintText") as Style
                 });
-                RebuildGameProfileRows();
                 return;
             }
 
@@ -2673,7 +2884,6 @@ namespace PlayniteDisplayManager
             }
 
             DisplayCardsPanel.Children.Add(grid);
-            RebuildGameProfileRows();
         }
 
         private UIElement CreateDisplayCard(DisplayInfo display, int index)
@@ -3138,7 +3348,7 @@ namespace PlayniteDisplayManager
             };
 
             var primary = ResolvePrimaryDisplayForEditors(settings);
-            var rates = settings?.Plugin?.RefreshRates?.GetAvailableRates(primary) ?? Array.Empty<double>();
+            var rates = GetCachedAvailableRates(settings, primary);
             var exactFormat = TryFindResource("LOCDisplayManager_RefreshPolicyExactFormat") as string
                 ?? "{0:0.###} Hz";
             foreach (var rate in rates)
@@ -3208,9 +3418,7 @@ namespace PlayniteDisplayManager
             };
 
             var primary = ResolvePrimaryDisplayForEditors(settings);
-            var modes = PrepareResolutionModesForUi(
-                settings?.Plugin?.Resolutions?.GetAvailableModes(primary)
-                ?? new List<ResolutionMode>());
+            var modes = PrepareResolutionModesForUi(GetCachedAvailableModes(settings, primary));
             var customSuffix = TryFindResource("LOCDisplayManager_ResolutionCustomSuffix") as string
                 ?? "custom";
             foreach (var mode in modes)

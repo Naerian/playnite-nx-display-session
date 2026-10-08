@@ -59,21 +59,44 @@ namespace PlayniteDisplayManager.Refresh
         private const int CdsEnableUnsafeModes = 0x00000100;
         private const uint DmDisplayFrequency = 0x00400000;
 
+        private readonly object cacheLock = new object();
+        private readonly Dictionary<string, IReadOnlyList<double>> ratesCache =
+            new Dictionary<string, IReadOnlyList<double>>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Drop cached EnumDisplaySettings results (call when topology changes).</summary>
+        public void ClearCache()
+        {
+            lock (cacheLock)
+            {
+                ratesCache.Clear();
+            }
+        }
+
         public IReadOnlyList<double> GetAvailableRates(DisplayInfo display)
         {
-            var rates = new SortedSet<double>();
             if (display == null || string.IsNullOrWhiteSpace(display.GdiDeviceName))
             {
-                return rates.ToList();
+                return Array.Empty<double>();
             }
 
             var device = display.GdiDeviceName;
             var width = display.Width;
             var height = display.Height;
+            var cacheKey = device + "\n" + width + "x" + height;
+            lock (cacheLock)
+            {
+                if (ratesCache.TryGetValue(cacheKey, out var cached))
+                {
+                    return cached;
+                }
+            }
+
+            var rates = new SortedSet<double>();
             var mode = new DEVMODE();
             mode.dmSize = (ushort)Marshal.SizeOf(typeof(DEVMODE));
 
             // EDS_RAWMODE so custom refresh rates (NVIDIA/AMD/CRU) are included.
+            // CRT/CRU lists can be huge; walk once then cache.
             for (var i = 0; EnumDisplaySettingsEx(device, i, ref mode, EdsRawMode); i++)
             {
                 mode.dmDriverExtra = 0;
@@ -89,7 +112,13 @@ namespace PlayniteDisplayManager.Refresh
                 }
             }
 
-            return rates.ToList();
+            IReadOnlyList<double> result = rates.ToList();
+            lock (cacheLock)
+            {
+                ratesCache[cacheKey] = result;
+            }
+
+            return result;
         }
 
         public RefreshRatePlan Plan(

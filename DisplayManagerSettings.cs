@@ -628,8 +628,6 @@ namespace PlayniteDisplayManager
             AvailableGameProfiles = plugin?.GetGameProfileEntries() ?? new List<GameDisplayProfileEntry>();
             AvailablePlatformProfiles = plugin?.GetPlatformProfileEntries() ?? new List<PlatformProfileEntry>();
             editingClone = Serialization.GetClone(this);
-            AvailableGameProfiles = plugin?.GetGameProfileEntries() ?? new List<GameDisplayProfileEntry>();
-            AvailablePlatformProfiles = plugin?.GetPlatformProfileEntries() ?? new List<PlatformProfileEntry>();
             DisplayProfiles = (DisplayProfiles ?? new List<DisplayProfile>())
                 .Select(p => p?.Clone())
                 .Where(p => p != null)
@@ -733,23 +731,28 @@ namespace PlayniteDisplayManager
                 DisplayProfiles = new List<DisplayProfile>();
             }
 
-            DisplayProfiles = DisplayProfiles
-                .Where(p => p != null)
-                .Select(p =>
-                {
-                    if (p.Id == Guid.Empty)
+            var needsRewrite = DisplayProfiles.Any(p =>
+                p == null || p.Id == Guid.Empty || string.IsNullOrWhiteSpace(p.Name));
+            if (needsRewrite)
+            {
+                DisplayProfiles = DisplayProfiles
+                    .Where(p => p != null)
+                    .Select(p =>
                     {
-                        p.Id = Guid.NewGuid();
-                    }
+                        if (p.Id == Guid.Empty)
+                        {
+                            p.Id = Guid.NewGuid();
+                        }
 
-                    if (string.IsNullOrWhiteSpace(p.Name))
-                    {
-                        p.Name = "Default";
-                    }
+                        if (string.IsNullOrWhiteSpace(p.Name))
+                        {
+                            p.Name = "Default";
+                        }
 
-                    return p;
-                })
-                .ToList();
+                        return p;
+                    })
+                    .ToList();
+            }
 
             if (DisplayProfiles.Count == 0)
             {

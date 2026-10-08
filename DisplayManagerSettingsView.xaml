@@ -956,7 +956,7 @@
                                     </StackPanel>
                                 </ScrollViewer>
             </TabItem>
-            <TabItem>
+            <TabItem Tag="LaunchRefresh">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE9D9;" />
@@ -1063,7 +1063,7 @@
                                                 </StackPanel>
                                             </ScrollViewer>
             </TabItem>
-            <TabItem>
+            <TabItem Tag="LaunchResolution">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE7F4;" />
@@ -1290,7 +1290,7 @@
                                                             </StackPanel>
                                                         </ScrollViewer>
                         </TabItem>
-                        <TabItem>
+                        <TabItem Tag="GameProfiles">
                             <TabItem.Header>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE8F1;" />
@@ -1340,7 +1340,7 @@
                                                             </StackPanel>
                                                         </ScrollViewer>
                         </TabItem>
-                        <TabItem>
+                        <TabItem Tag="PlatformProfiles">
                             <TabItem.Header>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Style="{StaticResource TabGlyph}" Text="&#xE774;" />

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.8 — 2026-10-08
+- Settings open is much faster: coalesce refresh work, stop re-running Win32 mode/HDR probes from Overview updates, and cache display mode/HDR queries for the settings session.
+- Fixed a regression where Desktop/Fullscreen mode tabs bubbled `SelectionChanged` and rebuilt every per-game/platform profile editor (very slow with many game overrides). Those editors now load only when their tab is open.
+- Cache `EnumDisplaySettingsEx` (RAWMODE) results used for refresh/resolution lists — CRT/CRU setups can expose thousands of timings and were freezing Settings even after downgrading (same saved config).
+- Defer building the Refresh rate / Resolution launch pages until those tabs are opened.
+
 ## 1.0.7 — 2026-10-08
 - Separate **primary display** pickers for Playnite Desktop and Fullscreen (from your connected displays).
 - **When a game launches** can switch between Desktop and Fullscreen to edit each mode’s HDR, refresh rate, resolution, turn-off-others, and missing-display settings.
