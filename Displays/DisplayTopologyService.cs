@@ -390,6 +390,7 @@ namespace PlayniteDisplayManager.Displays
                 }
 
                 ApplyHdrRestoreWrites(snapshot);
+                ApplyDpiRestoreWrites(snapshot);
                 return true;
             }
             catch (Exception ex)
@@ -414,6 +415,34 @@ namespace PlayniteDisplayManager.Displays
                 Debug.WriteLine("Display Manager HDR restore writes: " + hdrError);
 #if !RESTORE_HOST
                 PlayniteDisplayManager.Logging.PluginFileLogger.Current?.Warn("Display Manager HDR restore writes: " + hdrError);
+#endif
+            }
+        }
+
+        private void ApplyDpiRestoreWrites(DisplaySnapshot snapshot)
+        {
+            if (snapshot?.DpiRestoreWrites == null || snapshot.DpiRestoreWrites.Count == 0)
+            {
+                return;
+            }
+
+            var dpi = new DpiScaleService();
+            IEnumerable<DisplayInfo> live;
+            try
+            {
+                live = enumerator.GetDisplays();
+            }
+            catch
+            {
+                live = Array.Empty<DisplayInfo>();
+            }
+
+            dpi.ApplyDpiWrites(snapshot.DpiRestoreWrites, live, out var dpiError);
+            if (!string.IsNullOrWhiteSpace(dpiError))
+            {
+                Debug.WriteLine("Display Manager DPI restore writes: " + dpiError);
+#if !RESTORE_HOST
+                PlayniteDisplayManager.Logging.PluginFileLogger.Current?.Warn("Display Manager DPI restore writes: " + dpiError);
 #endif
             }
         }

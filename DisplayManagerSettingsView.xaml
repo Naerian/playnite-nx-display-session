@@ -1436,42 +1436,64 @@
                                             <TextBlock Text="{DynamicResource LOCDisplayManager_FullscreenRelocateTitle}" Style="{StaticResource SectionHeaderText}" />
                                         </Border>
                                         <TextBlock Text="{DynamicResource LOCDisplayManager_FullscreenRelocateHelp}" Style="{StaticResource SectionSubtitleText}" />
-                                        <CheckBox x:Name="RelocateFullscreenCheck"
-                                                  Content="{DynamicResource LOCDisplayManager_FullscreenRelocate}"
-                                                  Margin="0,8,0,0"
-                                                  Checked="RelocateFullscreenCheck_OnChanged"
-                                                  Unchecked="RelocateFullscreenCheck_OnChanged" />
-                                        <TextBlock Text="{DynamicResource LOCDisplayManager_FullscreenRelocateHint}"
-                                                   Style="{StaticResource HintText}"
-                                                   Margin="0,8,0,0" />
+                                        <StackPanel Style="{StaticResource FieldGroup}">
+                                            <CheckBox x:Name="RelocateFullscreenCheck"
+                                                      Content="{DynamicResource LOCDisplayManager_FullscreenRelocate}"
+                                                      Margin="0,8,0,0"
+                                                      Checked="RelocateFullscreenCheck_OnChanged"
+                                                      Unchecked="RelocateFullscreenCheck_OnChanged" />
+                                            <TextBlock Text="{DynamicResource LOCDisplayManager_FullscreenRelocateHint}"
+                                                       Style="{StaticResource HintText}"
+                                                       Margin="0,8,0,16" />
+                                        </StackPanel>
                                     </StackPanel>
-                                    <StackPanel Style="{StaticResource PageSection}" Margin="0,8,0,0">
+                                    <StackPanel Style="{StaticResource PageSection}">
+                                        <Border Style="{StaticResource PageHeader}">
+                                            <TextBlock Text="{DynamicResource LOCDisplayManager_FullscreenDpiTitle}" Style="{StaticResource SectionHeaderText}" />
+                                        </Border>
+                                        <TextBlock Text="{DynamicResource LOCDisplayManager_FullscreenDpiHelp}" Style="{StaticResource SectionSubtitleText}" />
+                                        <StackPanel Style="{StaticResource FieldGroup}">
+                                            <CheckBox x:Name="Force100PercentScaleCheck"
+                                                      Content="{DynamicResource LOCDisplayManager_FullscreenDpiForce100}"
+                                                      Margin="0,8,0,0"
+                                                      Checked="Force100PercentScaleCheck_OnChanged"
+                                                      Unchecked="Force100PercentScaleCheck_OnChanged" />
+                                            <TextBlock Text="{DynamicResource LOCDisplayManager_FullscreenDpiHint}"
+                                                       Style="{StaticResource HintText}"
+                                                       Margin="0,8,0,16" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <StackPanel Style="{StaticResource PageSection}">
                                         <Border Style="{StaticResource PageHeader}">
                                             <TextBlock Text="{DynamicResource LOCDisplayManager_PreDisplayChangeDelay}" Style="{StaticResource SectionHeaderText}" />
                                         </Border>
                                         <TextBlock Text="{DynamicResource LOCDisplayManager_PreDisplayChangeDelayHelp}" Style="{StaticResource SectionSubtitleText}" />
-                                        <ComboBox ItemsSource="{Binding PreDisplayChangeDelayOptions}"
-                                                  DisplayMemberPath="DisplayName"
-                                                  SelectedValuePath="Value"
-                                                  SelectedValue="{Binding PreDisplayChangeDelayMsValue, Mode=TwoWay}"
-                                                  MinHeight="36"
-                                                  Margin="0,8,0,0"
-                                                  HorizontalAlignment="Left"
-                                                  MinWidth="200" />
+                                        <StackPanel Style="{StaticResource FieldGroup}">
+                                            <ComboBox ItemsSource="{Binding PreDisplayChangeDelayOptions}"
+                                                      DisplayMemberPath="DisplayName"
+                                                      SelectedValuePath="Value"
+                                                      SelectedValue="{Binding PreDisplayChangeDelayMsValue, Mode=TwoWay}"
+                                                      MinHeight="36"
+                                                      Margin="0,8,0,0"
+                                                      HorizontalAlignment="Left"
+                                                      MinWidth="200" />
+                                        </StackPanel>
                                     </StackPanel>
-                                    <StackPanel Style="{StaticResource PageSection}" Margin="0,8,0,0">
+                                    <StackPanel Style="{StaticResource PageSection}">
                                         <Border Style="{StaticResource PageHeader}">
                                             <TextBlock Text="{DynamicResource LOCDisplayManager_PostChangeSettleDelay}" Style="{StaticResource SectionHeaderText}" />
                                         </Border>
                                         <TextBlock Text="{DynamicResource LOCDisplayManager_PostChangeSettleDelayHelp}" Style="{StaticResource SectionSubtitleText}" />
-                                        <ComboBox ItemsSource="{Binding PostChangeSettleDelayOptions}"
-                                                  DisplayMemberPath="DisplayName"
-                                                  SelectedValuePath="Value"
-                                                  SelectedValue="{Binding PostChangeSettleDelayMsValue, Mode=TwoWay}"
-                                                  MinHeight="36"
-                                                  Margin="0,8,0,0"
-                                                  HorizontalAlignment="Left"
-                                                  MinWidth="200" />
+                                        <StackPanel Style="{StaticResource FieldGroup}">
+                                            <ComboBox ItemsSource="{Binding PostChangeSettleDelayOptions}"
+                                                      DisplayMemberPath="DisplayName"
+                                                      SelectedValuePath="Value"
+                                                      SelectedValue="{Binding PostChangeSettleDelayMsValue, Mode=TwoWay}"
+                                                      MinHeight="36"
+                                                      Margin="0,8,0,0"
+                                                      HorizontalAlignment="Left"
+                                                      MinWidth="200" />
+                                        </StackPanel>
                                     </StackPanel>
                                 </StackPanel>
                             </ScrollViewer>

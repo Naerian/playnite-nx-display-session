@@ -57,6 +57,7 @@ namespace PlayniteDisplayManager
         private Guid? defaultDisplayProfileId;
         private Guid? defaultDisplayProfileIdFullscreen;
         private bool relocatePlayniteFullscreenAfterRestore;
+        private bool force100PercentScaleInFullscreen;
         private bool applyTopologyOnFullscreenMode;
         private bool enableVerboseLogging;
         private List<GameDisplayProfileEntry> availableGameProfiles = new List<GameDisplayProfileEntry>();
@@ -119,6 +120,7 @@ namespace PlayniteDisplayManager
                 DefaultDisplayProfileId = savedSettings.DefaultDisplayProfileId;
                 DefaultDisplayProfileIdFullscreen = savedSettings.DefaultDisplayProfileIdFullscreen;
                 RelocatePlayniteFullscreenAfterRestore = savedSettings.RelocatePlayniteFullscreenAfterRestore;
+                Force100PercentScaleInFullscreen = savedSettings.Force100PercentScaleInFullscreen;
                 ApplyTopologyOnFullscreenMode = savedSettings.ApplyTopologyOnFullscreenMode;
                 EnableVerboseLogging = savedSettings.EnableVerboseLogging;
             }
@@ -456,6 +458,17 @@ namespace PlayniteDisplayManager
         }
 
         /// <summary>
+        /// When true, entering Playnite Fullscreen forces Windows UI scale to 100% on the
+        /// Fullscreen primary display and restores the previous scale on exit / crash restore.
+        /// Uses an undocumented CCD API — opt-in, default off.
+        /// </summary>
+        public bool Force100PercentScaleInFullscreen
+        {
+            get => force100PercentScaleInFullscreen;
+            set => SetValue(ref force100PercentScaleInFullscreen, value);
+        }
+
+        /// <summary>
         /// Legacy setting (ignored). Fullscreen mode always applies the Fullscreen primary
         /// on enter and keeps that layout for the mode session.
         /// </summary>
@@ -709,6 +722,7 @@ namespace PlayniteDisplayManager
             DefaultDisplayProfileId = editingClone.DefaultDisplayProfileId;
             DefaultDisplayProfileIdFullscreen = editingClone.DefaultDisplayProfileIdFullscreen;
             RelocatePlayniteFullscreenAfterRestore = editingClone.RelocatePlayniteFullscreenAfterRestore;
+            Force100PercentScaleInFullscreen = editingClone.Force100PercentScaleInFullscreen;
             ApplyTopologyOnFullscreenMode = editingClone.ApplyTopologyOnFullscreenMode;
             EnableVerboseLogging = editingClone.EnableVerboseLogging;
             editingClone = null;

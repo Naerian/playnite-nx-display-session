@@ -10,6 +10,7 @@ It is built for living-room gaming — a PC on the sofa connected to a TV, or se
 - Choose a primary display for games, or keep the Windows default primary untouched.
 - Optionally turn off other displays when a game launches, with a short display layout trial and automatic restore.
 - Optionally apply that same layout when entering Playnite fullscreen and restore it when returning to desktop, so games do not flip monitors between sessions.
+- Optional experimental setting to force 100% Windows display scale on the Fullscreen primary when entering Fullscreen (restored on exit / crash).
 - Rename displays for Playnite and identify each monitor with an on-screen label. Custom names appear in the game context menu.
 - Own HDR for game sessions with global policies: leave Windows alone, always on, or Features/Tags metadata matching.
 - Override display profile, HDR, resolution, refresh rate, play display, and turn-off-others per game from the game context menu.

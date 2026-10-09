@@ -42,6 +42,12 @@ namespace PlayniteDisplayManager.Displays
         [DataMember(Name = "hdrRestoreWrites")]
         public List<Hdr.HdrWriteTarget> HdrRestoreWrites { get; set; } = new List<Hdr.HdrWriteTarget>();
 
+        /// <summary>
+        /// Windows UI scale (%) to WRITE on restore for sources we changed during the session.
+        /// </summary>
+        [DataMember(Name = "dpiRestoreWrites")]
+        public List<DpiWriteTarget> DpiRestoreWrites { get; set; } = new List<DpiWriteTarget>();
+
         public static string ToJson(DisplaySnapshot snapshot)
         {
             var serializer = new DataContractJsonSerializer(typeof(DisplaySnapshot));

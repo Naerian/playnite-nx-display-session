@@ -141,6 +141,7 @@ namespace PlayniteDisplayManager
             RefreshDisplayProfilesUi();
             SyncDesktopAccessControls();
             SyncFullscreenRelocateControl();
+            SyncFullscreenDpiControl();
             SyncLoggingControls();
             // Game/platform profile editors are heavy (ComboBoxes × modes per row).
             // Build them only when those tabs are visible — not on every settings open.
@@ -1174,6 +1175,28 @@ namespace PlayniteDisplayManager
             }
 
             RelocateFullscreenCheck.IsChecked = settings.RelocatePlayniteFullscreenAfterRestore;
+        }
+
+        private void Force100PercentScaleCheck_OnChanged(object sender, RoutedEventArgs e)
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null || Force100PercentScaleCheck == null)
+            {
+                return;
+            }
+
+            settings.Force100PercentScaleInFullscreen = Force100PercentScaleCheck.IsChecked == true;
+        }
+
+        private void SyncFullscreenDpiControl()
+        {
+            var settings = DataContext as DisplayManagerSettings;
+            if (settings == null || Force100PercentScaleCheck == null)
+            {
+                return;
+            }
+
+            Force100PercentScaleCheck.IsChecked = settings.Force100PercentScaleInFullscreen;
         }
 
         private void SyncLoggingControls()

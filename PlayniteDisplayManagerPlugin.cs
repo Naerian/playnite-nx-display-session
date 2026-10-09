@@ -31,6 +31,7 @@ namespace PlayniteDisplayManager
         private readonly HdrService hdr = new HdrService();
         private readonly RefreshRateService refreshRates = new RefreshRateService();
         private readonly ResolutionService resolutions = new ResolutionService();
+        private readonly DpiScaleService dpiScale = new DpiScaleService();
         private DisplayManagerSettings settings;
         private GameDisplayProfileStore gameProfiles;
         private PlatformProfileStore platformProfiles;
@@ -860,6 +861,7 @@ namespace PlayniteDisplayManager
         {
             // Always apply the Fullscreen primary (and that mode's topology) when entering
             // Playnite Fullscreen; keep it for the mode session so games do not thrash.
+            // Optional: force Windows UI scale to 100% on the Fullscreen primary (Advanced).
             if (PlayniteApi.ApplicationInfo.Mode != ApplicationMode.Fullscreen)
             {
                 return;
@@ -908,11 +910,38 @@ namespace PlayniteDisplayManager
                 var wantsTurnOffOthers = resolved.TurnOffOtherDisplays
                     && !string.IsNullOrWhiteSpace(topologyTargetId);
                 var wantsTopology = wantsMakePrimary || wantsTurnOffOthers;
-                if (!wantsTopology)
+
+                var wantsScale = settings?.Force100PercentScaleInFullscreen == true;
+                DisplayInfo scaleTarget = null;
+                DpiScaleInfo scaleBefore = null;
+                if (wantsScale && !string.IsNullOrWhiteSpace(topologyTargetId))
+                {
+                    scaleTarget = livePreview.FirstOrDefault(d => d.IsConnected
+                        && string.Equals(d.Id, topologyTargetId, StringComparison.OrdinalIgnoreCase));
+                    if (scaleTarget != null)
+                    {
+                        scaleBefore = dpiScale.TryGet(scaleTarget);
+                    }
+                }
+
+                var needsScaleChange = scaleBefore != null
+                    && scaleBefore.IsValid
+                    && scaleBefore.Current != 100
+                    && scaleBefore.Minimum <= 100;
+
+                if (!wantsTopology && !needsScaleChange)
                 {
                     fileLogger.InfoTopic(
                         "mode.skip",
-                        "topology=none preferred=" + (preferredId ?? "(windows-primary)"));
+                        "topology=none scale=" +
+                        (wantsScale
+                            ? (scaleBefore == null
+                                ? "unavailable"
+                                : (scaleBefore.IsValid
+                                    ? scaleBefore.Current + "%"
+                                    : "invalid"))
+                            : "off") +
+                        " preferred=" + (preferredId ?? "(windows-primary)"));
                     return;
                 }
 
@@ -920,8 +949,20 @@ namespace PlayniteDisplayManager
                     (wantsMakePrimary ? "makePrimary" : string.Empty) +
                     (wantsMakePrimary && wantsTurnOffOthers ? "+" : string.Empty) +
                     (wantsTurnOffOthers ? "turnOffOthers" : string.Empty);
+                if (string.IsNullOrEmpty(topologyPlan))
+                {
+                    topologyPlan = "none";
+                }
 
                 var snapshot = Topology.CaptureSnapshot();
+                if (needsScaleChange && scaleTarget != null)
+                {
+                    snapshot.DpiRestoreWrites = new List<DpiWriteTarget>
+                    {
+                        dpiScale.BuildRestoreWrite(scaleTarget, scaleBefore.Current)
+                    };
+                }
+
                 modeSessionSnapshot = snapshot;
                 Theme?.Refresh();
 
@@ -932,32 +973,86 @@ namespace PlayniteDisplayManager
                     "mode.begin",
                     "preferred=" + (topologyTargetId ?? "(windows-primary)") +
                     " missingPreferred=" + missingPreferred +
-                    " topology=" + topologyPlan);
+                    " topology=" + topologyPlan +
+                    " scale=" + (needsScaleChange
+                        ? scaleBefore.Current + "%->100%"
+                        : (wantsScale ? "already-100-or-skip" : "off")));
 
-                var topologyApply = Topology.TryApplyRequest(new DisplayTopologyRequest
+                var appliedSomething = false;
+                if (wantsTopology)
                 {
-                    TargetDisplayId = topologyTargetId,
-                    MakePrimary = wantsMakePrimary,
-                    TurnOffOtherDisplays = wantsTurnOffOthers
-                });
-                if (!topologyApply.Success)
+                    var topologyApply = Topology.TryApplyRequest(new DisplayTopologyRequest
+                    {
+                        TargetDisplayId = topologyTargetId,
+                        MakePrimary = wantsMakePrimary,
+                        TurnOffOtherDisplays = wantsTurnOffOthers
+                    });
+                    if (!topologyApply.Success)
+                    {
+                        fileLogger.WarnTopic(
+                            "mode.topology",
+                            "failed target=" + (topologyTargetId ?? string.Empty) +
+                            " plan=" + topologyPlan,
+                            topologyApply.Error);
+                        if (!needsScaleChange)
+                        {
+                            modeSessionSnapshot = null;
+                            DisarmRestoreLease();
+                            Theme?.Refresh();
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        appliedSomething = true;
+                        fileLogger.InfoTopic(
+                            "mode.topology",
+                            "ok target=" + (topologyTargetId ?? string.Empty) +
+                            " plan=" + topologyPlan +
+                            " message=" + (topologyApply.Message ?? string.Empty));
+                    }
+                }
+
+                if (needsScaleChange)
                 {
-                    fileLogger.WarnTopic(
-                        "mode.topology",
-                        "failed target=" + (topologyTargetId ?? string.Empty) +
-                        " plan=" + topologyPlan,
-                        topologyApply.Error);
+                    var liveAfter = Displays.GetDisplays().ToList();
+                    var scaleTargetAfter = liveAfter.FirstOrDefault(d => d.IsConnected
+                        && string.Equals(d.Id, topologyTargetId, StringComparison.OrdinalIgnoreCase))
+                        ?? scaleTarget;
+
+                    if (!dpiScale.TrySet(scaleTargetAfter, 100, out var scaleError))
+                    {
+                        fileLogger.WarnTopic(
+                            "mode.dpi",
+                            "failed target=" + (topologyTargetId ?? string.Empty) +
+                            " from=" + scaleBefore.Current + "%",
+                            scaleError);
+                        if (!appliedSomething)
+                        {
+                            modeSessionSnapshot = null;
+                            DisarmRestoreLease();
+                            Theme?.Refresh();
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        appliedSomething = true;
+                        fileLogger.InfoTopic(
+                            "mode.dpi",
+                            "ok target=" + (topologyTargetId ?? string.Empty) +
+                            " from=" + scaleBefore.Current + "% to=100%");
+                    }
+                }
+
+                if (!appliedSomething)
+                {
                     modeSessionSnapshot = null;
                     DisarmRestoreLease();
                     Theme?.Refresh();
                     return;
                 }
 
-                fileLogger.InfoTopic(
-                    "mode.topology",
-                    "ok target=" + (topologyTargetId ?? string.Empty) +
-                    " plan=" + topologyPlan +
-                    " message=" + (topologyApply.Message ?? string.Empty));
                 SettleAfterDisplayChange(true);
                 NotifyDisplaysChanged();
                 Theme?.Refresh();

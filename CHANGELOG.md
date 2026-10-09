@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.10 — 2026-10-09
+- Optional **Force 100% display scale when entering Fullscreen** (Advanced → Relocate Playnite): sets Windows UI scaling to 100% on the Fullscreen primary, restores the previous scale on exit, and includes scale in RestoreHost crash restore. Experimental / undocumented Windows API; default off.
+- Advanced → Relocate Playnite: proper section spacing between relocate, DPI, and delay blocks.
+
 ## 1.0.9 — 2026-10-09
 - When switching primary and resolution together, wait for the new primary to settle before applying resolution/refresh (the settle delay now actually covers that gap).
 - Apply resolution/refresh to the preferred display by stable id, not a possibly-stale Windows primary.

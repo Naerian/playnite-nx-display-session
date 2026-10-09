@@ -1,5 +1,12 @@
 AddonId: PlayniteDisplayManager_9c2e4a71-b8d3-4f6a-a1c5-0e7d92f3b846
 Packages:
+  - Version: 1.0.10
+    RequiredApiVersion: 6.16.0
+    ReleaseDate: 2026-10-09
+    PackageUrl: https://github.com/Naerian/playnite-nx-display-session/releases/download/v1.0.10/PlayniteDisplayManager_9c2e4a71-b8d3-4f6a-a1c5-0e7d92f3b846_1_0_10.pext
+    Changelog:
+      - 'Optional Force 100% display scale when entering Fullscreen (Advanced â†’ Relocate Playnite): sets Windows UI scaling to 100% on the Fullscreen primary, restores the previous scale on exit, and includes scale in RestoreHost crash restore. Experimental / undocumented Windows API; default off.'
+      - 'Advanced â†’ Relocate Playnite: proper section spacing between relocate, DPI, and delay blocks.'
   - Version: 1.0.9
     RequiredApiVersion: 6.16.0
     ReleaseDate: 2026-10-09

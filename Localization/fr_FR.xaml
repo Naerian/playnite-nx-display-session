@@ -64,6 +64,10 @@
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHelp">Après la restauration des écrans à la fermeture d’un jeu, vous pouvez déplacer Playnite vers l’écran principal.</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocate">Déplacer Playnite vers l’écran principal lors de la restauration des écrans</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRelocateHint">Si Playnite reste sur un moniteur secondaire ou éteint après un jeu.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenDpiTitle">Display scale (DPI)</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenDpiHelp">Some TVs use 125% or 150% Windows scaling, which can break Playnite Fullscreen. This optional setting forces 100% on the Fullscreen primary when you enter Fullscreen, then restores the previous scale when you leave (or if Playnite crashes).</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenDpiForce100">Force 100% display scale when entering Fullscreen</sys:String>
+    <sys:String x:Key="LOCDisplayManager_FullscreenDpiHint">Experimental: uses an undocumented Windows API. Leave off unless you need it. Only the Fullscreen primary is changed.</sys:String>
     <sys:String x:Key="LOCDisplayManager_FullscreenRestoreTab">Repositionner Playnite</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsTab">Au lancement d'un jeu</sys:String>
     <sys:String x:Key="LOCDisplayManager_LaunchDefaultsHelp">Comportement d'affichage par défaut au démarrage d'un jeu, sauf si un profil d'affichage, de plateforme ou de jeu le remplace.</sys:String>

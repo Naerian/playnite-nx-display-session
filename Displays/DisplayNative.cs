@@ -349,6 +349,35 @@ namespace PlayniteDisplayManager.Displays
             public uint enableHdr;
         }
 
+        /// <summary>
+        /// Undocumented CCD device-info types used by tools such as SetDPI.
+        /// GET/SET per-source Windows UI scale (100/125/150…), not path DISPLAYCONFIG_SCALING.
+        /// </summary>
+        public const int DISPLAYCONFIG_DEVICE_INFO_GET_DPI_SCALE = -3;
+        public const int DISPLAYCONFIG_DEVICE_INFO_SET_DPI_SCALE = -4;
+
+        /// <summary>Expected marshal size of <see cref="DISPLAYCONFIG_SOURCE_DPI_SCALE_GET"/> (header + 3 ints).</summary>
+        public const int DISPLAYCONFIG_SOURCE_DPI_SCALE_GET_SIZE = 0x20;
+
+        /// <summary>Expected marshal size of <see cref="DISPLAYCONFIG_SOURCE_DPI_SCALE_SET"/> (header + 1 int).</summary>
+        public const int DISPLAYCONFIG_SOURCE_DPI_SCALE_SET_SIZE = 0x18;
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_SOURCE_DPI_SCALE_GET
+        {
+            public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+            public int minScaleRel;
+            public int curScaleRel;
+            public int maxScaleRel;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DISPLAYCONFIG_SOURCE_DPI_SCALE_SET
+        {
+            public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+            public int scaleRel;
+        }
+
         [DllImport("user32.dll")]
         public static extern int GetDisplayConfigBufferSizes(
             uint flags,
@@ -388,6 +417,12 @@ namespace PlayniteDisplayManager.Displays
 
         [DllImport("user32.dll")]
         public static extern int DisplayConfigSetDeviceInfo(ref DISPLAYCONFIG_SET_HDR_STATE setPacket);
+
+        [DllImport("user32.dll", EntryPoint = "DisplayConfigGetDeviceInfo")]
+        public static extern int DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_SOURCE_DPI_SCALE_GET dpiScale);
+
+        [DllImport("user32.dll")]
+        public static extern int DisplayConfigSetDeviceInfo(ref DISPLAYCONFIG_SOURCE_DPI_SCALE_SET setPacket);
 
         [DllImport("user32.dll")]
         public static extern int SetDisplayConfig(
