@@ -94,7 +94,8 @@
     <sys:String x:Key="LOCDisplayManager_DisplayAlias">Nome personalizzato</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplayAliasHelp">Nome Playnite opzionale. Gli schermi scollegati con nome personalizzato restano in elenco.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AppearancePreset">Aspetto</sys:String>
-    <sys:String x:Key="LOCDisplayManager_AppearancePresetHelp">I preset cambiano solo i colori. Layout, scala del testo e spaziatura restano fissi.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AppearancePresetHelp">I preset cambiano solo i colori. Layout, scala del testo e spaziatura restano fissi. Predefinito usa testo/accento Playnite e adatta le superfici del tema quando possibile.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PresetDefault">Predefinito</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetMidnight">Mezzanotte</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetPaper">Carta</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetOled">OLED</sys:String>

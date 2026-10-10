@@ -229,6 +229,8 @@ namespace PlayniteDisplayManager
 
         public DisplayManagerSettings Settings => settings;
 
+        public string UserDataPath => GetPluginUserDataPath();
+
         internal event EventHandler DisplaysChanged;
 
         public void NotifyDisplaysChanged()

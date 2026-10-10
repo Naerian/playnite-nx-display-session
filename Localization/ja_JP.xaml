@@ -94,7 +94,8 @@
     <sys:String x:Key="LOCDisplayManager_DisplayAlias">カスタム名</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplayAliasHelp">任意の Playnite 名です。カスタム名がある切断済みディスプレイは一覧に残ります。</sys:String>
     <sys:String x:Key="LOCDisplayManager_AppearancePreset">外観</sys:String>
-    <sys:String x:Key="LOCDisplayManager_AppearancePresetHelp">プリセットは色のみを変更します。レイアウト、文字サイズ、間隔は固定です。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AppearancePresetHelp">プリセットは色のみを変更します。レイアウト、文字サイズ、間隔は固定です。デフォルトは Playnite の文字色/アクセントを使い、可能ならテーマの面も合わせます。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PresetDefault">デフォルト</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetMidnight">Midnight</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetPaper">Paper</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetOled">OLED</sys:String>

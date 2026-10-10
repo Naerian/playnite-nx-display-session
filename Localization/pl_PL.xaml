@@ -94,7 +94,8 @@
     <sys:String x:Key="LOCDisplayManager_DisplayAlias">Nazwa niestandardowa</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplayAliasHelp">Opcjonalna nazwa w Playnite. Odłączone wyświetlacze z nazwą niestandardową pozostają na liście.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AppearancePreset">Wygląd</sys:String>
-    <sys:String x:Key="LOCDisplayManager_AppearancePresetHelp">Presety zmieniają tylko kolory. Układ, skala tekstu i odstępy pozostają stałe.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AppearancePresetHelp">Presety zmieniają tylko kolory. Układ, skala tekstu i odstępy pozostają stałe. Domyślny używa tekstu/akcentu Playnite i dostosowuje powierzchnie motywu, gdy to możliwe.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PresetDefault">Domyślny</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetMidnight">Midnight</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetPaper">Paper</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetOled">OLED</sys:String>

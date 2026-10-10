@@ -23,7 +23,7 @@ namespace PlayniteDisplayManager
     {
         private readonly PlayniteDisplayManagerPlugin plugin;
         private DisplayManagerSettings editingClone;
-        private string appearancePreset = SettingsAppearance.Midnight;
+        private string appearancePreset = SettingsAppearance.Default;
         private bool setupWizardCompleted;
         private int settingsSchemaVersion;
         private List<DisplayDeviceAlias> displayAliases = new List<DisplayDeviceAlias>();
@@ -528,6 +528,7 @@ namespace PlayniteDisplayManager
         [DontSerialize]
         public List<AppearancePresetOption> AppearancePresetOptions => new List<AppearancePresetOption>
         {
+            new AppearancePresetOption { Value = SettingsAppearance.Default, DisplayName = plugin?.Loc("LOCDisplayManager_PresetDefault") ?? "Default" },
             new AppearancePresetOption { Value = SettingsAppearance.Midnight, DisplayName = plugin?.Loc("LOCDisplayManager_PresetMidnight") ?? "Midnight" },
             new AppearancePresetOption { Value = SettingsAppearance.Paper, DisplayName = plugin?.Loc("LOCDisplayManager_PresetPaper") ?? "Paper" },
             new AppearancePresetOption { Value = SettingsAppearance.Oled, DisplayName = plugin?.Loc("LOCDisplayManager_PresetOled") ?? "OLED" },

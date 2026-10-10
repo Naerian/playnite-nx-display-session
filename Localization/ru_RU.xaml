@@ -94,7 +94,8 @@
     <sys:String x:Key="LOCDisplayManager_DisplayAlias">Пользовательское имя</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplayAliasHelp">Необязательное имя в Playnite. Отключенные дисплеи с пользовательским именем остаются в списке.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AppearancePreset">Внешний вид</sys:String>
-    <sys:String x:Key="LOCDisplayManager_AppearancePresetHelp">Пресеты меняют только цвета. Макет, масштаб текста и отступы остаются неизменными.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AppearancePresetHelp">Пресеты меняют только цвета. Макет, масштаб текста и отступы остаются неизменными. «По умолчанию» берёт текст/акцент Playnite и подстраивает поверхности темы, когда это возможно.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PresetDefault">По умолчанию</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetMidnight">Midnight</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetPaper">Paper</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetOled">OLED</sys:String>

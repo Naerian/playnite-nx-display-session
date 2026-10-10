@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.11 — 2026-10-10
+- Overview **Appearance** uses a ComboBox dropdown (same pattern as Audio Switcher) instead of preset chips, with the same card title style as the other Overview cards.
+- New **Default** appearance preset: Playnite `TextBrush` / `HighlightGlyphBrush`, plus theme bg/surface when the theme exposes an opaque pair (`WindowBackgourndBrush`/`PopupBackgroundBrush` or Fullscreen control brushes); otherwise derives a second surface level or falls back to Midnight (new installs default to it).
+- Settings window remembers size, position, and maximized state when reopened.
+
 ## 1.0.10 — 2026-10-09
 - Optional **Force 100% display scale when entering Fullscreen** (Advanced → Relocate Playnite): sets Windows UI scaling to 100% on the Fullscreen primary, restores the previous scale on exit, and includes scale in RestoreHost crash restore. Experimental / undocumented Windows API; default off.
 - Advanced → Relocate Playnite: proper section spacing between relocate, DPI, and delay blocks.

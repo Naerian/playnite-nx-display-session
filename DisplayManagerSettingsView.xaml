@@ -635,11 +635,19 @@
                             <TextBlock Text="{DynamicResource LOCDisplayManager_OverviewHelp}" Style="{StaticResource SectionSubtitleText}" />
                         </StackPanel>
 
-                        <Border Style="{StaticResource SettingsCard}" Margin="0,0,0,24">
+                        <Border Style="{StaticResource SummaryCard}" Margin="0,0,0,16">
                             <StackPanel>
-                                <TextBlock Text="{DynamicResource LOCDisplayManager_AppearancePreset}" Style="{StaticResource FieldLabel}" />
+                                <Border Style="{StaticResource SummaryTitleSeparator}">
+                                    <TextBlock Text="{DynamicResource LOCDisplayManager_AppearancePreset}"
+                                               Style="{StaticResource SummaryCardTitle}" />
+                                </Border>
                                 <TextBlock Text="{DynamicResource LOCDisplayManager_AppearancePresetHelp}" Style="{StaticResource HintText}" Margin="0,0,0,8" />
-                                <WrapPanel x:Name="AppearancePresetChips" Orientation="Horizontal" />
+                                <ComboBox x:Name="AppearancePresetSelector"
+                                          Width="280"
+                                          HorizontalAlignment="Left"
+                                          DisplayMemberPath="DisplayName"
+                                          SelectedValuePath="Value"
+                                          SelectionChanged="AppearancePresetSelector_OnSelectionChanged" />
                             </StackPanel>
                         </Border>
 

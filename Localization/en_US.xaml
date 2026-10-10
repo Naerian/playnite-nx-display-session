@@ -94,7 +94,8 @@
     <sys:String x:Key="LOCDisplayManager_DisplayAlias">Custom name</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplayAliasHelp">Optional Playnite name. Disconnected displays with a custom name stay listed.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AppearancePreset">Appearance</sys:String>
-    <sys:String x:Key="LOCDisplayManager_AppearancePresetHelp">Presets change colors only. Layout, type scale, and spacing stay fixed.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AppearancePresetHelp">Presets change colors only. Layout, type scale, and spacing stay fixed. Default uses Playnite text/accent and adapts surfaces from the theme when possible.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PresetDefault">Default</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetMidnight">Midnight</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetPaper">Paper</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetOled">OLED</sys:String>

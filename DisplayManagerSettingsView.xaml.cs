@@ -25,6 +25,8 @@ namespace PlayniteDisplayManager
         private readonly bool themeStandaloneWindow;
         private ScrollViewer hostScrollViewer;
         private Window hostWindow;
+        private bool settingsWindowPlacementApplied;
+        private bool settingsWindowPlacementSaved;
         private PlayniteDisplayManagerPlugin subscribedPlugin;
         private DisplaySnapshot topologyTrialSnapshot;
         private DispatcherTimer topologyTrialTimer;
@@ -37,6 +39,7 @@ namespace PlayniteDisplayManager
         private int topologySyncDepth;
         private bool syncingLaunchMode;
         private bool settingsUiRefreshQueued;
+        private bool suppressAppearancePresetChange;
         private ApplicationMode editingLaunchMode = ApplicationMode.Desktop;
         private int? cachedNativeHdrEnabledCount;
         private string cachedRatesDisplayId;
@@ -108,7 +111,9 @@ namespace PlayniteDisplayManager
         {
             ApplyPreferredWindowSize();
             AttachToHost();
+            Dispatcher.BeginInvoke(new Action(ApplyPreferredWindowSize), DispatcherPriority.Loaded);
             Dispatcher.BeginInvoke(new Action(AttachToHost), DispatcherPriority.Loaded);
+            Dispatcher.BeginInvoke(new Action(ApplyPreferredWindowSize), DispatcherPriority.ApplicationIdle);
             Dispatcher.BeginInvoke(new Action(AttachToHost), DispatcherPriority.ApplicationIdle);
             Dispatcher.BeginInvoke(new Action(FillSelectedContentHosts), DispatcherPriority.Loaded);
             Dispatcher.BeginInvoke(new Action(FillSelectedContentHosts), DispatcherPriority.ApplicationIdle);
@@ -136,7 +141,7 @@ namespace PlayniteDisplayManager
             SubscribeDisplaysChanged();
             InvalidateDisplayQueryCaches();
             ApplyAppearancePreset();
-            BuildAppearancePresetChips();
+            BindAppearancePresetSelector();
             RebuildDisplayCards();
             RefreshDisplayProfilesUi();
             SyncDesktopAccessControls();
@@ -214,6 +219,7 @@ namespace PlayniteDisplayManager
 
         private void OnUnloaded(object sender, RoutedEventArgs args)
         {
+            PersistSettingsWindowPlacement();
             StopTopologyTrialTimer(restore: true);
             UnsubscribeDisplaysChanged();
             DetachFromHost();
@@ -254,7 +260,7 @@ namespace PlayniteDisplayManager
             var settings = DataContext as DisplayManagerSettings;
             var preset = settings != null
                 ? settings.AppearancePreset
-                : SettingsAppearance.Midnight;
+                : SettingsAppearance.Default;
             SettingsAppearance.Apply(this, preset);
 
             if (themeStandaloneWindow)
@@ -262,7 +268,7 @@ namespace PlayniteDisplayManager
                 SettingsAppearance.ApplyWindow(Window.GetWindow(this), preset);
             }
 
-            RefreshAppearancePresetChips();
+            SyncAppearancePresetSelector(preset);
         }
 
         private void RootTabsSelectionChanged(object sender, SelectionChangedEventArgs args)
@@ -354,6 +360,8 @@ namespace PlayniteDisplayManager
             if (hostWindow != null)
             {
                 hostWindow.SizeChanged += OnHostSizeChanged;
+                hostWindow.Closing -= OnHostWindowClosing;
+                hostWindow.Closing += OnHostWindowClosing;
             }
 
             ApplyViewportSize();
@@ -370,8 +378,14 @@ namespace PlayniteDisplayManager
             if (hostWindow != null)
             {
                 hostWindow.SizeChanged -= OnHostSizeChanged;
+                hostWindow.Closing -= OnHostWindowClosing;
                 hostWindow = null;
             }
+        }
+
+        private void OnHostWindowClosing(object sender, System.ComponentModel.CancelEventArgs args)
+        {
+            PersistSettingsWindowPlacement();
         }
 
         private void OnHostSizeChanged(object sender, SizeChangedEventArgs args)
@@ -526,95 +540,177 @@ namespace PlayniteDisplayManager
         private void ApplyPreferredWindowSize()
         {
             var window = Window.GetWindow(this);
-            if (window == null)
+            if (window == null || settingsWindowPlacementApplied)
             {
                 return;
             }
 
+            settingsWindowPlacementApplied = true;
             window.SizeToContent = SizeToContent.Manual;
+            if (window.ResizeMode == ResizeMode.NoResize || window.ResizeMode == ResizeMode.CanMinimize)
+            {
+                window.ResizeMode = ResizeMode.CanResize;
+            }
+
             if (window.MinWidth < 1000)
             {
                 window.MinWidth = 1000;
             }
+
             if (window.MinHeight < 700)
             {
                 window.MinHeight = 700;
             }
+
+            var placement = LoadSettingsWindowPlacement();
+            if (placement != null)
+            {
+                window.Width = placement.Width;
+                window.Height = placement.Height;
+                if (SettingsWindowPlacementStore.IsOnVirtualScreen(
+                        placement.Left,
+                        placement.Top,
+                        placement.Width,
+                        placement.Height))
+                {
+                    window.WindowStartupLocation = WindowStartupLocation.Manual;
+                    window.Left = placement.Left;
+                    window.Top = placement.Top;
+                }
+
+                if (placement.Maximized)
+                {
+                    window.WindowState = WindowState.Maximized;
+                }
+
+                return;
+            }
+
             if (window.ActualWidth < 1100 && window.Width < 1100)
             {
                 window.Width = 1100;
             }
+
             if (window.ActualHeight < 780 && window.Height < 780)
             {
                 window.Height = 780;
             }
         }
 
-        private void BuildAppearancePresetChips()
+        private SettingsWindowPlacement LoadSettingsWindowPlacement()
         {
-            if (AppearancePresetChips == null)
-            {
-                return;
-            }
-
-            AppearancePresetChips.Children.Clear();
             var settings = DataContext as DisplayManagerSettings;
-            var options = settings != null ? settings.AppearancePresetOptions : null;
-            if (options == null)
+            var path = settings?.Plugin?.UserDataPath;
+            return SettingsWindowPlacementStore.Load(path);
+        }
+
+        private void PersistSettingsWindowPlacement()
+        {
+            if (settingsWindowPlacementSaved)
             {
                 return;
             }
 
-            foreach (var option in options)
+            var window = hostWindow ?? Window.GetWindow(this);
+            var settings = DataContext as DisplayManagerSettings;
+            var path = settings?.Plugin?.UserDataPath;
+            if (window == null || string.IsNullOrWhiteSpace(path))
             {
-                var button = new Button
+                return;
+            }
+
+            try
+            {
+                var bounds = window.WindowState == WindowState.Maximized
+                    ? window.RestoreBounds
+                    : new Rect(window.Left, window.Top, window.ActualWidth > 0 ? window.ActualWidth : window.Width,
+                        window.ActualHeight > 0 ? window.ActualHeight : window.Height);
+
+                var width = bounds.Width > 0 ? bounds.Width : window.Width;
+                var height = bounds.Height > 0 ? bounds.Height : window.Height;
+                var left = bounds.Width > 0 ? bounds.Left : window.Left;
+                var top = bounds.Height > 0 ? bounds.Top : window.Top;
+
+                var placement = new SettingsWindowPlacement
                 {
-                    Content = option.DisplayName,
-                    Tag = option.Value,
-                    MinHeight = 36,
-                    MinWidth = 88,
-                    Margin = new Thickness(0, 0, 8, 8),
-                    Padding = new Thickness(12, 6, 12, 6),
-                    Cursor = Cursors.Hand
+                    Width = width,
+                    Height = height,
+                    Left = left,
+                    Top = top,
+                    Maximized = window.WindowState == WindowState.Maximized
                 };
-                button.Click += AppearancePresetChip_OnClick;
-                button.MouseEnter += AppearancePresetChip_OnMouseEnter;
-                button.MouseLeave += AppearancePresetChip_OnMouseLeave;
-                AppearancePresetChips.Children.Add(button);
-            }
 
-            RefreshAppearancePresetChips();
+                if (!SettingsWindowPlacementStore.IsUsable(placement))
+                {
+                    return;
+                }
+
+                SettingsWindowPlacementStore.Save(path, placement);
+                settingsWindowPlacementSaved = true;
+            }
+            catch
+            {
+                // Best-effort UI chrome persistence only.
+            }
         }
 
-        private void AppearancePresetChip_OnMouseEnter(object sender, MouseEventArgs e)
+        private void BindAppearancePresetSelector()
         {
-            var button = sender as Button;
-            var settings = DataContext as DisplayManagerSettings;
-            if (button == null || settings == null)
+            if (AppearancePresetSelector == null)
             {
                 return;
             }
 
-            var selected = SettingsAppearance.Normalize(settings.AppearancePreset);
-            if (string.Equals(button.Tag as string, selected, StringComparison.OrdinalIgnoreCase))
+            var settings = DataContext as DisplayManagerSettings;
+            suppressAppearancePresetChange = true;
+            try
+            {
+                AppearancePresetSelector.ItemsSource = settings != null
+                    ? settings.AppearancePresetOptions
+                    : null;
+                SyncAppearancePresetSelector(settings != null
+                    ? settings.AppearancePreset
+                    : SettingsAppearance.Default);
+            }
+            finally
+            {
+                suppressAppearancePresetChange = false;
+            }
+        }
+
+        private void SyncAppearancePresetSelector(string preset)
+        {
+            if (AppearancePresetSelector == null)
             {
                 return;
             }
 
-            var palette = SettingsAppearance.GetPalette(selected);
-            button.Background = new SolidColorBrush(palette.Hover);
+            var normalized = SettingsAppearance.Normalize(preset);
+            if (Equals(AppearancePresetSelector.SelectedValue, normalized))
+            {
+                return;
+            }
+
+            suppressAppearancePresetChange = true;
+            try
+            {
+                AppearancePresetSelector.SelectedValue = normalized;
+            }
+            finally
+            {
+                suppressAppearancePresetChange = false;
+            }
         }
 
-        private void AppearancePresetChip_OnMouseLeave(object sender, MouseEventArgs e)
+        private void AppearancePresetSelector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            RefreshAppearancePresetChips();
-        }
+            if (suppressAppearancePresetChange)
+            {
+                return;
+            }
 
-        private void AppearancePresetChip_OnClick(object sender, RoutedEventArgs e)
-        {
-            var button = sender as Button;
-            var preset = button == null ? null : button.Tag as string;
             var settings = DataContext as DisplayManagerSettings;
+            var preset = AppearancePresetSelector?.SelectedValue as string;
             if (settings == null || string.IsNullOrWhiteSpace(preset))
             {
                 return;
@@ -622,44 +718,6 @@ namespace PlayniteDisplayManager
 
             settings.AppearancePreset = preset;
             ApplyAppearancePreset();
-        }
-
-        private void RefreshAppearancePresetChips()
-        {
-            if (AppearancePresetChips == null)
-            {
-                return;
-            }
-
-            var settings = DataContext as DisplayManagerSettings;
-            var selected = settings != null
-                ? SettingsAppearance.Normalize(settings.AppearancePreset)
-                : SettingsAppearance.Midnight;
-            var palette = SettingsAppearance.GetPalette(selected);
-            var accent = new SolidColorBrush(palette.Accent);
-            var accentOn = new SolidColorBrush(palette.AccentOn);
-            var badgeBg = new SolidColorBrush(palette.BadgeBg);
-            var text = new SolidColorBrush(palette.Text);
-            accent.Freeze();
-            accentOn.Freeze();
-            badgeBg.Freeze();
-            text.Freeze();
-
-            foreach (var child in AppearancePresetChips.Children)
-            {
-                var button = child as Button;
-                if (button == null)
-                {
-                    continue;
-                }
-
-                var isSelected = string.Equals(button.Tag as string, selected, StringComparison.OrdinalIgnoreCase);
-                button.Background = isSelected ? accent : badgeBg;
-                button.Foreground = isSelected ? accentOn : text;
-                button.BorderBrush = isSelected ? accent : new SolidColorBrush(palette.Border);
-                button.BorderThickness = new Thickness(1);
-                button.FontWeight = isSelected ? FontWeights.SemiBold : FontWeights.Normal;
-            }
         }
 
         private void RefreshOverview_OnClick(object sender, RoutedEventArgs e)

@@ -94,7 +94,8 @@
     <sys:String x:Key="LOCDisplayManager_DisplayAlias">自定义名称</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplayAliasHelp">可选的 Playnite 名称。带自定义名称的已断开显示器会保留在列表中。</sys:String>
     <sys:String x:Key="LOCDisplayManager_AppearancePreset">外观</sys:String>
-    <sys:String x:Key="LOCDisplayManager_AppearancePresetHelp">预设只改变颜色。布局、字号和间距保持固定。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AppearancePresetHelp">预设只改变颜色。布局、字号和间距保持固定。默认使用 Playnite 文字色/强调色，并在可能时适配主题表面。</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PresetDefault">默认</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetMidnight">Midnight</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetPaper">Paper</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetOled">OLED</sys:String>

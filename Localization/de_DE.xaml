@@ -94,7 +94,8 @@
     <sys:String x:Key="LOCDisplayManager_DisplayAlias">Benutzerdefinierter Name</sys:String>
     <sys:String x:Key="LOCDisplayManager_DisplayAliasHelp">Optionaler Playnite-Name. Getrennte Anzeigen mit benutzerdefiniertem Namen bleiben gelistet.</sys:String>
     <sys:String x:Key="LOCDisplayManager_AppearancePreset">Darstellung</sys:String>
-    <sys:String x:Key="LOCDisplayManager_AppearancePresetHelp">Voreinstellungen ändern nur Farben. Layout, Schriftgröße und Abstände bleiben fest.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_AppearancePresetHelp">Voreinstellungen ändern nur Farben. Layout, Schriftgröße und Abstände bleiben fest. Standard nutzt Playnite-Text/Akzent und passt Flächen vom Theme an, wenn möglich.</sys:String>
+    <sys:String x:Key="LOCDisplayManager_PresetDefault">Standard</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetMidnight">Mitternacht</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetPaper">Papier</sys:String>
     <sys:String x:Key="LOCDisplayManager_PresetOled">OLED</sys:String>
