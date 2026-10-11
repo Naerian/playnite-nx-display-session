@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
 using System.Windows.Threading;
+using Microsoft.Win32;
 using Playnite.SDK;
 using Playnite.SDK.Events;
 using Playnite.SDK.Models;
@@ -38,15 +39,33 @@ namespace PlayniteDisplayManager
         private NativeHdrFlagMigration nativeHdrMigration;
         private ResourceDictionary englishFallbackResources;
         private DisplayRestoreClient restoreClient;
-        private DispatcherTimer restoreHeartbeatTimer;
         private DisplaySnapshot gameSessionSnapshot;
         private DisplaySnapshot modeSessionSnapshot;
+        private ActiveDisplayPlan modeSessionPlan;
+        private ActiveDisplayPlan gameSessionPlan;
+        private int displayApplyDepth;
+        private DispatcherTimer displayReassertTimer;
+        private bool displayChangeHooked;
         private Guid? activeGameId;
         private string activeGameName;
         private Guid? deferredDisplaySessionGameId;
         private int deferredDisplaySessionGeneration;
         private TopPanelItem desktopTopPanelItem;
         private bool openingStandaloneSettings;
+
+        /// <summary>Intended topology / mode / HDR for an active mode or game session (for reassert).</summary>
+        private sealed class ActiveDisplayPlan
+        {
+            public string TargetDisplayId;
+            public bool MakePrimary;
+            public bool TurnOffOtherDisplays;
+            public bool ModeOwnsTopology;
+            public int? Width;
+            public int? Height;
+            public double? Hz;
+            public List<HdrWriteTarget> HdrWrites;
+            public bool ForceDpi100;
+        }
 
         public override Guid Id { get; } = Guid.Parse("9c2e4a71-b8d3-4f6a-a1c5-0e7d92f3b846");
 
@@ -401,15 +420,16 @@ namespace PlayniteDisplayManager
         {
             logger.Info("Display Manager application started (verbose=" +
                         (settings?.EnableVerboseLogging == true) + ").");
+            HookDisplayChangeWatch();
             TryOfferFirstRunSetupWizard();
             BeginModeSession();
         }
 
         public override void OnApplicationStopped(OnApplicationStoppedEventArgs args)
         {
+            UnhookDisplayChangeWatch();
             EndGameSession("app-stopped");
             EndModeSession("app-stopped");
-            StopRestoreHeartbeat();
             if (restoreClient != null)
             {
                 try { restoreClient.Disarm(); } catch { /* ignore */ }
@@ -966,96 +986,109 @@ namespace PlayniteDisplayManager
                 }
 
                 modeSessionSnapshot = snapshot;
+                modeSessionPlan = new ActiveDisplayPlan
+                {
+                    TargetDisplayId = topologyTargetId,
+                    MakePrimary = wantsMakePrimary,
+                    TurnOffOtherDisplays = wantsTurnOffOthers,
+                    ForceDpi100 = needsScaleChange
+                };
                 Theme?.Refresh();
 
                 EnsureRestoreClient();
-                restoreClient.Arm(snapshot);
-                StartRestoreHeartbeat();
-                fileLogger.InfoTopic(
-                    "mode.begin",
-                    "preferred=" + (topologyTargetId ?? "(windows-primary)") +
-                    " missingPreferred=" + missingPreferred +
-                    " topology=" + topologyPlan +
-                    " scale=" + (needsScaleChange
-                        ? scaleBefore.Current + "%->100%"
-                        : (wantsScale ? "already-100-or-skip" : "off")));
-
-                var appliedSomething = false;
-                if (wantsTopology)
+                using (BeginDisplayApplyScope())
                 {
-                    var topologyApply = Topology.TryApplyRequest(new DisplayTopologyRequest
+                    restoreClient.Arm(snapshot);
+                    fileLogger.InfoTopic(
+                        "mode.begin",
+                        "preferred=" + (topologyTargetId ?? "(windows-primary)") +
+                        " missingPreferred=" + missingPreferred +
+                        " topology=" + topologyPlan +
+                        " scale=" + (needsScaleChange
+                            ? scaleBefore.Current + "%->100%"
+                            : (wantsScale ? "already-100-or-skip" : "off")));
+
+                    var appliedSomething = false;
+                    if (wantsTopology)
                     {
-                        TargetDisplayId = topologyTargetId,
-                        MakePrimary = wantsMakePrimary,
-                        TurnOffOtherDisplays = wantsTurnOffOthers
-                    });
-                    if (!topologyApply.Success)
-                    {
-                        fileLogger.WarnTopic(
-                            "mode.topology",
-                            "failed target=" + (topologyTargetId ?? string.Empty) +
-                            " plan=" + topologyPlan,
-                            topologyApply.Error);
-                        if (!needsScaleChange)
+                        var topologyApply = Topology.TryApplyRequest(new DisplayTopologyRequest
                         {
-                            modeSessionSnapshot = null;
-                            DisarmRestoreLease();
-                            Theme?.Refresh();
-                            return;
+                            TargetDisplayId = topologyTargetId,
+                            MakePrimary = wantsMakePrimary,
+                            TurnOffOtherDisplays = wantsTurnOffOthers
+                        });
+                        if (!topologyApply.Success)
+                        {
+                            fileLogger.WarnTopic(
+                                "mode.topology",
+                                "failed target=" + (topologyTargetId ?? string.Empty) +
+                                " plan=" + topologyPlan,
+                                topologyApply.Error);
+                            if (!needsScaleChange)
+                            {
+                                modeSessionSnapshot = null;
+                                modeSessionPlan = null;
+                                DisarmRestoreLease();
+                                Theme?.Refresh();
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            appliedSomething = true;
+                            fileLogger.InfoTopic(
+                                "mode.topology",
+                                "ok target=" + (topologyTargetId ?? string.Empty) +
+                                " plan=" + topologyPlan +
+                                " message=" + (topologyApply.Message ?? string.Empty));
                         }
                     }
-                    else
-                    {
-                        appliedSomething = true;
-                        fileLogger.InfoTopic(
-                            "mode.topology",
-                            "ok target=" + (topologyTargetId ?? string.Empty) +
-                            " plan=" + topologyPlan +
-                            " message=" + (topologyApply.Message ?? string.Empty));
-                    }
-                }
 
-                if (needsScaleChange)
-                {
-                    var liveAfter = Displays.GetDisplays().ToList();
-                    var scaleTargetAfter = liveAfter.FirstOrDefault(d => d.IsConnected
-                        && string.Equals(d.Id, topologyTargetId, StringComparison.OrdinalIgnoreCase))
-                        ?? scaleTarget;
-
-                    if (!dpiScale.TrySet(scaleTargetAfter, 100, out var scaleError))
+                    if (needsScaleChange)
                     {
-                        fileLogger.WarnTopic(
-                            "mode.dpi",
-                            "failed target=" + (topologyTargetId ?? string.Empty) +
-                            " from=" + scaleBefore.Current + "%",
-                            scaleError);
-                        if (!appliedSomething)
+                        var liveAfter = Displays.GetDisplays().ToList();
+                        var scaleTargetAfter = liveAfter.FirstOrDefault(d => d.IsConnected
+                            && string.Equals(d.Id, topologyTargetId, StringComparison.OrdinalIgnoreCase))
+                            ?? scaleTarget;
+
+                        if (!dpiScale.TrySet(scaleTargetAfter, 100, out var scaleError))
                         {
-                            modeSessionSnapshot = null;
-                            DisarmRestoreLease();
-                            Theme?.Refresh();
-                            return;
+                            fileLogger.WarnTopic(
+                                "mode.dpi",
+                                "failed target=" + (topologyTargetId ?? string.Empty) +
+                                " from=" + scaleBefore.Current + "%",
+                                scaleError);
+                            if (!appliedSomething)
+                            {
+                                modeSessionSnapshot = null;
+                                modeSessionPlan = null;
+                                DisarmRestoreLease();
+                                Theme?.Refresh();
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            appliedSomething = true;
+                            fileLogger.InfoTopic(
+                                "mode.dpi",
+                                "ok target=" + (topologyTargetId ?? string.Empty) +
+                                " from=" + scaleBefore.Current + "% to=100%");
                         }
                     }
-                    else
+
+                    if (!appliedSomething)
                     {
-                        appliedSomething = true;
-                        fileLogger.InfoTopic(
-                            "mode.dpi",
-                            "ok target=" + (topologyTargetId ?? string.Empty) +
-                            " from=" + scaleBefore.Current + "% to=100%");
+                        modeSessionSnapshot = null;
+                        modeSessionPlan = null;
+                        DisarmRestoreLease();
+                        Theme?.Refresh();
+                        return;
                     }
+
+                    SettleAfterDisplayChange(true);
                 }
 
-                if (!appliedSomething)
-                {
-                    modeSessionSnapshot = null;
-                    DisarmRestoreLease();
-                    Theme?.Refresh();
-                    return;
-                }
-
-                SettleAfterDisplayChange(true);
                 NotifyDisplaysChanged();
                 Theme?.Refresh();
             }
@@ -1063,6 +1096,7 @@ namespace PlayniteDisplayManager
             {
                 fileLogger.ErrorTopic("mode.begin", "Failed to begin Fullscreen mode display session.", ex);
                 modeSessionSnapshot = null;
+                modeSessionPlan = null;
             }
         }
 
@@ -1077,18 +1111,22 @@ namespace PlayniteDisplayManager
             {
                 var snapshot = modeSessionSnapshot;
                 modeSessionSnapshot = null;
+                modeSessionPlan = null;
                 Theme?.Refresh();
 
-                if (!Topology.TryRestoreSnapshot(snapshot, out var error))
+                using (BeginDisplayApplyScope())
                 {
-                    fileLogger.WarnTopic(
-                        "mode.restore",
-                        "failed reason=" + reason,
-                        error);
-                }
-                else
-                {
-                    fileLogger.InfoTopic("mode.restore", "ok reason=" + reason);
+                    if (!Topology.TryRestoreSnapshot(snapshot, out var error))
+                    {
+                        fileLogger.WarnTopic(
+                            "mode.restore",
+                            "failed reason=" + reason,
+                            error);
+                    }
+                    else
+                    {
+                        fileLogger.InfoTopic("mode.restore", "ok reason=" + reason);
+                    }
                 }
 
                 NotifyDisplaysChanged();
@@ -1239,27 +1277,40 @@ namespace PlayniteDisplayManager
                 gameSessionSnapshot = snapshot;
                 activeGameId = game.Id;
                 activeGameName = game.Name;
+                gameSessionPlan = new ActiveDisplayPlan
+                {
+                    TargetDisplayId = topologyTargetId,
+                    MakePrimary = wantsMakePrimary,
+                    TurnOffOtherDisplays = wantsTurnOffOthers,
+                    ModeOwnsTopology = modeOwnsTopology,
+                    Width = resolutionPlan.ShouldApply ? resolutionPlan.TargetWidth : null,
+                    Height = resolutionPlan.ShouldApply ? resolutionPlan.TargetHeight : null,
+                    Hz = hzPlan.ShouldApply ? hzPlan.TargetHz : null,
+                    HdrWrites = applyWrites != null && applyWrites.Count > 0
+                        ? applyWrites.ToList()
+                        : null
+                };
                 Theme?.Refresh();
 
                 EnsureRestoreClient();
-                if (modeOwnsTopology)
-                {
-                    // Keep the Fullscreen mode lease (desktop layout) armed for crash restore.
-                    restoreClient.Arm(modeSessionSnapshot);
-                    StartRestoreHeartbeat();
-                    fileLogger.InfoTopic(
-                        "restore.arm",
-                        "mode-lease kept for game session snapshotTargets=" +
-                        (snapshot.HdrRestoreWrites == null ? 0 : snapshot.HdrRestoreWrites.Count));
-                }
-                else
-                {
-                    restoreClient.Arm(snapshot);
-                    StartRestoreHeartbeat();
-                    fileLogger.InfoTopic("restore.arm", "lease armed snapshotTargets=" +
-                        (snapshot.HdrRestoreWrites == null ? 0 : snapshot.HdrRestoreWrites.Count));
-                }
                 var appliedAny = false;
+                using (BeginDisplayApplyScope())
+                {
+                    if (modeOwnsTopology)
+                    {
+                        // Keep the Fullscreen mode lease (desktop layout) armed for crash restore.
+                        restoreClient.Arm(modeSessionSnapshot);
+                        fileLogger.InfoTopic(
+                            "restore.arm",
+                            "mode-lease kept for game session snapshotTargets=" +
+                            (snapshot.HdrRestoreWrites == null ? 0 : snapshot.HdrRestoreWrites.Count));
+                    }
+                    else
+                    {
+                        restoreClient.Arm(snapshot);
+                        fileLogger.InfoTopic("restore.arm", "lease armed snapshotTargets=" +
+                            (snapshot.HdrRestoreWrites == null ? 0 : snapshot.HdrRestoreWrites.Count));
+                    }
 
                 if (wantsTopology)
                 {
@@ -1294,6 +1345,10 @@ namespace PlayniteDisplayManager
                             applyWrites = hdr.BuildEnableWritesForPrimary(live);
                             offWrites = applyWrites.Select(ToOffWrite).ToList();
                             snapshot.HdrRestoreWrites = offWrites;
+                            if (gameSessionPlan != null)
+                            {
+                                gameSessionPlan.HdrWrites = applyWrites.ToList();
+                            }
                         }
                     }
                 }
@@ -1306,6 +1361,12 @@ namespace PlayniteDisplayManager
                     && resolutionPlan.TargetHeight.HasValue
                     && primary != null)
                 {
+                    if (gameSessionPlan != null)
+                    {
+                        gameSessionPlan.Width = resolutionPlan.TargetWidth;
+                        gameSessionPlan.Height = resolutionPlan.TargetHeight;
+                    }
+
                     if (resolutions.TryApply(primary, resolutionPlan.TargetWidth.Value, resolutionPlan.TargetHeight.Value, out var resolutionError))
                     {
                         appliedAny = true;
@@ -1338,6 +1399,11 @@ namespace PlayniteDisplayManager
                 hzPlan = PlanRefreshRateSession(game, resolved, primary);
                 if (hzPlan.ShouldApply && hzPlan.TargetHz.HasValue && primary != null)
                 {
+                    if (gameSessionPlan != null)
+                    {
+                        gameSessionPlan.Hz = hzPlan.TargetHz;
+                    }
+
                     if (refreshRates.TryApply(primary, hzPlan.TargetHz.Value, out var hzError))
                     {
                         appliedAny = true;
@@ -1394,6 +1460,7 @@ namespace PlayniteDisplayManager
                 }
 
                 SettleAfterDisplayChange(appliedAny);
+                }
             }
             catch (Exception ex)
             {
@@ -1465,6 +1532,7 @@ namespace PlayniteDisplayManager
             {
                 var snapshot = gameSessionSnapshot;
                 gameSessionSnapshot = null;
+                gameSessionPlan = null;
                 activeGameId = null;
                 var name = activeGameName;
                 activeGameName = null;
@@ -1474,25 +1542,28 @@ namespace PlayniteDisplayManager
                 {
                     var restoreOk = false;
                     // Restore writes HDR off from snapshot.HdrRestoreWrites — no GET trust.
-                    if (!Topology.TryRestoreSnapshot(snapshot, out var error))
+                    using (BeginDisplayApplyScope())
                     {
-                        fileLogger.WarnTopic(
-                            "session.restore",
-                            "failed reason=" + reason +
-                            (string.IsNullOrWhiteSpace(name) ? string.Empty : " game=" + name),
-                            error);
-                        if (snapshot.HdrRestoreWrites != null && snapshot.HdrRestoreWrites.Count > 0)
+                        if (!Topology.TryRestoreSnapshot(snapshot, out var error))
                         {
-                            hdr.ApplyHdrWrites(snapshot.HdrRestoreWrites, out _);
+                            fileLogger.WarnTopic(
+                                "session.restore",
+                                "failed reason=" + reason +
+                                (string.IsNullOrWhiteSpace(name) ? string.Empty : " game=" + name),
+                                error);
+                            if (snapshot.HdrRestoreWrites != null && snapshot.HdrRestoreWrites.Count > 0)
+                            {
+                                hdr.ApplyHdrWrites(snapshot.HdrRestoreWrites, out _);
+                            }
                         }
-                    }
-                    else
-                    {
-                        restoreOk = true;
-                        fileLogger.InfoTopic(
-                            "session.restore",
-                            "ok reason=" + reason +
-                            (string.IsNullOrWhiteSpace(name) ? string.Empty : " game=" + name));
+                        else
+                        {
+                            restoreOk = true;
+                            fileLogger.InfoTopic(
+                                "session.restore",
+                                "ok reason=" + reason +
+                                (string.IsNullOrWhiteSpace(name) ? string.Empty : " game=" + name));
+                        }
                     }
 
                     if (restoreOk
@@ -1514,7 +1585,6 @@ namespace PlayniteDisplayManager
                 {
                     EnsureRestoreClient();
                     restoreClient.Arm(modeSessionSnapshot);
-                    StartRestoreHeartbeat();
                     fileLogger.InfoTopic("restore.arm", "mode-lease re-armed after game session");
                 }
                 else
@@ -2009,14 +2079,11 @@ namespace PlayniteDisplayManager
             var snapshot = Topology.CaptureSnapshot();
             snapshot.HdrRestoreWrites = hdr.BuildForceOffWrites(Displays.GetDisplays());
             EnsureRestoreClient();
-            var path = restoreClient.Arm(snapshot);
-            StartRestoreHeartbeat();
-            return path;
+            return restoreClient.Arm(snapshot);
         }
 
         public void DisarmRestoreLease()
         {
-            StopRestoreHeartbeat();
             restoreClient?.Disarm();
         }
 
@@ -2029,7 +2096,6 @@ namespace PlayniteDisplayManager
                 before = Topology.CaptureSnapshot();
                 before.HdrRestoreWrites = hdr.BuildForceOffWrites(Displays.GetDisplays());
                 restoreClient.Arm(before);
-                StartRestoreHeartbeat();
             }
             catch (Exception ex)
             {
@@ -2040,12 +2106,20 @@ namespace PlayniteDisplayManager
                 };
             }
 
-            var apply = Topology.TryApplyRequest(request);
+            DisplayTopologyApplyResult apply;
+            using (BeginDisplayApplyScope())
+            {
+                apply = Topology.TryApplyRequest(request);
+            }
+
             if (!apply.Success)
             {
                 if (before != null)
                 {
-                    Topology.TryRestoreSnapshot(before, out _);
+                    using (BeginDisplayApplyScope())
+                    {
+                        Topology.TryRestoreSnapshot(before, out _);
+                    }
                 }
 
                 DisarmRestoreLease();
@@ -2668,36 +2742,390 @@ namespace PlayniteDisplayManager
 
         private void EnsureRestoreClient()
         {
-            if (restoreClient == null)
-            {
-                restoreClient = new DisplayRestoreClient(logger);
-            }
-        }
-
-        private void StartRestoreHeartbeat()
-        {
-            if (restoreHeartbeatTimer != null)
+            if (restoreClient != null)
             {
                 return;
             }
 
-            restoreHeartbeatTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(2)
-            };
-            restoreHeartbeatTimer.Tick += (_, __) => restoreClient?.Heartbeat();
-            restoreHeartbeatTimer.Start();
+            restoreClient = new DisplayRestoreClient(logger);
+            restoreClient.UnexpectedHostExit += OnRestoreHostUnexpectedExit;
         }
 
-        private void StopRestoreHeartbeat()
+        private IDisposable BeginDisplayApplyScope()
         {
-            if (restoreHeartbeatTimer == null)
+            Interlocked.Increment(ref displayApplyDepth);
+            return new DisplayApplyScope(this);
+        }
+
+        private sealed class DisplayApplyScope : IDisposable
+        {
+            private PlayniteDisplayManagerPlugin owner;
+
+            public DisplayApplyScope(PlayniteDisplayManagerPlugin plugin)
+            {
+                owner = plugin;
+            }
+
+            public void Dispose()
+            {
+                if (owner == null)
+                {
+                    return;
+                }
+
+                Interlocked.Decrement(ref owner.displayApplyDepth);
+                owner = null;
+            }
+        }
+
+        private void HookDisplayChangeWatch()
+        {
+            if (displayChangeHooked)
             {
                 return;
             }
 
-            restoreHeartbeatTimer.Stop();
-            restoreHeartbeatTimer = null;
+            try
+            {
+                SystemEvents.DisplaySettingsChanged += OnSystemDisplaySettingsChanged;
+                displayChangeHooked = true;
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Could not subscribe to DisplaySettingsChanged.");
+            }
+        }
+
+        private void UnhookDisplayChangeWatch()
+        {
+            if (!displayChangeHooked)
+            {
+                return;
+            }
+
+            try
+            {
+                SystemEvents.DisplaySettingsChanged -= OnSystemDisplaySettingsChanged;
+            }
+            catch
+            {
+                // ignore
+            }
+
+            displayChangeHooked = false;
+            StopDisplayReassertTimer();
+        }
+
+        private void OnSystemDisplaySettingsChanged(object sender, EventArgs e)
+        {
+            if (Volatile.Read(ref displayApplyDepth) > 0)
+            {
+                return;
+            }
+
+            if (gameSessionPlan == null && modeSessionPlan == null)
+            {
+                return;
+            }
+
+            // Debounce on the UI dispatcher — display storms fire many events.
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher == null)
+            {
+                return;
+            }
+
+            try
+            {
+                dispatcher.BeginInvoke(new Action(ScheduleDisplayReassert));
+            }
+            catch
+            {
+                // Playnite may be shutting down.
+            }
+        }
+
+        private void ScheduleDisplayReassert()
+        {
+            if (Volatile.Read(ref displayApplyDepth) > 0
+                || (gameSessionPlan == null && modeSessionPlan == null))
+            {
+                return;
+            }
+
+            if (displayReassertTimer == null)
+            {
+                displayReassertTimer = new DispatcherTimer
+                {
+                    Interval = TimeSpan.FromMilliseconds(1500)
+                };
+                displayReassertTimer.Tick += (_, __) =>
+                {
+                    StopDisplayReassertTimer();
+                    ReassertActiveDisplaySession("display-changed");
+                };
+            }
+
+            displayReassertTimer.Stop();
+            displayReassertTimer.Start();
+        }
+
+        private void StopDisplayReassertTimer()
+        {
+            if (displayReassertTimer == null)
+            {
+                return;
+            }
+
+            displayReassertTimer.Stop();
+            displayReassertTimer = null;
+        }
+
+        private void OnRestoreHostUnexpectedExit()
+        {
+            if (gameSessionSnapshot == null && modeSessionSnapshot == null)
+            {
+                return;
+            }
+
+            fileLogger.WarnTopic(
+                "restore.host",
+                "RestoreHost exited while a session lease was armed; reasserting live display plan.");
+            ReassertActiveDisplaySession("restore-host-exit");
+        }
+
+        private void ReassertActiveDisplaySession(string reason)
+        {
+            if (Volatile.Read(ref displayApplyDepth) > 0)
+            {
+                return;
+            }
+
+            if (gameSessionPlan == null && modeSessionPlan == null)
+            {
+                return;
+            }
+
+            try
+            {
+                using (BeginDisplayApplyScope())
+                {
+                    var changed = false;
+
+                    if (modeSessionPlan != null && modeSessionSnapshot != null)
+                    {
+                        changed |= ApplyPlanTopology(modeSessionPlan, "mode.reassert." + reason);
+                        if (modeSessionPlan.ForceDpi100
+                            && !string.IsNullOrWhiteSpace(modeSessionPlan.TargetDisplayId))
+                        {
+                            var live = Displays.GetDisplays().ToList();
+                            var target = live.FirstOrDefault(d => d.IsConnected
+                                && string.Equals(
+                                    d.Id,
+                                    modeSessionPlan.TargetDisplayId,
+                                    StringComparison.OrdinalIgnoreCase));
+                            if (target != null)
+                            {
+                                var scale = dpiScale.TryGet(target);
+                                if (scale != null && scale.IsValid && scale.Current != 100
+                                    && dpiScale.TrySet(target, 100, out _))
+                                {
+                                    changed = true;
+                                    fileLogger.InfoTopic(
+                                        "mode.reassert.dpi",
+                                        "ok reason=" + reason +
+                                        " target=" + (target.Id ?? string.Empty));
+                                }
+                            }
+                        }
+                    }
+
+                    if (gameSessionPlan != null && gameSessionSnapshot != null)
+                    {
+                        if (!gameSessionPlan.ModeOwnsTopology)
+                        {
+                            changed |= ApplyPlanTopology(gameSessionPlan, "session.reassert." + reason);
+                        }
+
+                        changed |= ApplyPlanResolutionRefresh(gameSessionPlan, reason);
+                        if (gameSessionPlan.HdrWrites != null && gameSessionPlan.HdrWrites.Count > 0)
+                        {
+                            var written = hdr.ApplyHdrWrites(gameSessionPlan.HdrWrites, out var hdrError);
+                            if (written > 0)
+                            {
+                                changed = true;
+                                fileLogger.InfoTopic(
+                                    "session.reassert.hdr",
+                                    "ok reason=" + reason + " wrote=" + written);
+                            }
+                            else if (!string.IsNullOrWhiteSpace(hdrError))
+                            {
+                                fileLogger.WarnTopic(
+                                    "session.reassert.hdr",
+                                    "failed reason=" + reason,
+                                    hdrError);
+                            }
+                        }
+                    }
+
+                    if (changed)
+                    {
+                        fileLogger.InfoTopic("session.reassert", "applied reason=" + reason);
+                    }
+                    else
+                    {
+                        fileLogger.InfoTopic("session.reassert", "noop reason=" + reason);
+                    }
+
+                    // Re-arm after host death or when we changed the live topology (lease still valid otherwise).
+                    EnsureRestoreClient();
+                    var hostGone = !restoreClient.IsHostRunning;
+                    var mustRearm = hostGone
+                        || changed
+                        || string.Equals(reason, "restore-host-exit", StringComparison.Ordinal);
+                    if (mustRearm)
+                    {
+                        if (gameSessionSnapshot != null && IsModeSessionActive && modeSessionSnapshot != null)
+                        {
+                            restoreClient.Arm(modeSessionSnapshot);
+                        }
+                        else if (gameSessionSnapshot != null)
+                        {
+                            restoreClient.Arm(gameSessionSnapshot);
+                        }
+                        else if (modeSessionSnapshot != null)
+                        {
+                            restoreClient.Arm(modeSessionSnapshot);
+                        }
+                    }
+                }
+
+                try
+                {
+                    Application.Current?.Dispatcher?.BeginInvoke(new Action(() => Theme?.Refresh()));
+                }
+                catch
+                {
+                    // ignore
+                }
+            }
+            catch (Exception ex)
+            {
+                fileLogger.ErrorTopic("session.reassert", "Failed to reassert display session (" + reason + ").", ex);
+            }
+        }
+
+        private bool ApplyPlanTopology(ActiveDisplayPlan plan, string topic)
+        {
+            if (plan == null || string.IsNullOrWhiteSpace(plan.TargetDisplayId))
+            {
+                return false;
+            }
+
+            if (!plan.MakePrimary && !plan.TurnOffOtherDisplays)
+            {
+                return false;
+            }
+
+            var live = Displays.GetDisplays().ToList();
+            var target = live.FirstOrDefault(d => d.IsConnected
+                && string.Equals(d.Id, plan.TargetDisplayId, StringComparison.OrdinalIgnoreCase));
+            if (target == null)
+            {
+                return false;
+            }
+
+            var needsPrimary = plan.MakePrimary && !target.IsPrimary;
+            var connectedCount = live.Count(d => d.IsConnected);
+            var needsTurnOff = plan.TurnOffOtherDisplays && connectedCount > 1;
+            if (!needsPrimary && !needsTurnOff)
+            {
+                return false;
+            }
+
+            var apply = Topology.TryApplyRequest(new DisplayTopologyRequest
+            {
+                TargetDisplayId = plan.TargetDisplayId,
+                MakePrimary = needsPrimary || (plan.MakePrimary && needsTurnOff),
+                TurnOffOtherDisplays = needsTurnOff
+            });
+            if (!apply.Success)
+            {
+                fileLogger.WarnTopic(topic, "topology failed", apply.Error);
+                return false;
+            }
+
+            fileLogger.InfoTopic(topic, "topology ok message=" + (apply.Message ?? string.Empty));
+            return true;
+        }
+
+        private bool ApplyPlanResolutionRefresh(ActiveDisplayPlan plan, string reason)
+        {
+            if (plan == null)
+            {
+                return false;
+            }
+
+            var live = Displays.GetDisplays().ToList();
+            var primary = ResolveApplyTargetDisplay(live, plan.TargetDisplayId);
+            if (primary == null)
+            {
+                return false;
+            }
+
+            var changed = false;
+            if (plan.Width.HasValue && plan.Height.HasValue
+                && (primary.Width != (uint)plan.Width.Value || primary.Height != (uint)plan.Height.Value))
+            {
+                if (resolutions.TryApply(primary, plan.Width.Value, plan.Height.Value, out var resError))
+                {
+                    changed = true;
+                    fileLogger.InfoTopic(
+                        "session.reassert.resolution",
+                        "ok reason=" + reason +
+                        " " + plan.Width.Value + "x" + plan.Height.Value +
+                        " display=" + (primary.Id ?? string.Empty));
+                    live = Displays.GetDisplays().ToList();
+                    primary = ResolveApplyTargetDisplay(live, plan.TargetDisplayId) ?? primary;
+                }
+                else
+                {
+                    fileLogger.WarnTopic(
+                        "session.reassert.resolution",
+                        "failed reason=" + reason +
+                        " " + plan.Width.Value + "x" + plan.Height.Value,
+                        resError);
+                }
+            }
+
+            if (plan.Hz.HasValue && primary != null)
+            {
+                var currentHz = primary.RefreshRateHz > 0
+                    ? (uint)Math.Round(primary.RefreshRateHz)
+                    : 0u;
+                var targetRounded = (uint)Math.Round(plan.Hz.Value);
+                if (currentHz != targetRounded)
+                {
+                    if (refreshRates.TryApply(primary, plan.Hz.Value, out var hzError))
+                    {
+                        changed = true;
+                        fileLogger.InfoTopic(
+                            "session.reassert.hz",
+                            "ok reason=" + reason +
+                            " " + plan.Hz.Value.ToString("0.###") + " Hz" +
+                            " display=" + (primary.Id ?? string.Empty));
+                    }
+                    else if (!string.IsNullOrWhiteSpace(hzError))
+                    {
+                        fileLogger.WarnTopic(
+                            "session.reassert.hz",
+                            "failed reason=" + reason,
+                            hzError);
+                    }
+                }
+            }
+
+            return changed;
         }
 
         private void EnsureEnglishFallbackResources()

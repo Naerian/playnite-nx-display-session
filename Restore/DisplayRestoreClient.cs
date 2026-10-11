@@ -13,10 +13,13 @@ namespace PlayniteDisplayManager.Restore
     /// <summary>
     /// Starts the external RestoreHost and arms a display-topology lease.
     /// If Playnite dies or heartbeats stop, the host reapplies the snapshot.
+    /// Heartbeats run on a background timer (not the WPF dispatcher) so exclusive
+    /// fullscreen / UI freezes do not falsely trip the lease restore.
     /// </summary>
     public sealed class DisplayRestoreClient : IDisposable
     {
         private const string Protocol = "DM1";
+        private const int HeartbeatIntervalMs = 2000;
         private readonly ILogger logger;
         private readonly string pipeName;
         private readonly string token;
@@ -24,10 +27,18 @@ namespace PlayniteDisplayManager.Restore
         private readonly Thread worker;
         private readonly object hostSync = new object();
         private Process hostProcess;
+        private Timer heartbeatTimer;
+        private int unexpectedExitRaised;
         private bool disposed;
         private string lastSessionId = Guid.NewGuid().ToString("N");
         private DateTime lastHeartbeatUtc = DateTime.MinValue;
         private string armedSnapshotPath;
+
+        /// <summary>
+        /// Fired once when RestoreHost exits while a lease is still armed (false timeout
+        /// restore, crash, etc.). The plugin should reassert the live session and re-arm.
+        /// </summary>
+        public event Action UnexpectedHostExit;
 
         public DisplayRestoreClient(ILogger sourceLogger)
         {
@@ -63,6 +74,7 @@ namespace PlayniteDisplayManager.Restore
             }
 
             EnsureHost();
+            Interlocked.Exchange(ref unexpectedExitRaised, 0);
             lastSessionId = string.IsNullOrWhiteSpace(sessionId) ? Guid.NewGuid().ToString("N") : sessionId;
             var path = Path.Combine(Path.GetTempPath(),
                 "PlayniteDisplayManager-snapshot-" + lastSessionId + ".json");
@@ -73,6 +85,7 @@ namespace PlayniteDisplayManager.Restore
                 Protocol, token, lastSessionId, "ARM", Encode(path)
             }));
             Heartbeat();
+            StartHeartbeat();
             logger.Info("Display Manager restore lease armed: " + path);
             return path;
         }
@@ -89,8 +102,50 @@ namespace PlayniteDisplayManager.Restore
             Enqueue(string.Join("|", new[] { Protocol, token, lastSessionId, "HEARTBEAT" }));
         }
 
+        public void StartHeartbeat()
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            if (heartbeatTimer != null)
+            {
+                return;
+            }
+
+            heartbeatTimer = new Timer(
+                HeartbeatTick,
+                null,
+                HeartbeatIntervalMs,
+                HeartbeatIntervalMs);
+        }
+
+        public void StopHeartbeat()
+        {
+            var timer = heartbeatTimer;
+            heartbeatTimer = null;
+            if (timer == null)
+            {
+                return;
+            }
+
+            try
+            {
+                timer.Change(Timeout.Infinite, Timeout.Infinite);
+            }
+            catch
+            {
+                // ignore
+            }
+
+            timer.Dispose();
+            Interlocked.Exchange(ref unexpectedExitRaised, 0);
+        }
+
         public void Disarm()
         {
+            StopHeartbeat();
             if (IsHostRunning)
             {
                 Enqueue(string.Join("|", new[] { Protocol, token, lastSessionId, "DISARM" }));
@@ -99,6 +154,41 @@ namespace PlayniteDisplayManager.Restore
             CleanupSnapshotFile();
             armedSnapshotPath = null;
             logger.Info("Display Manager restore lease disarmed.");
+        }
+
+        private void HeartbeatTick(object state)
+        {
+            if (disposed || !IsArmed)
+            {
+                return;
+            }
+
+            if (!IsHostRunning)
+            {
+                if (Interlocked.CompareExchange(ref unexpectedExitRaised, 1, 0) == 0)
+                {
+                    logger.Warn("Display Manager RestoreHost exited while lease was armed.");
+                    try
+                    {
+                        UnexpectedHostExit?.Invoke();
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Warn(ex, "UnexpectedHostExit handler failed.");
+                    }
+                }
+
+                return;
+            }
+
+            try
+            {
+                Heartbeat();
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "RestoreHost heartbeat tick failed.");
+            }
         }
 
         public void RequestRestore()
@@ -227,6 +317,9 @@ namespace PlayniteDisplayManager.Restore
             {
                 return;
             }
+
+            StopHeartbeat();
+            UnexpectedHostExit = null;
 
             if (IsHostRunning)
             {

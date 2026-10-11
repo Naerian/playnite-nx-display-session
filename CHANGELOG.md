@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.12 — 2026-10-11
+- Fixed the game resolution snapping back to desktop while Playnite still showed the game as running.
+- Display settings now stick when a monitor sleeps or you turn a TV on or off mid-session.
+- Made crash-restore less aggressive so a brief Playnite freeze is far less likely to undo your game display setup.
+
 ## 1.0.11 — 2026-10-10
 - Overview **Appearance** uses a ComboBox dropdown (same pattern as Audio Switcher) instead of preset chips, with the same card title style as the other Overview cards.
 - New **Default** appearance preset: Playnite `TextBrush` / `HighlightGlyphBrush`, plus theme bg/surface when the theme exposes an opaque pair (`WindowBackgourndBrush`/`PopupBackgroundBrush` or Fullscreen control brushes); otherwise derives a second surface level or falls back to Midnight (new installs default to it).

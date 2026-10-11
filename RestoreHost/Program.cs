@@ -13,7 +13,8 @@ namespace PlayniteDisplayManager.RestoreHost
     internal static class Program
     {
         private const string Protocol = "DM1";
-        private const int HeartbeatKillSeconds = 30;
+        // Background heartbeats every ~2s; keep a wide margin for IPC backlog / display storms.
+        private const int HeartbeatKillSeconds = 90;
         private static readonly object Sync = new object();
         private static DisplaySnapshot armedSnapshot;
         private static string armedSessionId;
