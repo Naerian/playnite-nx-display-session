@@ -2,7 +2,7 @@
 
 ## 1.0.13 — 2026-10-12
 - Fixed the main monitor jumping back to a previous game resolution (like 1080p) when you turn on a TV or reconnect a display after the game was already closed.
-- Game resolution changes stay temporary again, so quitting a game no longer leaves that mode stuck as Windows’ preferred desktop setting.
+- Game resolution changes stay temporary again, so quitting a game no longer leaves that mode stuck as Windows' preferred desktop setting.
 
 ## 1.0.12 — 2026-10-11
 - Fixed the game resolution snapping back to desktop while Playnite still showed the game as running.
