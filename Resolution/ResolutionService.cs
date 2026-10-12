@@ -63,13 +63,18 @@ namespace PlayniteDisplayManager.Resolution
 
     /// <summary>
     /// Optional resolution changes via ChangeDisplaySettingsEx.
-    /// Restore is owned by the display snapshot (CCD), not by guessing modes.
+    /// Game-session applies must stay temporary (no CDS_UPDATEREGISTRY): writing the
+    /// registry makes Windows reapply that mode whenever displays reconnect (TV on, etc.)
+    /// even after the game has ended. Persist only when healing desktop after restore.
     /// </summary>
     public sealed class ResolutionService
     {
         private const int EnumCurrentSettings = -1;
+        private const int EnumRegistrySettings = -2;
         private const int CdsTest = 0x00000002;
         private const int CdsUpdateregistry = 0x00000001;
+        private const int CdsNoReset = 0x10000000;
+        private const int CdsFullscreen = 0x00000004;
         // Include driver-reported modes that are not in the monitor EDID
         // (NVIDIA/AMD/CRU custom resolutions). Vendor-agnostic Win32 flag.
         private const uint EdsRawMode = 0x00000002;
@@ -300,7 +305,9 @@ namespace PlayniteDisplayManager.Resolution
                 mode.dmFields |= DmDisplayFrequency;
             }
 
-            var applyFlags = CdsUpdateregistry;
+            // Temporary only (CDS_FULLSCREEN). Never CDS_UPDATEREGISTRY here — that sticks the
+            // game mode in the user profile and Windows reapplies it on every display reconnect.
+            var applyFlags = CdsFullscreen;
             var test = ChangeDisplaySettingsEx(target.GdiDeviceName, ref mode, IntPtr.Zero, CdsTest, IntPtr.Zero);
             if (test != 0)
             {
@@ -334,6 +341,65 @@ namespace PlayniteDisplayManager.Resolution
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// If the profile still stores a different mode than what is live (sticky leftover from
+        /// older CDS_UPDATEREGISTRY game applies), rewrite the profile only — CDS_NORESET so
+        /// Windows does not reconfigure displays or freeze the desktop.
+        /// </summary>
+        public int PersistCurrentModes(IEnumerable<DisplayInfo> displays, out string error)
+        {
+            error = null;
+            if (displays == null)
+            {
+                return 0;
+            }
+
+            var written = 0;
+            foreach (var display in displays)
+            {
+                if (display == null || !display.IsConnected || string.IsNullOrWhiteSpace(display.GdiDeviceName))
+                {
+                    continue;
+                }
+
+                var current = new DEVMODE();
+                current.dmSize = (ushort)Marshal.SizeOf(typeof(DEVMODE));
+                if (!EnumDisplaySettings(display.GdiDeviceName, EnumCurrentSettings, ref current))
+                {
+                    continue;
+                }
+
+                var registry = new DEVMODE();
+                registry.dmSize = (ushort)Marshal.SizeOf(typeof(DEVMODE));
+                var hasRegistry = EnumDisplaySettings(display.GdiDeviceName, EnumRegistrySettings, ref registry);
+                if (hasRegistry
+                    && registry.dmPelsWidth == current.dmPelsWidth
+                    && registry.dmPelsHeight == current.dmPelsHeight
+                    && registry.dmDisplayFrequency == current.dmDisplayFrequency)
+                {
+                    continue;
+                }
+
+                current.dmFields = DmPelsWidth | DmPelsHeight | DmDisplayFrequency;
+                var result = ChangeDisplaySettingsEx(
+                    display.GdiDeviceName,
+                    ref current,
+                    IntPtr.Zero,
+                    CdsUpdateregistry | CdsNoReset,
+                    IntPtr.Zero);
+                if (result == 0)
+                {
+                    written++;
+                }
+                else if (string.IsNullOrWhiteSpace(error))
+                {
+                    error = "Registry mode persist failed (" + result + ") for " + display.GdiDeviceName + ".";
+                }
+            }
+
+            return written;
         }
 
         private static ResolutionPolicy ResolvePolicy(

@@ -32,5 +32,6 @@
     <Compile Include="..\Displays\DisplayTopologyService.cs" Link="Displays\DisplayTopologyService.cs" />
     <Compile Include="..\Displays\DpiScaleService.cs" Link="Displays\DpiScaleService.cs" />
     <Compile Include="..\Hdr\HdrService.cs" Link="Hdr\HdrService.cs" />
+    <Compile Include="..\Resolution\ResolutionService.cs" Link="Resolution\ResolutionService.cs" />
   </ItemGroup>
 </Project>

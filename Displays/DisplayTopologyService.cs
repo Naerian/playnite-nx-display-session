@@ -391,6 +391,10 @@ namespace PlayniteDisplayManager.Displays
 
                 ApplyHdrRestoreWrites(snapshot);
                 ApplyDpiRestoreWrites(snapshot);
+                // CCD restore brings back the live topology. If the user profile still stores a
+                // sticky game mode from older CDS_UPDATEREGISTRY applies, rewrite the profile
+                // only (CDS_NORESET) so reconnects stay correct without resetting displays.
+                PersistLiveModesToRegistry();
                 return true;
             }
             catch (Exception ex)
@@ -398,6 +402,39 @@ namespace PlayniteDisplayManager.Displays
                 error = ex.Message;
                 Debug.WriteLine(ex);
                 return false;
+            }
+        }
+
+        private void PersistLiveModesToRegistry()
+        {
+            try
+            {
+                var service = new Resolution.ResolutionService();
+                var written = service.PersistCurrentModes(enumerator.GetDisplays(), out var persistError);
+                if (written > 0)
+                {
+                    Debug.WriteLine("Display Manager: persisted " + written + " live display mode(s) to registry.");
+#if !RESTORE_HOST
+                    PlayniteDisplayManager.Logging.PluginFileLogger.Current?.Info(
+                        "Display Manager: persisted " + written + " live display mode(s) to registry.");
+#endif
+                }
+                else if (!string.IsNullOrWhiteSpace(persistError))
+                {
+                    Debug.WriteLine("Display Manager: registry mode persist skipped: " + persistError);
+#if !RESTORE_HOST
+                    PlayniteDisplayManager.Logging.PluginFileLogger.Current?.Warn(
+                        "Display Manager: registry mode persist skipped: " + persistError);
+#endif
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+#if !RESTORE_HOST
+                PlayniteDisplayManager.Logging.PluginFileLogger.Current?.Warn(
+                    "Display Manager: registry mode persist failed: " + ex.Message);
+#endif
             }
         }
 
